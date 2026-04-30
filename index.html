@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grandmaster Web Chess - Volcano Edition</title>
+    <title>Grandmaster Web Chess - Vulkan Profile Edition</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
@@ -15,6 +15,7 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, onSnapshot, getDoc, setDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+        // TWOJA KONFIGURACJA
         const firebaseConfig = {
             apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
             authDomain: "xchess-79e2d.firebaseapp.com",
@@ -32,7 +33,7 @@
 
         window.db = db; 
         window.auth = auth;
-        window.currentUserData = null; // Przechowuje profil gracza
+        window.currentUserData = null;
 
         window.loginWithGoogle = function() {
             signInWithPopup(auth, provider).catch((error) => alert("Błąd: " + error.message));
@@ -46,32 +47,106 @@
                 const docSnap = await getDoc(userRef);
                 
                 if (!docSnap.exists()) {
-                    // Pierwsze logowanie - tworzymy profil
-                    const newProfile = {
-                        uid: user.uid,
-                        displayName: user.displayName,
-                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
-                        elo: 1000
-                    };
-                    await setDoc(userRef, newProfile);
-                    window.currentUserData = newProfile;
+                    // 1. PIERWSZE LOGOWANIE - Przejście do konfiguracji
+                    document.getElementById('nick-input').value = user.displayName;
+                    document.getElementById('preview-avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`;
+                    showScreen('setup-screen');
                 } else {
-                    // Stary gracz - wczytujemy profil
+                    // 2. STARY GRACZ - Wczytanie profilu
                     window.currentUserData = docSnap.data();
+                    updateProfileUI();
                 }
-                
-                document.getElementById('profile-img').src = window.currentUserData.avatar;
-                document.getElementById('player-nick').innerText = window.currentUserData.displayName;
-                document.getElementById('player-elo').innerText = window.currentUserData.elo;
-                
-                document.getElementById('login-section').style.display = 'none';
-                document.getElementById('profile-section').style.display = 'flex';
             } else {
                 window.currentUserData = null;
                 document.getElementById('login-section').style.display = 'block';
                 document.getElementById('profile-section').style.display = 'none';
             }
         });
+
+        // --- TWORZENIE I EDYCJA PROFILU ---
+        window.editProfile = function() {
+            document.getElementById('nick-input').value = window.currentUserData.displayName;
+            document.getElementById('preview-avatar').src = window.currentUserData.avatar;
+            showScreen('setup-screen');
+        };
+
+        // Podgląd obrazka po wybraniu z dysku
+        document.getElementById('avatar-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('preview-avatar').src = event.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Zapisywanie profilu i kompresja zdjęcia
+        window.saveProfile = async function() {
+            if (!auth.currentUser) return;
+            const nick = document.getElementById('nick-input').value.trim();
+            if (!nick) return alert("Nick nie może być pusty!");
+
+            document.getElementById('setup-btn').innerText = "Zapisywanie...";
+
+            const fileInput = document.getElementById('avatar-upload');
+            let finalAvatar = document.getElementById('preview-avatar').src;
+
+            // Jeśli użytkownik dodał nowe zdjęcie, kompresujemy je
+            if (fileInput.files && fileInput.files[0]) {
+                finalAvatar = await compressImage(fileInput.files[0]);
+            }
+
+            const userRef = doc(db, 'users', auth.currentUser.uid);
+            const newProfile = {
+                uid: auth.currentUser.uid,
+                displayName: nick,
+                avatar: finalAvatar,
+                elo: window.currentUserData ? window.currentUserData.elo : 1000 // Zachowaj ELO przy edycji
+            };
+
+            await setDoc(userRef, newProfile);
+            window.currentUserData = newProfile;
+            updateProfileUI();
+            
+            document.getElementById('setup-btn').innerText = "Zapisz profil i Graj";
+            showScreen('menu-screen');
+        };
+
+        // Narzędzie do ucinania i kompresowania grafik (żeby nie zapchać bazy)
+        function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 150; canvas.height = 150; // Idealny rozmiar na miniaturkę
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Centrowanie i wycinanie kwadratu
+                        const minSize = Math.min(img.width, img.height);
+                        const startX = (img.width - minSize) / 2;
+                        const startY = (img.height - minSize) / 2;
+                        
+                        ctx.drawImage(img, startX, startY, minSize, minSize, 0, 0, 150, 150);
+                        resolve(canvas.toDataURL('image/jpeg', 0.8)); // Zapisz jako jakość 80% JPEG
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function updateProfileUI() {
+            document.getElementById('profile-img').src = window.currentUserData.avatar;
+            document.getElementById('player-nick').innerText = window.currentUserData.displayName;
+            document.getElementById('player-elo').innerText = window.currentUserData.elo;
+            
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('profile-section').style.display = 'flex';
+        }
 
         // --- ZABEZPIECZONA LOGIKA MULTIPLAYER Z PROFILAMI ---
         window.currentGameId = null;
@@ -105,7 +180,6 @@
             });
 
             if (gameToJoin) {
-                // DOŁĄCZAMY
                 const gameData = gameToJoin.data();
                 window.currentGameId = gameToJoin.id;
                 
@@ -114,28 +188,21 @@
                     document.getElementById('opponent-avatar').src = gameData.whiteAvatar;
                     document.getElementById('opponent-name').innerText = gameData.whitePlayer;
                     await updateDoc(doc(db, "games", window.currentGameId), { 
-                        status: "playing", 
-                        blackPlayer: window.currentUserData.displayName,
-                        blackAvatar: window.currentUserData.avatar
+                        status: "playing", blackPlayer: window.currentUserData.displayName, blackAvatar: window.currentUserData.avatar
                     });
                 } else {
                     window.playerColor = 'w';
                     document.getElementById('opponent-avatar').src = gameData.blackAvatar;
                     document.getElementById('opponent-name').innerText = gameData.blackPlayer;
                     await updateDoc(doc(db, "games", window.currentGameId), { 
-                        status: "playing", 
-                        whitePlayer: window.currentUserData.displayName,
-                        whiteAvatar: window.currentUserData.avatar
+                        status: "playing", whitePlayer: window.currentUserData.displayName, whiteAvatar: window.currentUserData.avatar
                     });
                 }
                 startBoard(window.playerColor);
                 listenToGame();
             } else {
-                // TWORZYMY
                 window.playerColor = Math.random() < 0.5 ? 'w' : 'b';
-                const newGameData = { 
-                    status: "waiting", fen: "start", creatorUid: auth.currentUser.uid 
-                };
+                const newGameData = { status: "waiting", fen: "start", creatorUid: auth.currentUser.uid };
                 
                 if (window.playerColor === 'w') {
                     newGameData.whitePlayer = window.currentUserData.displayName;
@@ -161,14 +228,12 @@
                     window.gameStatus = 'playing';
                     document.getElementById('waiting-overlay').style.display = 'none';
                     
-                    // Aktualizuj dane przeciwnika, jeśli my założyliśmy pokój
                     if (document.getElementById('opponent-name').innerText === "Szukanie gracza...") {
                         document.getElementById('opponent-avatar').src = window.playerColor === 'w' ? data.blackAvatar : data.whiteAvatar;
                         document.getElementById('opponent-name').innerText = window.playerColor === 'w' ? data.blackPlayer : data.whitePlayer;
                     }
                     
                     window.updateStatusLocal(); 
-                    
                     if (data.fen !== window.game.fen() && data.fen !== "start") {
                         window.game.load(data.fen);
                         window.board.position(window.game.fen());
@@ -192,15 +257,14 @@
             const q = query(usersRef, orderBy("elo", "desc"), limit(10));
             const snapshot = await getDocs(q);
             
-            let html = "";
-            let rank = 1;
+            let html = ""; let rank = 1;
             snapshot.forEach(doc => {
                 const d = doc.data();
                 html += `
                 <div class="list-item">
                     <div style="display:flex; align-items:center;">
                         <strong style="margin-right:15px; color:#ff4500;">#${rank}</strong>
-                        <img src="${d.avatar}" style="width:30px; height:30px; background:#fff; border-radius:50%; margin-right:10px;">
+                        <img src="${d.avatar}" style="width:30px; height:30px; object-fit:cover; background:#fff; border-radius:50%; margin-right:10px;">
                         <span>${d.displayName}</span>
                     </div>
                     <strong style="color:#ffd700;">${d.elo} ELO</strong>
@@ -250,16 +314,30 @@
         .game-title { font-size: 36px; text-transform: uppercase; letter-spacing: 2px; }
         .game-title span { color: var(--vulcan-glow); text-shadow: 0 0 10px var(--vulcan-glow); }
 
+        /* Edycja Profilu (Inputy) */
+        .custom-input {
+            width: 80%; padding: 12px; margin: 15px auto; display: block;
+            border-radius: 8px; border: 1px solid var(--vulcan-red);
+            background: rgba(0,0,0,0.5); color: white; font-size: 16px;
+            text-align: center; font-weight: bold;
+        }
+        .custom-input:focus { outline: none; border-color: var(--vulcan-glow); box-shadow: 0 0 10px var(--vulcan-glow); }
+
+        .file-upload-btn {
+            background: #440000; border: 1px solid var(--vulcan-red);
+            padding: 10px 20px; border-radius: 8px; cursor: pointer; color: white;
+            font-weight: bold; display: inline-block; margin-bottom: 20px;
+        }
+
         /* Profil użytkownika w Menu */
         .profile-card {
-            display: flex; align-items: center; justify-content: center;
+            display: flex; align-items: center; justify-content: space-between;
             background: rgba(255, 69, 0, 0.1); padding: 15px;
             border-radius: 10px; margin-bottom: 20px;
             border: 1px solid rgba(255, 69, 0, 0.3);
         }
-        .profile-img { width: 60px; height: 60px; border-radius: 50%; background: #fff; margin-right: 15px; }
+        .profile-img { width: 60px; height: 60px; object-fit: cover; border-radius: 50%; background: #fff; margin-right: 15px; border: 2px solid var(--vulcan-glow);}
 
-        /* Przyciski i Animacje Klikania */
         .btn { 
             display: block; width: 100%; padding: 15px; margin-bottom: 15px; 
             font-size: 16px; font-weight: bold; color: white; border: none; 
@@ -271,9 +349,6 @@
             transform: scale(1.02); 
             background-color: var(--vulcan-glow); 
             box-shadow: 0 0 20px var(--vulcan-glow);
-        }
-        .btn:active {
-            transform: scale(0.95);
         }
         .btn-google { background-color: #DB4437; border: 1px solid #ff7b70; }
 
@@ -287,7 +362,6 @@
             display: flex; justify-content: space-between; align-items: center; padding: 10px;
             border-bottom: 1px solid rgba(255,69,0,0.2); transition: 0.3s;
         }
-        .list-item:hover { background: rgba(255, 69, 0, 0.1); }
 
         /* Szachownica i Gracze */
         .match-player {
@@ -295,7 +369,7 @@
             padding: 10px 20px; border-radius: 8px; margin: 10px auto;
             width: 400px; box-sizing: border-box; border: 1px solid var(--vulcan-red);
         }
-        .match-player img { width: 40px; height: 40px; background: #fff; border-radius: 50%; margin-right: 15px; }
+        .match-player img { width: 40px; height: 40px; object-fit: cover; background: #fff; border-radius: 50%; margin-right: 15px; }
         .match-player span { font-weight: bold; font-size: 18px; }
 
         #board-wrapper { position: relative; width: 400px; margin: 0 auto; box-shadow: 0 0 40px rgba(255, 69, 0, 0.4); border-radius: 4px; overflow: hidden; border: 4px solid var(--vulcan-red); }
@@ -322,19 +396,22 @@
             <h1 class="game-title">Vulkan <span>Chess</span></h1>
             
             <div id="login-section">
-                <p>Zaloguj się, aby tworzyć profil i zdobywać punkty ELO!</p>
+                <p>Zaloguj się, aby stworzyć profil i wgrać własne zdjęcie!</p>
                 <button class="btn btn-google" onclick="window.loginWithGoogle()">G Zaloguj przez Gmail</button>
             </div>
 
             <div id="profile-section" style="display: none; flex-direction: column;">
                 <div class="profile-card">
-                    <img id="profile-img" src="" class="profile-img" alt="Avatar">
-                    <div style="text-align: left;">
-                        <h3 id="player-nick" style="margin:0;">Gracz</h3>
-                        <p style="margin: 5px 0 0 0; color: gold;">🏆 ELO: <span id="player-elo">1000</span></p>
+                    <div style="display:flex; align-items: center;">
+                        <img id="profile-img" src="" class="profile-img" alt="Avatar">
+                        <div style="text-align: left;">
+                            <h3 id="player-nick" style="margin:0;">Gracz</h3>
+                            <p style="margin: 5px 0 0 0; color: gold;">🏆 ELO: <span id="player-elo">1000</span></p>
+                        </div>
                     </div>
+                    <button onclick="window.editProfile()" style="background:transparent; border:none; cursor:pointer; font-size:24px;" title="Edytuj profil">⚙️</button>
                 </div>
-                <button class="btn" style="background: transparent; border: 1px solid #555;" onclick="window.logout()">Wyloguj się</button>
+                
             </div>
             
             <hr style="border-color: rgba(255,69,0,0.3); margin: 20px 0;">
@@ -342,6 +419,29 @@
             <button class="btn" onclick="startBotMatch()">🤖 Graj z Botem</button>
             <button class="btn" onclick="window.findOnlineMatch()">🔥 Graj Online</button>
             <button class="btn" style="background: #2a0808;" onclick="window.loadLeaderboard()">🏆 Tabela Wyników</button>
+            
+            <button id="logout-btn" style="background: transparent; border: none; color: #888; cursor: pointer; display: none; margin: 10px auto 0;" onclick="window.logout()">Wyloguj się</button>
+        </div>
+    </div>
+
+    <div id="setup-screen" class="screen">
+        <div class="menu-container">
+            <h2 style="color: var(--vulcan-glow);">Ustaw swój profil</h2>
+            <p>Ten nick i zdjęcie będą widzieć inni gracze podczas partii!</p>
+
+            <div style="margin: 20px 0;">
+                <img id="preview-avatar" src="" style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 3px solid var(--vulcan-glow); margin-bottom: 10px;">
+                <br>
+                <label class="file-upload-btn">
+                    Zmień zdjęcie
+                    <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
+                </label>
+            </div>
+
+            <input type="text" id="nick-input" placeholder="Wpisz nowy nick..." class="custom-input">
+
+            <button id="setup-btn" class="btn" onclick="window.saveProfile()">Zapisz profil i Graj</button>
+            <button class="btn" style="background: transparent; border: 1px solid #555;" onclick="showScreen('menu-screen')">Anuluj</button>
         </div>
     </div>
 
@@ -381,6 +481,10 @@
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
+            
+            // Pokaż dyskretne wyloguj tylko w menu
+            if(screenId === 'menu-screen' && auth.currentUser) document.getElementById('logout-btn').style.display = 'block';
+            else document.getElementById('logout-btn').style.display = 'none';
         }
 
         window.board = null;
@@ -449,7 +553,6 @@
             window.gameStatus = 'playing';
             window.game.reset();
             
-            // Konfiguracja UI dla bota
             document.getElementById('waiting-overlay').style.display = 'none';
             document.getElementById('opponent-name').innerText = "Stockfish Bot";
             document.getElementById('opponent-avatar').src = "https://api.dicebear.com/7.x/bottts/svg?seed=Stockfish";

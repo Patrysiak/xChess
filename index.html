@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grandmaster Web Chess - Pixel Edition</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        // Twoja konfiguracja Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
+            authDomain: "xchess-79e2d.firebaseapp.com",
+            projectId: "xchess-79e2d",
+            storageBucket: "xchess-79e2d.firebasestorage.app",
+            messagingSenderId: "382071993193",
+            appId: "1:382071993193:web:86dbe5211f2151cb5383f8",
+            measurementId: "G-E8RJF7LKLE"
+        };
+
+        // Inicjalizacja bazy
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Funkcje logowania przypisane do obiektu window, aby działały z przyciskami HTML
+        window.loginWithGoogle = function() {
+            signInWithPopup(auth, provider).then((result) => {
+                const user = result.user;
+                alert("Zalogowano jako: " + user.displayName);
+            }).catch((error) => {
+                alert("Błąd logowania: " + error.message);
+            });
+        };
+
+        window.logout = function() {
+            signOut(auth).then(() => alert("Wylogowano!"));
+        };
+
+        // Nasłuchiwanie czy gracz jest zalogowany
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('player-nick').innerText = user.displayName;
+                document.getElementById('login-btn').style.display = 'none';
+                document.getElementById('logout-btn').style.display = 'block';
+            } else {
+                document.getElementById('player-nick').innerText = "Gość";
+                document.getElementById('login-btn').style.display = 'block';
+                document.getElementById('logout-btn').style.display = 'none';
+            }
+        });
+    </script>
+
+    <style>
+        /* === STYLE CSS === */
+        :root {
+            --bg-color: #1a1a2e;
+            --primary-btn: #0f3460;
+            --primary-hover: #e94560;
+            --text-light: #fff;
+        }
+
+        body {
+            margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: radial-gradient(circle at center, #16213e, #0f3460);
+            color: var(--text-light); display: flex;
+            justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
+        }
+
+        .screen { display: none; width: 100%; max-width: 600px; text-align: center; }
+        .active { display: block; }
+
+        .menu-container {
+            background: rgba(255, 255, 255, 0.05); padding: 40px;
+            border-radius: 20px; backdrop-filter: blur(10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5); margin: 0 auto;
+        }
+
+        .game-title span { color: var(--primary-hover); }
+
+        .btn {
+            display: block; width: 100%; padding: 15px; margin-bottom: 15px;
+            font-size: 16px; font-weight: bold; color: white; border: none;
+            border-radius: 8px; cursor: pointer; transition: 0.3s;
+            background-color: var(--primary-btn);
+        }
+        .btn:hover { transform: scale(1.05); background-color: var(--primary-hover); }
+        .btn-google { background-color: #DB4437; }
+
+        /* Szachownica i wymuszenie ostrych pikseli */
+        #myBoard { width: 400px; margin: 20px auto; border: 5px solid #333; }
+        .chessboard-63f37 img { image-rendering: pixelated; }
+
+        .list-container {
+            background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px;
+            text-align: left; max-height: 300px; overflow-y: auto;
+        }
+        .list-item {
+            display: flex; justify-content: space-between; padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="menu-screen" class="screen active">
+        <div class="menu-container">
+            <h1 class="game-title">Pixel <span>Chess</span></h1>
+            <p>Zalogowano jako: <strong id="player-nick">Gość</strong> | ELO: <strong>1000</strong></p>
+            
+            <button id="login-btn" class="btn btn-google" onclick="loginWithGoogle()">G Zaloguj przez Gmail</button>
+            <button id="logout-btn" class="btn" style="display:none;" onclick="logout()">Wyloguj</button>
+            
+            <hr style="border-color: rgba(255,255,255,0.1); margin: 20px 0;">
+            
+            <button class="btn" onclick="startGame('bot')">🤖 Graj z Botem</button>
+            <button class="btn" onclick="alert('Gra Online wymaga wdrożenia logiki WebSocket / bazy Firebase z pokojami!')">🌐 Graj Online</button>
+            <button class="btn" onclick="showScreen('leaderboard-screen')">🏆 Tabela Rankingowa</button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <h2>Rozgrywka</h2>
+        <p id="status">Twój ruch (Białe)</p>
+        <div id="myBoard"></div>
+        <button class="btn" onclick="showScreen('menu-screen')" style="width:200px; margin:20px auto;">Wróć do Menu</button>
+    </div>
+
+    <div id="leaderboard-screen" class="screen">
+        <div class="menu-container">
+            <h2>🏆 Najlepsi Gracze</h2>
+            <div class="list-container">
+                <div class="list-item"><span>1. Kasparov</span> <span>2850 ELO</span></div>
+                <div class="list-item"><span>2. Carlsen</span> <span>2790 ELO</span></div>
+            </div>
+            <button class="btn" onclick="showScreen('menu-screen')" style="margin-top:20px;">Wróć</button>
+        </div>
+    </div>
+
+    <script>
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Generator Pikselowych Figur
+        const pixelArt = {
+            'P': ["00000000","00000000","00011000","00111100","00011000","00011000","00111100","01111110"],
+            'R': ["00000000","01010100","01111100","00111000","00111000","00111000","01111110","01111110"],
+            'N': ["00000000","00011000","00111100","01110000","00111000","00011100","00111100","01111110"],
+            'B': ["00011000","00111100","00011000","00111100","00011000","00111100","01111110","01111110"],
+            'Q': ["01010100","01111100","00111000","00111000","01111100","01111110","01111110","01111110"],
+            'K': ["00011000","00111100","00011000","01111110","00111100","00111100","01111110","01111110"]
+        };
+
+        function generatePixelPiece(pieceCode) {
+            const color = pieceCode[0]; 
+            const type = pieceCode[1]; 
+            const art = pixelArt[type];
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = color === 'w' ? '#FFFFFF' : '#111111';
+            for(let y = 0; y < 8; y++) {
+                for(let x = 0; x < 8; x++) {
+                    if (art[y][x] === '1') {
+                        ctx.fillRect(x * 8, y * 8, 8, 8);
+                        if (color === 'w') {
+                            ctx.strokeStyle = '#000000'; ctx.lineWidth = 1;
+                            ctx.strokeRect(x * 8, y * 8, 8, 8);
+                        }
+                    }
+                }
+            }
+            return canvas.toDataURL(); 
+        }
+
+        // Logika Szachów
+        let board = null;
+        let game = new Chess();
+        let isPlayingBot = false;
+
+        function onDragStart(source, piece) {
+            if (game.game_over() || piece.search(/^b/) !== -1) return false;
+        }
+
+        function onDrop(source, target) {
+            let move = game.move({ from: source, to: target, promotion: 'q' });
+            if (move === null) return 'snapback';
+            updateStatus();
+            if (isPlayingBot) window.setTimeout(makeBotMove, 500);
+        }
+
+        function onSnapEnd() { board.position(game.fen()); }
+
+        function updateStatus() {
+            let status = '';
+            let moveColor = game.turn() === 'b' ? 'Czarne' : 'Białe';
+            if (game.in_checkmate()) status = `Koniec gry! ${moveColor} zamatowane.`;
+            else if (game.in_draw()) status = 'Remis.';
+            else {
+                status = `Tura: ${moveColor}`;
+                if (game.in_check()) status += ' (Szach!)';
+            }
+            $('#status').html(status);
+        }
+
+        function makeBotMove() {
+            if (game.game_over()) return;
+            let possibleMoves = game.moves();
+            let randomIdx = Math.floor(Math.random() * possibleMoves.length);
+            game.move(possibleMoves[randomIdx]);
+            board.position(game.fen());
+            updateStatus();
+        }
+
+        function startGame(mode) {
+            isPlayingBot = (mode === 'bot');
+            game.reset();
+            let config = {
+                draggable: true, position: 'start',
+                onDragStart: onDragStart, onDrop: onDrop, onSnapEnd: onSnapEnd,
+                pieceTheme: generatePixelPiece
+            };
+            board = Chessboard('myBoard', config);
+            updateStatus();
+            showScreen('game-screen');
+        }
+    </script>
+</body>
+</html>

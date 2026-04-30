@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vulkan Chess - Mega Update</title>
+    <title>Vulkan Chess - Social MMO Edition</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
@@ -16,7 +16,7 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, onSnapshot, getDoc, setDoc, orderBy, limit, arrayUnion, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // TWOJA BAZA
+        // TWOJA BAZA FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
             authDomain: "xchess-79e2d.firebaseapp.com",
@@ -33,7 +33,7 @@
 
         window.db = db; window.auth = auth; window.currentUserData = null; window.globalVolume = 0.5;
 
-        // NAPRAWIONE I ZAAKTUALIZOWANE PRZEDMIOTY
+        // BAZA PRZEDMIOTÓW I DŹWIĘKÓW
         window.GAME_ITEMS = {
             boards: {
                 default: { name: "Klasyczna", price: 0, type: "boards", w: "#f0d9b5", b: "#b58863", rarity: "common" },
@@ -62,9 +62,9 @@
 
         window.gameEndSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-end.mp3');
         window.hoverSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/premove.mp3'); 
-        
         window.updateVolume = function(val) { window.globalVolume = val; window.gameEndSound.volume = val; window.hoverSound.volume = val * 0.5; if(window.moveSound) window.moveSound.volume = val; if(window.captureSound) window.captureSound.volume = val; };
 
+        // --- LOGOWANIE I INICJALIZACJA PROFILU ---
         window.loginWithGoogle = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
         window.logout = () => signOut(auth);
 
@@ -89,16 +89,26 @@
                     
                     if(needsUpdate) await updateDoc(doc(db, 'users', user.uid), data);
                     
-                    window.currentUserData = data; updateProfileUI(user.email); applyEquippedItems(); window.updateVolume(0.5);
+                    window.currentUserData = data; 
+                    updateProfileUI(user.email); 
+                    applyEquippedItems(); 
+                    window.updateVolume(0.5);
+                    
+                    // Odpal nasłuchiwanie poczty
+                    listenToMailbox();
+                    // Pokaz przycisk sidebaru
+                    document.getElementById('sidebar-toggle-btn').style.display = 'block';
                 }
             } else {
                 window.currentUserData = null;
                 document.getElementById('login-section').style.display = 'block';
                 document.getElementById('profile-section').style.display = 'none';
                 document.getElementById('wallet-ui').style.display = 'none';
+                document.getElementById('sidebar-toggle-btn').style.display = 'none';
             }
         });
 
+        // --- ZAPIS PROFILU ---
         window.saveProfile = async () => {
             if (!auth.currentUser) return;
             const nick = document.getElementById('nick-input').value.trim(); if (!nick) return;
@@ -146,7 +156,7 @@
             if(email === "zawadzkit117@gmail.com") document.getElementById('admin-btn').style.display = 'block';
         }
 
-        // --- SKLEP I ULEPSZONA SZAFKA ---
+        // --- SKLEP I EKWIPUNEK ---
         window.applyEquippedItems = function() {
             const eq = window.currentUserData.equipped;
             const b = window.GAME_ITEMS.boards[eq.board];
@@ -159,20 +169,17 @@
         window.openShop = function() { showScreen('shop-screen'); renderItemsUI('shop'); };
         window.openInventory = function() { showScreen('inventory-screen'); renderItemsUI('inventory'); };
 
-        function renderItemsUI(mode) { // mode: 'shop' lub 'inventory'
+        function renderItemsUI(mode) { 
             const categories = ['boards', 'pieces', 'sounds'];
             categories.forEach(type => {
-                const container = document.getElementById(`${mode}-${type}-list`);
-                container.innerHTML = "";
+                const container = document.getElementById(`${mode}-${type}-list`); container.innerHTML = "";
                 const owned = window.currentUserData.inventory[type];
                 const equipped = window.currentUserData.equipped[type === 'boards' ? 'board' : type];
 
                 Object.keys(window.GAME_ITEMS[type]).forEach(key => {
                     const item = window.GAME_ITEMS[type][key];
-                    const isOwned = owned.includes(key);
-                    const isEq = equipped === key;
-                    
-                    if(mode === 'inventory' && !isOwned) return; // W szafce pokazujemy tylko posiadane
+                    const isOwned = owned.includes(key); const isEq = equipped === key;
+                    if(mode === 'inventory' && !isOwned) return; 
 
                     let btnHtml = "";
                     if(mode === 'shop') {
@@ -193,8 +200,7 @@
 
                     container.innerHTML += `
                     <div class="shop-card" style="border-top: 3px solid ${rarityColor}; ${isEq ? 'box-shadow: 0 0 20px rgba(40,167,69,0.5); border-color:#28a745;' : ''}">
-                        ${previewHtml}
-                        <h4 style="margin:10px 0 5px 0; color:${rarityColor}; font-size:14px;">${item.name}</h4>
+                        ${previewHtml}<h4 style="margin:10px 0 5px 0; color:${rarityColor}; font-size:14px;">${item.name}</h4>
                         ${mode==='shop' ? `<p style="margin:0 0 10px 0; font-size:12px; color:#aaa;">${isOwned ? 'Zdobyto' : '💎 ' + item.price}</p>` : '<br>'}
                         ${btnHtml}
                     </div>`;
@@ -226,7 +232,137 @@
             alert(`🎁 Otwarto Daily Box!\n\nZdobywasz: 💎 ${coins} Vulkan Coins!`);
         };
 
-        // --- ZABEZPIECZONA LOGIKA MULTIPLAYER ---
+        // ==========================================
+        //  NOWY PANEL ZNAJOMYCH (SIDEBAR)
+        // ==========================================
+        window.toggleSidebar = function() {
+            document.getElementById('friends-sidebar').classList.toggle('open');
+            window.switchSidebarTab('list');
+        };
+
+        window.switchSidebarTab = function(tabName) {
+            document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-tab-${tabName}`).classList.add('active');
+
+            if(tabName === 'list') renderFriendsList();
+        };
+
+        // Renderowanie posiadanych znajomych
+        function renderFriendsList() {
+            const container = document.getElementById('friends-list-container');
+            container.innerHTML = "";
+            if(!window.currentUserData.friends || window.currentUserData.friends.length === 0) {
+                container.innerHTML = "<p style='color:#888; text-align:center; margin-top:20px;'>Brak znajomych. Poszukaj ich w zakładce Szukaj!</p>";
+                return;
+            }
+            window.currentUserData.friends.forEach(f => {
+                container.innerHTML += `
+                <div class="sidebar-item">
+                    <div style="display:flex; align-items:center;">
+                        <img src="${f.avatar}" class="sidebar-avatar">
+                        <span>${f.name}</span>
+                    </div>
+                    <button class="btn" style="width:auto; padding:5px 10px; font-size:12px; margin:0;" onclick="alert('Wyślij ten kod swojemu znajomemu by zagrać prywatnie!')">Wyzwanie</button>
+                </div>`;
+            });
+        }
+
+        // Wyszukiwanie z bazy po prawej stronie
+        window.searchPlayers = async () => {
+            const queryText = document.getElementById('search-input-sidebar').value.trim().toLowerCase();
+            const resultsBox = document.getElementById('search-results-sidebar');
+            if(!queryText) return;
+            
+            resultsBox.innerHTML = "<div class='spinner' style='margin:20px auto'></div>";
+            const snapshot = await getDocs(collection(db, "users"));
+            let html = "";
+            snapshot.forEach(d => {
+                const u = d.data();
+                if(u.uid !== auth.currentUser.uid && u.displayName.toLowerCase().includes(queryText)) {
+                    // Sprawdzenie czy już jest znajomym
+                    const isFriend = window.currentUserData.friends.find(f => f.uid === u.uid);
+                    html += `
+                    <div class="sidebar-item">
+                        <div style="display:flex; align-items:center;">
+                            <img src="${u.avatar}" class="sidebar-avatar">
+                            <div>
+                                <span style="font-weight:bold; display:block;">${u.displayName}</span>
+                                <span style="font-size:10px; color:gold;">${u.elo} ELO</span>
+                            </div>
+                        </div>
+                        ${isFriend ? `<span style="font-size:12px; color:#888;">Znajomy</span>` : `<button class="btn" style="width:auto; padding:5px 10px; font-size:12px; margin:0;" onclick="window.sendFriendRequest('${u.uid}', '${u.displayName}')">Dodaj</button>`}
+                    </div>`;
+                }
+            });
+            resultsBox.innerHTML = html || "<p style='color:#888; text-align:center;'>Nie znaleziono gracza.</p>";
+        };
+
+        window.sendFriendRequest = async (toUid, toName) => {
+            await addDoc(collection(db, "mail"), {
+                type: "friend_request", fromUid: auth.currentUser.uid,
+                fromName: window.currentUserData.displayName, fromAvatar: window.currentUserData.avatar,
+                toUid: toUid, timestamp: Date.now()
+            });
+            alert(`Wysłano zaproszenie do: ${toName}`);
+            document.getElementById('search-input-sidebar').value = '';
+            document.getElementById('search-results-sidebar').innerHTML = '';
+        };
+
+        // Nasłuchiwanie na pocztę (zaproszenia) w czasie rzeczywistym!
+        function listenToMailbox() {
+            const q = query(collection(db, "mail"), where("toUid", "==", auth.currentUser.uid));
+            onSnapshot(q, (snapshot) => {
+                const mailBox = document.getElementById('mail-list-container');
+                let mailHtml = "";
+                let count = 0;
+                
+                snapshot.forEach(d => {
+                    count++;
+                    const mail = d.data();
+                    mailHtml += `
+                    <div class="sidebar-item" style="flex-direction:column; align-items:flex-start;">
+                        <div style="display:flex; align-items:center; margin-bottom:10px;">
+                            <img src="${mail.fromAvatar}" class="sidebar-avatar">
+                            <span style="font-size:13px;"><b>${mail.fromName}</b> zaprasza Cię!</span>
+                        </div>
+                        <div style="display:flex; gap:10px; width:100%;">
+                            <button class="btn" style="background:#28a745; margin:0; padding:5px; font-size:12px;" onclick="window.acceptFriend('${d.id}', '${mail.fromUid}', '${mail.fromName}', '${mail.fromAvatar}')">Akceptuj</button>
+                            <button class="btn" style="background:#dc3545; margin:0; padding:5px; font-size:12px;" onclick="window.deleteMail('${d.id}')">Odrzuć</button>
+                        </div>
+                    </div>`;
+                });
+                mailBox.innerHTML = mailHtml || "<p style='color:#888; text-align:center;'>Brak nowych powiadomień.</p>";
+                
+                // Czerwona kropka powiadomienia
+                const notifDot = document.getElementById('sidebar-notif-dot');
+                if(count > 0) {
+                    notifDot.style.display = 'block';
+                    notifDot.innerText = count;
+                } else {
+                    notifDot.style.display = 'none';
+                }
+            });
+        }
+
+        window.deleteMail = async (mailId) => { await deleteDoc(doc(db, "mail", mailId)); };
+
+        window.acceptFriend = async (mailId, friendUid, friendName, friendAvatar) => {
+            const myRef = doc(db, "users", auth.currentUser.uid);
+            await updateDoc(myRef, { friends: arrayUnion({ uid: friendUid, name: friendName, avatar: friendAvatar }) });
+            window.currentUserData.friends.push({ uid: friendUid, name: friendName, avatar: friendAvatar });
+
+            const friendRef = doc(db, "users", friendUid);
+            await updateDoc(friendRef, { friends: arrayUnion({ uid: auth.currentUser.uid, name: window.currentUserData.displayName, avatar: window.currentUserData.avatar }) });
+            await window.deleteMail(mailId);
+            alert(`Dodano ${friendName} do znajomych!`);
+            window.switchSidebarTab('list'); // powrót do listy
+        };
+
+
+        // --- LOGIKA MULTIPLAYER ---
         window.currentGameId = null; window.playerColor = 'w'; window.gameStatus = 'menu';
         window.opponentUid = null; window.gameMode = 'casual'; window.myTime = 0; window.opponentTime = 0; window.timerInterval = null;
 
@@ -270,7 +406,7 @@
 
             if (gameToJoin) {
                 const gData = gameToJoin.data(); window.currentGameId = gameToJoin.id; window.opponentUid = gData.creatorUid;
-                window.playerColor = gData.creatorColor === 'w' ? 'b' : 'w'; // Odwrotność koloru twórcy = Brak bugów z tura
+                window.playerColor = gData.creatorColor === 'w' ? 'b' : 'w'; 
                 
                 const updates = { status: "playing", joinerUid: auth.currentUser.uid };
                 if (window.playerColor === 'b') {
@@ -287,8 +423,10 @@
                 window.playerColor = Math.random() < 0.5 ? 'w' : 'b';
                 const newGame = { status: "waiting", fen: "start", mode: window.gameMode, creatorUid: auth.currentUser.uid, creatorColor: window.playerColor, messages: [] };
                 if(isPrivate) newGame.privateCode = privateCode;
+
                 if (window.playerColor === 'w') { newGame.whitePlayer = window.currentUserData.displayName; newGame.whiteAvatar = window.currentUserData.avatar; } 
                 else { newGame.blackPlayer = window.currentUserData.displayName; newGame.blackAvatar = window.currentUserData.avatar; }
+                
                 const res = await addDoc(collection(db, "games"), newGame); window.currentGameId = res.id;
                 startBoard(window.playerColor); listenToGame();
             }
@@ -414,6 +552,7 @@
         .shop-card { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; align-items: center; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.5);} .shop-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.05); background: rgba(0,0,0,0.7);}
         .shop-btn { padding: 8px; font-size: 12px; margin-top: auto; background: linear-gradient(135deg, #d4af37, #b8860b); color: #000; text-shadow: none;} .shop-btn:hover { background: linear-gradient(135deg, #fff, #ffd700); color:#000; box-shadow: 0 0 15px gold;}
         
+        /* Gra */
         .match-player { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 10px; margin: 8px auto; width: 420px; border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box;} .player-left { display: flex; align-items: center; } .player-left img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 12px; border: 2px solid #444;}
         .timer { font-size: 22px; font-weight: bold; font-family: monospace; color: #fff; background: rgba(255, 69, 0, 0.2); padding: 5px 12px; border-radius: 8px; border: 1px solid var(--vulcan-red); text-shadow: 0 0 8px var(--vulcan-glow);}
         
@@ -426,12 +565,69 @@
         
         .list-container { background: rgba(0,0,0,0.5); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,69,0,0.2); margin-bottom: 20px; overflow-y:auto; text-align:left; max-height:200px;} .list-item { display: flex; justify-content: space-between; align-items:center; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;} .list-item:hover { background: rgba(255,69,0,0.1); border-radius: 8px;}
         .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,69,0,0.1); border-top-color: var(--vulcan-glow); border-radius: 50%; animation: spin 1s infinite cubic-bezier(0.55, 0.15, 0.45, 0.85); margin-bottom: 20px; } @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* =========================================================
+           NOWOŚĆ: SIDEBAR ZNAJOMYCH PO PRAWEJ STRONIE
+           ========================================================= */
+        .sidebar-toggle-btn { position: fixed; right: 0; top: 50%; transform: translateY(-50%); background: var(--vulcan-red); color: white; padding: 15px 10px; border-radius: 10px 0 0 10px; cursor: pointer; border: 1px solid var(--vulcan-glow); border-right: none; z-index: 101; writing-mode: vertical-rl; text-orientation: mixed; font-weight: bold; font-size: 16px; box-shadow: -5px 0 15px rgba(255,69,0,0.5); transition: 0.3s; display:none;}
+        .sidebar-toggle-btn:hover { background: var(--vulcan-glow); padding-right: 15px;}
+        .notif-dot { position: absolute; top: 5px; right: 5px; background: red; color: white; font-size: 12px; width: 18px; height: 18px; border-radius: 50%; display: flex; justify-content: center; align-items: center; writing-mode: horizontal-tb; border: 1px solid white; display: none;}
+
+        .friends-sidebar { position: fixed; right: -360px; top: 0; width: 340px; height: 100vh; background: rgba(10,0,0,0.95); border-left: 2px solid var(--vulcan-red); transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 105; padding: 20px; box-sizing: border-box; box-shadow: -10px 0 30px rgba(0,0,0,0.9); display: flex; flex-direction: column; text-align: left;}
+        .friends-sidebar.open { right: 0; }
+        
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,69,0,0.3); padding-bottom: 15px; margin-bottom: 15px; }
+        .sidebar-header h2 { margin: 0; color: var(--vulcan-glow); font-size: 22px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px var(--vulcan-glow);}
+        .close-btn { background: transparent; color: white; border: none; font-size: 24px; cursor: pointer; transition: 0.2s;} .close-btn:hover { color: var(--vulcan-glow); transform: scale(1.2); }
+
+        .sidebar-tabs { display: flex; margin-bottom: 15px; background: rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);}
+        .tab-btn { flex: 1; background: transparent; border: none; color: #aaa; padding: 10px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px;}
+        .tab-btn.active { background: rgba(255,69,0,0.2); color: white; border-bottom: 2px solid var(--vulcan-glow); }
+
+        .sidebar-tab { display: none; flex-grow: 1; overflow-y: auto; padding-right: 5px;}
+        .sidebar-tab.active { display: block; }
+        
+        .sidebar-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.02);}
+        .sidebar-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; margin-right: 10px; border: 1px solid var(--vulcan-glow);}
+
     </style>
 </head>
 <body>
     <div class="lava-lamp"><div class="bubble b1"></div><div class="bubble b2"></div><div class="bubble b3"></div></div>
 
     <div id="wallet-ui" class="wallet-display" style="display:none;">💎 <span id="player-coins">0</span></div>
+
+    <div class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="window.toggleSidebar()">
+        👥 ZNAJOMI
+        <div class="notif-dot" id="sidebar-notif-dot">!</div>
+    </div>
+
+    <div id="friends-sidebar" class="friends-sidebar">
+        <div class="sidebar-header">
+            <h2>Społeczność</h2>
+            <button class="close-btn" onclick="window.toggleSidebar()">✖</button>
+        </div>
+        
+        <div class="sidebar-tabs">
+            <button class="tab-btn active" id="btn-tab-list" onclick="window.switchSidebarTab('list')">Lista</button>
+            <button class="tab-btn" id="btn-tab-search" onclick="window.switchSidebarTab('search')">Szukaj</button>
+            <button class="tab-btn" id="btn-tab-mail" onclick="window.switchSidebarTab('mail')">Poczta</button>
+        </div>
+
+        <div id="tab-list" class="sidebar-tab active">
+            <div id="friends-list-container"></div>
+        </div>
+
+        <div id="tab-search" class="sidebar-tab">
+            <input type="text" id="search-input-sidebar" placeholder="Wpisz nick..." class="custom-input" style="width:100%; margin-top:0;">
+            <button class="btn" onclick="window.searchPlayers()">Szukaj w bazie</button>
+            <div id="search-results-sidebar" style="margin-top:15px;"></div>
+        </div>
+
+        <div id="tab-mail" class="sidebar-tab">
+            <div id="mail-list-container"></div>
+        </div>
+    </div>
 
     <div id="menu-screen" class="screen active">
         <div class="menu-container">
@@ -478,11 +674,12 @@
                 </div>
 
                 <div class="row-buttons" style="margin-top:12px;">
+                    <button class="btn" style="background: linear-gradient(135deg, #004d00, #003300);" onclick="window.findOnlineMatch(true)">🤝 Graj Prywatnie</button>
                     <button class="btn" style="background: linear-gradient(135deg, #440000, #220000);" onclick="startBotMatch()">🤖 Gra z Botem</button>
-                    <button class="btn" style="background: linear-gradient(135deg, #333, #111);" onclick="window.loadLeaderboard()">🏆 Ranking</button>
                 </div>
                 
                 <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; padding: 0 10px;">
+                    <button class="btn" style="width: auto; padding: 8px 15px; margin:0; background: linear-gradient(135deg, #333, #111);" onclick="window.loadLeaderboard()">🏆 Ranking</button>
                     <label style="font-size:12px; color:#aaa; display:flex; align-items:center; gap:5px;">🔊 Głośność <input type="range" min="0" max="1" step="0.1" value="0.5" onchange="window.updateVolume(this.value)"></label>
                     <button style="background:transparent; color:#888; border:none; cursor:pointer; font-weight:bold;" onclick="window.logout()">Wyloguj</button>
                 </div>
@@ -493,16 +690,12 @@
     <div id="shop-screen" class="screen">
         <div class="menu-container" style="max-width: 800px;">
             <h2 style="color:var(--text-light); margin-top:0;">🛒 Sklep Vulkan</h2>
-            
             <h3 style="color:var(--vulcan-glow); text-align:left; border-bottom: 1px solid #333; padding-bottom:5px;">Epickie Plansze</h3>
             <div class="shop-grid" id="shop-boards-list"></div>
-            
             <h3 style="color:var(--vulcan-glow); text-align:left; border-bottom: 1px solid #333; padding-bottom:5px;">Zestawy Pionków</h3>
             <div class="shop-grid" id="shop-pieces-list"></div>
-            
             <h3 style="color:var(--vulcan-glow); text-align:left; border-bottom: 1px solid #333; padding-bottom:5px;">Pakiety Dźwiękowe</h3>
             <div class="shop-grid" id="shop-sounds-list"></div>
-            
             <button class="btn" style="background:transparent; border: 1px solid #555;" onclick="showScreen('menu-screen')">Wróć do Menu</button>
         </div>
     </div>
@@ -510,16 +703,12 @@
     <div id="inventory-screen" class="screen">
         <div class="menu-container" style="max-width: 800px;">
             <h2 style="color:var(--text-light); margin-top:0;">🎒 Twoja Szafka</h2>
-            
             <h3 style="color:var(--vulcan-glow); text-align:left; border-bottom: 1px solid #333; padding-bottom:5px;">Motywy Planszy</h3>
             <div class="shop-grid" id="inventory-boards-list"></div>
-            
             <h3 style="color:var(--vulcan-glow); text-align:left; border-bottom: 1px solid #333; padding-bottom:5px;">Style Pionków</h3>
             <div class="shop-grid" id="inventory-pieces-list"></div>
-            
             <h3 style="color:var(--vulcan-glow); text-align:left; border-bottom: 1px solid #333; padding-bottom:5px;">Efekty Dźwiękowe</h3>
             <div class="shop-grid" id="inventory-sounds-list"></div>
-            
             <button class="btn" style="background:transparent; border: 1px solid #555;" onclick="showScreen('menu-screen')">Wróć</button>
         </div>
     </div>
@@ -568,7 +757,6 @@
         function onDragStart(s, p) {
             if (window.game.game_over()) return false;
             if (window.isOnline) {
-                // BLOKADA TURY DLA MULTIPLAYERA WPROWADZONA TUTAJ!
                 if (window.gameStatus !== 'playing') return false;
                 if ((window.playerColor === 'w' && p.search(/^b/) !== -1) || (window.playerColor === 'b' && p.search(/^w/) !== -1)) return false;
                 if (window.game.turn() !== window.playerColor) return false;

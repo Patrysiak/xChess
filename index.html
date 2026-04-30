@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grandmaster Web Chess - Vulkan Profile Edition</title>
+    <title>Vulkan Chess - Ultimate Edition</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
@@ -13,7 +13,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, onSnapshot, getDoc, setDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, onSnapshot, getDoc, setDoc, orderBy, limit, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         // TWOJA KONFIGURACJA
         const firebaseConfig = {
@@ -22,8 +22,7 @@
             projectId: "xchess-79e2d",
             storageBucket: "xchess-79e2d.firebasestorage.app",
             messagingSenderId: "382071993193",
-            appId: "1:382071993193:web:86dbe5211f2151cb5383f8",
-            measurementId: "G-E8RJF7LKLE"
+            appId: "1:382071993193:web:86dbe5211f2151cb5383f8"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -31,28 +30,25 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        window.db = db; 
-        window.auth = auth;
+        window.db = db; window.auth = auth;
         window.currentUserData = null;
 
-        window.loginWithGoogle = function() {
-            signInWithPopup(auth, provider).catch((error) => alert("Błąd: " + error.message));
-        };
-        window.logout = function() { signOut(auth); };
+        // DŹWIĘKI
+        window.moveSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3');
+        window.captureSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3');
+        window.gameEndSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-end.mp3');
 
-        // Zarządzanie profilem przy logowaniu
+        window.loginWithGoogle = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
+        window.logout = () => signOut(auth);
+
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const userRef = doc(db, 'users', user.uid);
-                const docSnap = await getDoc(userRef);
-                
+                const docSnap = await getDoc(doc(db, 'users', user.uid));
                 if (!docSnap.exists()) {
-                    // 1. PIERWSZE LOGOWANIE - Przejście do konfiguracji
                     document.getElementById('nick-input').value = user.displayName;
                     document.getElementById('preview-avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`;
                     showScreen('setup-screen');
                 } else {
-                    // 2. STARY GRACZ - Wczytanie profilu
                     window.currentUserData = docSnap.data();
                     updateProfileUI();
                 }
@@ -63,159 +59,131 @@
             }
         });
 
-        // --- TWORZENIE I EDYCJA PROFILU ---
-        window.editProfile = function() {
+        // --- ZARZĄDZANIE PROFILEM ---
+        window.editProfile = () => {
             document.getElementById('nick-input').value = window.currentUserData.displayName;
             document.getElementById('preview-avatar').src = window.currentUserData.avatar;
             showScreen('setup-screen');
         };
 
-        // Podgląd obrazka po wybraniu z dysku
         document.getElementById('avatar-upload').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
+            if (e.target.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(event) {
-                    document.getElementById('preview-avatar').src = event.target.result;
-                }
-                reader.readAsDataURL(file);
+                reader.onload = event => document.getElementById('preview-avatar').src = event.target.result;
+                reader.readAsDataURL(e.target.files[0]);
             }
         });
 
-        // Zapisywanie profilu i kompresja zdjęcia
-        window.saveProfile = async function() {
+        window.saveProfile = async () => {
             if (!auth.currentUser) return;
             const nick = document.getElementById('nick-input').value.trim();
-            if (!nick) return alert("Nick nie może być pusty!");
+            if (!nick) return;
 
             document.getElementById('setup-btn').innerText = "Zapisywanie...";
-
             const fileInput = document.getElementById('avatar-upload');
             let finalAvatar = document.getElementById('preview-avatar').src;
 
-            // Jeśli użytkownik dodał nowe zdjęcie, kompresujemy je
             if (fileInput.files && fileInput.files[0]) {
-                finalAvatar = await compressImage(fileInput.files[0]);
+                finalAvatar = await new Promise(res => {
+                    const r = new FileReader(); r.onload = e => {
+                        const img = new Image(); img.onload = () => {
+                            const cvs = document.createElement('canvas'); cvs.width = 150; cvs.height = 150;
+                            const size = Math.min(img.width, img.height);
+                            cvs.getContext('2d').drawImage(img, (img.width-size)/2, (img.height-size)/2, size, size, 0, 0, 150, 150);
+                            res(cvs.toDataURL('image/jpeg', 0.8));
+                        }; img.src = e.target.result;
+                    }; r.readAsDataURL(fileInput.files[0]);
+                });
             }
 
-            const userRef = doc(db, 'users', auth.currentUser.uid);
             const newProfile = {
-                uid: auth.currentUser.uid,
-                displayName: nick,
-                avatar: finalAvatar,
-                elo: window.currentUserData ? window.currentUserData.elo : 1000 // Zachowaj ELO przy edycji
+                uid: auth.currentUser.uid, displayName: nick, avatar: finalAvatar,
+                elo: window.currentUserData ? window.currentUserData.elo : 1000
             };
-
-            await setDoc(userRef, newProfile);
+            await setDoc(doc(db, 'users', auth.currentUser.uid), newProfile);
             window.currentUserData = newProfile;
-            updateProfileUI();
-            
-            document.getElementById('setup-btn').innerText = "Zapisz profil i Graj";
+            updateProfileUI(); document.getElementById('setup-btn').innerText = "Zapisz profil";
             showScreen('menu-screen');
         };
-
-        // Narzędzie do ucinania i kompresowania grafik (żeby nie zapchać bazy)
-        function compressImage(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = 150; canvas.height = 150; // Idealny rozmiar na miniaturkę
-                        const ctx = canvas.getContext('2d');
-                        
-                        // Centrowanie i wycinanie kwadratu
-                        const minSize = Math.min(img.width, img.height);
-                        const startX = (img.width - minSize) / 2;
-                        const startY = (img.height - minSize) / 2;
-                        
-                        ctx.drawImage(img, startX, startY, minSize, minSize, 0, 0, 150, 150);
-                        resolve(canvas.toDataURL('image/jpeg', 0.8)); // Zapisz jako jakość 80% JPEG
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
 
         function updateProfileUI() {
             document.getElementById('profile-img').src = window.currentUserData.avatar;
             document.getElementById('player-nick').innerText = window.currentUserData.displayName;
             document.getElementById('player-elo').innerText = window.currentUserData.elo;
-            
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('profile-section').style.display = 'flex';
         }
 
-        // --- ZABEZPIECZONA LOGIKA MULTIPLAYER Z PROFILAMI ---
-        window.currentGameId = null;
-        window.playerColor = 'w';
-        window.gameStatus = 'menu';
+        // --- TRYBY I MULTIPLAYER ---
+        window.currentGameId = null; window.playerColor = 'w'; window.gameStatus = 'menu';
+        window.opponentUid = null; window.gameMode = 'casual'; 
+        window.myTime = 0; window.opponentTime = 0; window.timerInterval = null;
 
-        window.findOnlineMatch = async function() {
-            if (!auth.currentUser || !window.currentUserData) return alert("Musisz się zalogować!");
+        function setTimersByMode(mode) {
+            if(mode === 'blitz') return 5 * 60; // 5 min
+            if(mode === 'tournament') return 10 * 60; // 10 min
+            return 999 * 60; // casual (brak limitu praktycznie)
+        }
+
+        window.findOnlineMatch = async () => {
+            if (!auth.currentUser || !window.currentUserData) return alert("Zaloguj się!");
+            
+            window.gameMode = document.getElementById('game-mode-select').value;
+            const startingTime = setTimersByMode(window.gameMode);
+            window.myTime = startingTime; window.opponentTime = startingTime;
             
             showScreen('game-screen');
             document.getElementById('waiting-overlay').style.display = 'flex';
-            document.getElementById('status').innerText = "Szukanie przeciwnika...";
-            
-            // Ustawienie własnego awatara na dole ekranu gry
+            document.getElementById('chat-messages').innerHTML = ''; // czyszczenie czatu
             document.getElementById('my-avatar').src = window.currentUserData.avatar;
             document.getElementById('my-name').innerText = window.currentUserData.displayName;
             document.getElementById('opponent-avatar').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Puste";
-            document.getElementById('opponent-name').innerText = "Szukanie gracza...";
+            document.getElementById('opponent-name').innerText = "Szukanie...";
             
-            window.isOnline = true;
-            window.gameStatus = 'waiting';
-            window.game.reset();
+            window.isOnline = true; window.gameStatus = 'waiting'; window.game.reset();
             
-            const gamesRef = collection(db, "games");
-            const q = query(gamesRef, where("status", "==", "waiting"));
-            const querySnapshot = await getDocs(q);
+            const q = query(collection(db, "games"), where("status", "==", "waiting"), where("mode", "==", window.gameMode));
+            const snapshot = await getDocs(q);
 
             let gameToJoin = null;
-            querySnapshot.forEach((docSnap) => {
-                if (docSnap.data().creatorUid !== auth.currentUser.uid) gameToJoin = docSnap;
-            });
+            snapshot.forEach(d => { if (d.data().creatorUid !== auth.currentUser.uid) gameToJoin = d; });
 
             if (gameToJoin) {
-                const gameData = gameToJoin.data();
-                window.currentGameId = gameToJoin.id;
+                // DOŁĄCZANIE
+                const gData = gameToJoin.data(); window.currentGameId = gameToJoin.id;
+                window.opponentUid = gData.creatorUid;
                 
-                if (gameData.whitePlayer) {
+                const updates = { status: "playing", joinerUid: auth.currentUser.uid };
+                if (gData.whitePlayer) {
                     window.playerColor = 'b';
-                    document.getElementById('opponent-avatar').src = gameData.whiteAvatar;
-                    document.getElementById('opponent-name').innerText = gameData.whitePlayer;
-                    await updateDoc(doc(db, "games", window.currentGameId), { 
-                        status: "playing", blackPlayer: window.currentUserData.displayName, blackAvatar: window.currentUserData.avatar
-                    });
+                    document.getElementById('opponent-avatar').src = gData.whiteAvatar;
+                    document.getElementById('opponent-name').innerText = gData.whitePlayer;
+                    updates.blackPlayer = window.currentUserData.displayName;
+                    updates.blackAvatar = window.currentUserData.avatar;
                 } else {
                     window.playerColor = 'w';
-                    document.getElementById('opponent-avatar').src = gameData.blackAvatar;
-                    document.getElementById('opponent-name').innerText = gameData.blackPlayer;
-                    await updateDoc(doc(db, "games", window.currentGameId), { 
-                        status: "playing", whitePlayer: window.currentUserData.displayName, whiteAvatar: window.currentUserData.avatar
-                    });
+                    document.getElementById('opponent-avatar').src = gData.blackAvatar;
+                    document.getElementById('opponent-name').innerText = gData.blackPlayer;
+                    updates.whitePlayer = window.currentUserData.displayName;
+                    updates.whiteAvatar = window.currentUserData.avatar;
                 }
-                startBoard(window.playerColor);
-                listenToGame();
+                await updateDoc(doc(db, "games", window.currentGameId), updates);
+                startBoard(window.playerColor); listenToGame();
             } else {
+                // TWORZENIE
                 window.playerColor = Math.random() < 0.5 ? 'w' : 'b';
-                const newGameData = { status: "waiting", fen: "start", creatorUid: auth.currentUser.uid };
-                
+                const newGame = { 
+                    status: "waiting", fen: "start", mode: window.gameMode, 
+                    creatorUid: auth.currentUser.uid, messages: [] 
+                };
                 if (window.playerColor === 'w') {
-                    newGameData.whitePlayer = window.currentUserData.displayName;
-                    newGameData.whiteAvatar = window.currentUserData.avatar;
+                    newGame.whitePlayer = window.currentUserData.displayName; newGame.whiteAvatar = window.currentUserData.avatar;
                 } else {
-                    newGameData.blackPlayer = window.currentUserData.displayName;
-                    newGameData.blackAvatar = window.currentUserData.avatar;
+                    newGame.blackPlayer = window.currentUserData.displayName; newGame.blackAvatar = window.currentUserData.avatar;
                 }
-
-                const newGame = await addDoc(gamesRef, newGameData);
-                window.currentGameId = newGame.id;
-                startBoard(window.playerColor);
-                listenToGame();
+                const res = await addDoc(collection(db, "games"), newGame);
+                window.currentGameId = res.id;
+                startBoard(window.playerColor); listenToGame();
             }
         };
 
@@ -224,288 +192,271 @@
                 if (!docSnap.exists()) return;
                 const data = docSnap.data();
                 
-                if (data.status === 'playing') {
+                // Aktualizacja przeciwnika
+                if (data.status === 'playing' && window.gameStatus === 'waiting') {
                     window.gameStatus = 'playing';
                     document.getElementById('waiting-overlay').style.display = 'none';
+                    window.opponentUid = data.joinerUid === auth.currentUser.uid ? data.creatorUid : data.joinerUid;
                     
-                    if (document.getElementById('opponent-name').innerText === "Szukanie gracza...") {
-                        document.getElementById('opponent-avatar').src = window.playerColor === 'w' ? data.blackAvatar : data.whiteAvatar;
-                        document.getElementById('opponent-name').innerText = window.playerColor === 'w' ? data.blackPlayer : data.whitePlayer;
+                    if(window.playerColor === 'w') {
+                        document.getElementById('opponent-avatar').src = data.blackAvatar;
+                        document.getElementById('opponent-name').innerText = data.blackPlayer;
+                    } else {
+                        document.getElementById('opponent-avatar').src = data.whiteAvatar;
+                        document.getElementById('opponent-name').innerText = data.whitePlayer;
                     }
-                    
-                    window.updateStatusLocal(); 
-                    if (data.fen !== window.game.fen() && data.fen !== "start") {
-                        window.game.load(data.fen);
-                        window.board.position(window.game.fen());
-                        window.updateStatusLocal();
+                    startTimers(); // Start zegarów
+                }
+
+                // Aktualizacja ruchów
+                if (data.status === 'playing' && data.fen !== window.game.fen()) {
+                    window.game.load(data.fen); window.board.position(window.game.fen());
+                    window.moveSound.play();
+                    window.updateStatusLocal();
+                }
+
+                // Czat
+                if (data.messages) {
+                    const chatBox = document.getElementById('chat-messages');
+                    chatBox.innerHTML = data.messages.map(m => `<p><b>${m.nick}:</b> ${m.text}</p>`).join('');
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+
+                // Koniec gry (ktoś uciekł lub mat)
+                if (data.status === 'finished' && window.gameStatus === 'playing') {
+                    window.gameStatus = 'finished';
+                    stopTimers(); window.gameEndSound.play();
+                    if(data.winnerUid === auth.currentUser.uid) {
+                        alert(`Wygrałeś! Przeciwnik: ${data.reason}. ${window.gameMode !== 'casual' ? '+15 ELO' : ''}`);
+                    } else {
+                        alert(`Przegrałeś! Powód: ${data.reason}. ${window.gameMode !== 'casual' ? '-15 ELO' : ''}`);
                     }
+                    showScreen('menu-screen');
                 }
             });
         }
 
-        window.updateGameFen = async function(fenStr) {
-            if (window.currentGameId) await updateDoc(doc(db, "games", window.currentGameId), { fen: fenStr });
+        // --- ZEGARY ---
+        function startTimers() {
+            if(window.gameMode === 'casual') return; // Bez czasu
+            window.timerInterval = setInterval(() => {
+                if(window.gameStatus !== 'playing') return stopTimers();
+                
+                if(window.game.turn() === window.playerColor) {
+                    window.myTime--;
+                    if(window.myTime <= 0) endGame('timeout', window.opponentUid); // Skończył mi się czas
+                } else {
+                    window.opponentTime--;
+                }
+                updateTimerUI();
+            }, 1000);
+        }
+        function stopTimers() { clearInterval(window.timerInterval); }
+        function formatTime(s) { const m=Math.floor(s/60); const sec=s%60; return `${m}:${sec<10?'0':''}${sec}`; }
+        function updateTimerUI() {
+            document.getElementById('my-timer').innerText = formatTime(window.myTime);
+            document.getElementById('opponent-timer').innerText = formatTime(window.opponentTime);
+        }
+
+        // --- ELO I KONIEC GRY ---
+        async function adjustElo(uid, amount) {
+            if(window.gameMode === 'casual' || !uid) return;
+            const ref = doc(db, 'users', uid);
+            const snap = await getDoc(ref);
+            if(snap.exists()) {
+                await updateDoc(ref, { elo: snap.data().elo + amount });
+                if(uid === auth.currentUser.uid) window.currentUserData.elo += amount;
+            }
+        }
+
+        window.endGame = async function(reason, winnerUid) {
+            if(window.gameStatus !== 'playing') return;
+            window.gameStatus = 'finished'; stopTimers();
+            
+            await updateDoc(doc(db, "games", window.currentGameId), { status: "finished", winnerUid: winnerUid, reason: reason });
+            
+            // Rozdanie ELO
+            if(window.gameMode !== 'casual') {
+                if(winnerUid === auth.currentUser.uid) { await adjustElo(auth.currentUser.uid, 15); await adjustElo(window.opponentUid, -15); }
+                else { await adjustElo(auth.currentUser.uid, -15); await adjustElo(window.opponentUid, 15); }
+            }
+            updateProfileUI();
         };
 
-        // --- TABELA WYNIKÓW ---
-        window.loadLeaderboard = async function() {
+        window.quitGame = async function() {
+            if (window.isOnline && window.gameStatus === 'playing') {
+                if(confirm("Opuszczenie gry oznacza przegraną i utratę ELO. Na pewno?")) {
+                    await window.endGame('ucieczka', window.opponentUid); // Wygrywa przeciwnik
+                } else return;
+            } else if (window.currentGameId && window.gameStatus === 'waiting') {
+                await updateDoc(doc(db, "games", window.currentGameId), { status: "cancelled" });
+            }
+            window.currentGameId = null; window.isOnline = false; isPlayingBot = false; window.gameStatus = 'menu';
+            stopTimers(); showScreen('menu-screen');
+        };
+
+        // --- CZAT ---
+        window.sendChat = async function(e) {
+            if(e.key === 'Enter' && e.target.value.trim() !== '') {
+                const text = e.target.value.trim(); e.target.value = '';
+                await updateDoc(doc(db, "games", window.currentGameId), {
+                    messages: arrayUnion({ nick: window.currentUserData.displayName, text: text })
+                });
+            }
+        };
+
+        // --- RANKING ---
+        window.loadLeaderboard = async () => {
             showScreen('leaderboard-screen');
-            const list = document.getElementById('leaderboard-list');
-            list.innerHTML = "<p>Ładowanie rankingu...</p>";
-            
-            const usersRef = collection(db, "users");
-            const q = query(usersRef, orderBy("elo", "desc"), limit(10));
-            const snapshot = await getDocs(q);
-            
+            const list = document.getElementById('leaderboard-list'); list.innerHTML = "Ładowanie...";
+            const snapshot = await getDocs(query(collection(db, "users"), orderBy("elo", "desc"), limit(10)));
             let html = ""; let rank = 1;
-            snapshot.forEach(doc => {
-                const d = doc.data();
-                html += `
-                <div class="list-item">
+            snapshot.forEach(d => {
+                html += `<div class="list-item">
                     <div style="display:flex; align-items:center;">
                         <strong style="margin-right:15px; color:#ff4500;">#${rank}</strong>
-                        <img src="${d.avatar}" style="width:30px; height:30px; object-fit:cover; background:#fff; border-radius:50%; margin-right:10px;">
-                        <span>${d.displayName}</span>
-                    </div>
-                    <strong style="color:#ffd700;">${d.elo} ELO</strong>
-                </div>`;
-                rank++;
+                        <img src="${d.data().avatar}" style="width:30px; height:30px; border-radius:50%; margin-right:10px; object-fit:cover;">
+                        <span>${d.data().displayName}</span>
+                    </div><strong style="color:#ffd700;">${d.data().elo} ELO</strong></div>`; rank++;
             });
             list.innerHTML = html;
         };
     </script>
 
     <style>
-        /* === MOTYW VULKAN (LAWA) === */
-        :root {
-            --vulcan-dark: #1a0505;
-            --vulcan-red: #8B0000;
-            --vulcan-glow: #ff4500;
-            --text-light: #fff;
-        }
-
-        body { 
-            margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; 
-            color: var(--text-light); display: flex; 
-            justify-content: center; align-items: center; 
-            height: 100vh; overflow: hidden;
-            background: linear-gradient(45deg, #0a0000, #3a0000, #140000);
-            background-size: 300% 300%;
-            animation: lavaFlow 10s ease infinite;
-        }
-
-        @keyframes lavaFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .screen { display: none; width: 100%; max-width: 600px; text-align: center; }
-        .active { display: block; }
+        /* === VULKAN STYL === */
+        :root { --vulcan-red: #8B0000; --vulcan-glow: #ff4500; --text-light: #fff; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; color: var(--text-light); display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(45deg, #0a0000, #3a0000, #140000); background-size: 300% 300%; animation: lavaFlow 10s infinite; overflow: hidden; }
+        @keyframes lavaFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .screen { display: none; width: 100%; max-width: 600px; text-align: center; } .active { display: block; }
+        .menu-container { background: rgba(0, 0, 0, 0.8); padding: 30px; border-radius: 15px; border: 1px solid var(--vulcan-red); box-shadow: 0 0 30px rgba(255, 69, 0, 0.3); margin: 0 auto; max-height: 90vh; overflow-y: auto;}
+        h1 span { color: var(--vulcan-glow); text-shadow: 0 0 10px var(--vulcan-glow); }
+        .btn { width: 100%; padding: 12px; margin-bottom: 10px; font-weight: bold; color: white; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; background: var(--vulcan-red); text-transform: uppercase; }
+        .btn:hover { background: var(--vulcan-glow); box-shadow: 0 0 15px var(--vulcan-glow); }
+        .custom-input { width: 80%; padding: 10px; margin: 10px auto; border-radius: 5px; border: 1px solid var(--vulcan-red); background: #111; color: white; display: block; text-align: center;}
         
-        .menu-container { 
-            background: rgba(0, 0, 0, 0.7); padding: 40px; 
-            border-radius: 15px; backdrop-filter: blur(10px); 
-            border: 1px solid var(--vulcan-red);
-            box-shadow: 0 0 30px rgba(255, 69, 0, 0.3);
-            margin: 0 auto; 
-        }
-
-        .game-title { font-size: 36px; text-transform: uppercase; letter-spacing: 2px; }
-        .game-title span { color: var(--vulcan-glow); text-shadow: 0 0 10px var(--vulcan-glow); }
-
-        /* Edycja Profilu (Inputy) */
-        .custom-input {
-            width: 80%; padding: 12px; margin: 15px auto; display: block;
-            border-radius: 8px; border: 1px solid var(--vulcan-red);
-            background: rgba(0,0,0,0.5); color: white; font-size: 16px;
-            text-align: center; font-weight: bold;
-        }
-        .custom-input:focus { outline: none; border-color: var(--vulcan-glow); box-shadow: 0 0 10px var(--vulcan-glow); }
-
-        .file-upload-btn {
-            background: #440000; border: 1px solid var(--vulcan-red);
-            padding: 10px 20px; border-radius: 8px; cursor: pointer; color: white;
-            font-weight: bold; display: inline-block; margin-bottom: 20px;
-        }
-
-        /* Profil użytkownika w Menu */
-        .profile-card {
-            display: flex; align-items: center; justify-content: space-between;
-            background: rgba(255, 69, 0, 0.1); padding: 15px;
-            border-radius: 10px; margin-bottom: 20px;
-            border: 1px solid rgba(255, 69, 0, 0.3);
-        }
-        .profile-img { width: 60px; height: 60px; object-fit: cover; border-radius: 50%; background: #fff; margin-right: 15px; border: 2px solid var(--vulcan-glow);}
-
-        .btn { 
-            display: block; width: 100%; padding: 15px; margin-bottom: 15px; 
-            font-size: 16px; font-weight: bold; color: white; border: none; 
-            border-radius: 8px; cursor: pointer; transition: all 0.2s; 
-            background-color: var(--vulcan-red);
-            text-transform: uppercase;
-        }
-        .btn:hover { 
-            transform: scale(1.02); 
-            background-color: var(--vulcan-glow); 
-            box-shadow: 0 0 20px var(--vulcan-glow);
-        }
-        .btn-google { background-color: #DB4437; border: 1px solid #ff7b70; }
-
-        /* Tabela Wyników */
-        .list-container {
-            background: rgba(0,0,0,0.5); padding: 20px; border-radius: 10px;
-            text-align: left; max-height: 300px; overflow-y: auto;
-            border: 1px solid var(--vulcan-red);
-        }
-        .list-item {
-            display: flex; justify-content: space-between; align-items: center; padding: 10px;
-            border-bottom: 1px solid rgba(255,69,0,0.2); transition: 0.3s;
-        }
-
-        /* Szachownica i Gracze */
-        .match-player {
-            display: flex; align-items: center; background: rgba(0,0,0,0.8);
-            padding: 10px 20px; border-radius: 8px; margin: 10px auto;
-            width: 400px; box-sizing: border-box; border: 1px solid var(--vulcan-red);
-        }
-        .match-player img { width: 40px; height: 40px; object-fit: cover; background: #fff; border-radius: 50%; margin-right: 15px; }
-        .match-player span { font-weight: bold; font-size: 18px; }
-
-        #board-wrapper { position: relative; width: 400px; margin: 0 auto; box-shadow: 0 0 40px rgba(255, 69, 0, 0.4); border-radius: 4px; overflow: hidden; border: 4px solid var(--vulcan-red); }
-        #myBoard { width: 400px; }
+        .profile-card { display: flex; align-items: center; justify-content: space-between; background: rgba(255,69,0,0.1); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,69,0,0.3); margin-bottom: 15px;}
+        .profile-img { width: 60px; height: 60px; object-fit: cover; border-radius: 50%; border: 2px solid var(--vulcan-glow); margin-right:15px;}
         
-        #waiting-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(26, 5, 5, 0.9); z-index: 10;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            color: var(--vulcan-glow); font-size: 20px; font-weight: bold; text-align: center;
-        }
-        .spinner {
-            width: 50px; height: 50px; border: 5px solid rgba(255,69,0,0.2);
-            border-top-color: var(--vulcan-glow); border-radius: 50%;
-            animation: spin 1s infinite linear; margin-bottom: 15px;
-        }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* Gra */
+        .match-player { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 8px; margin: 5px auto; width: 400px; border: 1px solid var(--vulcan-red); }
+        .player-left { display: flex; align-items: center; }
+        .player-left img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px; }
+        .timer { font-size: 20px; font-weight: bold; font-family: monospace; color: #ffaa00; background: #222; padding: 5px 10px; border-radius: 5px; }
+        #board-wrapper { position: relative; width: 400px; margin: 0 auto; box-shadow: 0 0 30px rgba(255,69,0,0.4); border: 4px solid var(--vulcan-red); } #myBoard { width: 400px; }
+        #waiting-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10; display:flex; flex-direction:column; justify-content:center; align-items:center; color:var(--vulcan-glow); font-size:20px; font-weight:bold;}
+        
+        /* Czat */
+        .chat-container { width: 400px; margin: 10px auto; background: rgba(0,0,0,0.8); border: 1px solid var(--vulcan-red); border-radius: 8px; overflow: hidden; }
+        #chat-messages { height: 80px; overflow-y: auto; padding: 10px; text-align: left; font-size: 13px; color: #ddd; }
+        #chat-messages p { margin: 2px 0; }
+        #chat-messages b { color: var(--vulcan-glow); }
+        #chat-input { width: 100%; padding: 8px; border: none; background: #222; color: white; border-top: 1px solid #444; box-sizing: border-box;}
+        
+        /* Tabele */
+        .list-container { background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; border: 1px solid var(--vulcan-red); margin-bottom: 15px; }
+        .list-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(255,69,0,0.2); }
     </style>
 </head>
 <body>
 
     <div id="menu-screen" class="screen active">
         <div class="menu-container">
-            <h1 class="game-title">Vulkan <span>Chess</span></h1>
+            <h1>Vulkan <span>Chess</span></h1>
             
             <div id="login-section">
-                <p>Zaloguj się, aby stworzyć profil i wgrać własne zdjęcie!</p>
-                <button class="btn btn-google" onclick="window.loginWithGoogle()">G Zaloguj przez Gmail</button>
+                <button class="btn" style="background:#DB4437" onclick="window.loginWithGoogle()">Zaloguj przez Gmail</button>
             </div>
 
             <div id="profile-section" style="display: none; flex-direction: column;">
                 <div class="profile-card">
-                    <div style="display:flex; align-items: center;">
-                        <img id="profile-img" src="" class="profile-img" alt="Avatar">
-                        <div style="text-align: left;">
+                    <div style="display:flex; align-items:center;">
+                        <img id="profile-img" src="" class="profile-img">
+                        <div style="text-align:left;">
                             <h3 id="player-nick" style="margin:0;">Gracz</h3>
-                            <p style="margin: 5px 0 0 0; color: gold;">🏆 ELO: <span id="player-elo">1000</span></p>
+                            <p style="margin:0; color:gold;">🏆 ELO: <span id="player-elo">1000</span></p>
                         </div>
                     </div>
-                    <button onclick="window.editProfile()" style="background:transparent; border:none; cursor:pointer; font-size:24px;" title="Edytuj profil">⚙️</button>
+                    <button onclick="window.editProfile()" style="background:transparent; border:none; cursor:pointer; font-size:20px;">⚙️</button>
                 </div>
                 
+                <h4 style="margin: 5px 0; color: #aaa;">Wybierz tryb gry:</h4>
+                <select id="game-mode-select" class="custom-input">
+                    <option value="casual">Rozrywkowy (Bez ELO / Czasu)</option>
+                    <option value="blitz">Blitz (5 min / +15 ELO)</option>
+                    <option value="tournament">Turniej (10 min / +15 ELO)</option>
+                </select>
+
+                <button class="btn" onclick="window.findOnlineMatch()">🔥 Graj Online</button>
+                <button class="btn" style="background:#440000;" onclick="startBotMatch()">🤖 Graj z Botem</button>
+                <button class="btn" style="background:#222;" onclick="window.loadLeaderboard()">🏆 Ranking</button>
+                <button id="logout-btn" style="background:transparent; color:#888;" onclick="window.logout()">Wyloguj</button>
             </div>
-            
-            <hr style="border-color: rgba(255,69,0,0.3); margin: 20px 0;">
-            
-            <button class="btn" onclick="startBotMatch()">🤖 Graj z Botem</button>
-            <button class="btn" onclick="window.findOnlineMatch()">🔥 Graj Online</button>
-            <button class="btn" style="background: #2a0808;" onclick="window.loadLeaderboard()">🏆 Tabela Wyników</button>
-            
-            <button id="logout-btn" style="background: transparent; border: none; color: #888; cursor: pointer; display: none; margin: 10px auto 0;" onclick="window.logout()">Wyloguj się</button>
         </div>
     </div>
 
     <div id="setup-screen" class="screen">
         <div class="menu-container">
-            <h2 style="color: var(--vulcan-glow);">Ustaw swój profil</h2>
-            <p>Ten nick i zdjęcie będą widzieć inni gracze podczas partii!</p>
-
-            <div style="margin: 20px 0;">
-                <img id="preview-avatar" src="" style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 3px solid var(--vulcan-glow); margin-bottom: 10px;">
-                <br>
-                <label class="file-upload-btn">
-                    Zmień zdjęcie
-                    <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
-                </label>
-            </div>
-
-            <input type="text" id="nick-input" placeholder="Wpisz nowy nick..." class="custom-input">
-
-            <button id="setup-btn" class="btn" onclick="window.saveProfile()">Zapisz profil i Graj</button>
-            <button class="btn" style="background: transparent; border: 1px solid #555;" onclick="showScreen('menu-screen')">Anuluj</button>
+            <h2 style="color:var(--vulcan-glow);">Profil</h2>
+            <img id="preview-avatar" src="" style="width:120px; height:120px; object-fit:cover; border-radius:50%; border:3px solid var(--vulcan-glow);"><br>
+            <label style="cursor:pointer; color:#aaa; font-size:14px;">Zmień zdjęcie <input type="file" id="avatar-upload" accept="image/*" style="display:none;"></label>
+            <input type="text" id="nick-input" placeholder="Twój nick..." class="custom-input">
+            <button id="setup-btn" class="btn" onclick="window.saveProfile()">Zapisz i wracaj</button>
         </div>
     </div>
 
     <div id="game-screen" class="screen">
-        <div class="match-player" id="opponent-info">
-            <img id="opponent-avatar" src="" alt="Przeciwnik">
-            <span id="opponent-name">Przeciwnik</span>
+        <div class="match-player">
+            <div class="player-left"><img id="opponent-avatar"><span id="opponent-name">...</span></div>
+            <div class="timer" id="opponent-timer">--:--</div>
         </div>
 
         <div id="board-wrapper">
             <div id="myBoard"></div>
-            <div id="waiting-overlay">
-                <div class="spinner"></div>
-                Szukanie przeciwnika...
-            </div>
+            <div id="waiting-overlay">Szukanie przeciwnika...</div>
         </div>
 
-        <div class="match-player" id="my-info">
-            <img id="my-avatar" src="" alt="Ja">
-            <span id="my-name">Ja</span>
+        <div class="match-player">
+            <div class="player-left"><img id="my-avatar"><span id="my-name">...</span></div>
+            <div class="timer" id="my-timer">--:--</div>
+        </div>
+        
+        <div class="chat-container">
+            <div id="chat-messages"></div>
+            <input type="text" id="chat-input" placeholder="Napisz wiadomość... (Enter)" onkeypress="window.sendChat(event)">
         </div>
 
-        <p id="status" style="font-weight:bold; color:var(--vulcan-glow); margin-top:15px; font-size:18px;">Ładowanie...</p>
-        <button class="btn" onclick="quitGame()" style="width:200px; margin:10px auto; background: #550000;">Opuść grę</button>
+        <p id="status" style="color:var(--vulcan-glow); font-weight:bold;"></p>
+        <button class="btn" onclick="window.quitGame()" style="width:200px; margin:0 auto; background:#550000;">Poddaj / Opuść</button>
     </div>
 
     <div id="leaderboard-screen" class="screen">
         <div class="menu-container">
-            <h2 style="color: var(--vulcan-glow);">🏆 Top 10 Graczy</h2>
-            <div class="list-container" id="leaderboard-list">
-                </div>
-            <button class="btn" onclick="showScreen('menu-screen')" style="margin-top:20px;">Wróć do Menu</button>
+            <h2 style="color:var(--vulcan-glow);">🏆 Top 10</h2>
+            <div class="list-container" id="leaderboard-list"></div>
+            <button class="btn" onclick="showScreen('menu-screen')">Wróć</button>
         </div>
     </div>
 
     <script>
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-            
-            // Pokaż dyskretne wyloguj tylko w menu
-            if(screenId === 'menu-screen' && auth.currentUser) document.getElementById('logout-btn').style.display = 'block';
-            else document.getElementById('logout-btn').style.display = 'none';
-        }
+        function showScreen(id) { document.querySelectorAll('.screen').forEach(e => e.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
-        window.board = null;
-        window.game = new Chess();
-        let isPlayingBot = false;
+        window.board = null; window.game = new Chess(); let isPlayingBot = false;
 
-        function onDragStart(source, piece) {
+        function onDragStart(s, p) {
             if (window.game.game_over()) return false;
             if (window.isOnline) {
                 if (window.gameStatus !== 'playing') return false;
-                if ((window.playerColor === 'w' && piece.search(/^b/) !== -1) ||
-                    (window.playerColor === 'b' && piece.search(/^w/) !== -1)) return false;
+                if ((window.playerColor === 'w' && p.search(/^b/) !== -1) || (window.playerColor === 'b' && p.search(/^w/) !== -1)) return false;
                 if (window.game.turn() !== window.playerColor) return false;
-            } else {
-                if (piece.search(/^b/) !== -1) return false;
-            }
+            } else if (p.search(/^b/) !== -1) return false;
         }
 
-        function onDrop(source, target) {
-            let move = window.game.move({ from: source, to: target, promotion: 'q' });
+        function onDrop(s, t) {
+            let move = window.game.move({ from: s, to: t, promotion: 'q' });
             if (move === null) return 'snapback';
+            
+            if(move.captured) window.captureSound.play(); else window.moveSound.play();
             
             window.updateStatusLocal();
             if (window.isOnline) window.updateGameFen(window.game.fen());
@@ -515,66 +466,37 @@
         function onSnapEnd() { window.board.position(window.game.fen()); }
 
         window.updateStatusLocal = function() {
-            let status = '';
-            let moveColor = window.game.turn() === 'b' ? 'Czarne' : 'Białe';
-            
-            if (window.game.in_checkmate()) status = `Koniec! ${moveColor} mają mata.`;
-            else if (window.game.in_draw()) status = 'Remis.';
-            else {
-                status = `Tura gracza: ${moveColor}`;
-                if (window.game.in_check()) status += ' (Szach!)';
+            let c = window.game.turn() === 'b' ? 'Czarne' : 'Białe';
+            if (window.game.in_checkmate()) { 
+                $('#status').html(`Szach mat!`); 
+                if(window.isOnline) window.endGame('mat', window.game.turn() === 'w' ? window.opponentUid : auth.currentUser.uid);
             }
-            $('#status').html(status);
+            else if (window.game.in_draw()) { $('#status').html('Remis.'); if(window.isOnline) window.endGame('remis', null); }
+            else $('#status').html(`Tura: ${c} ${window.game.in_check() ? '(Szach!)' : ''}`);
         };
+
+        window.updateGameFen = async (f) => { if (window.currentGameId) await updateDoc(doc(db, "games", window.currentGameId), { fen: f }); };
 
         function makeBotMove() {
             if (window.game.game_over()) return;
-            let possibleMoves = window.game.moves();
-            window.game.move(possibleMoves[Math.floor(Math.random() * possibleMoves.length)]);
-            window.board.position(window.game.fen());
-            window.updateStatusLocal();
+            let moves = window.game.moves(); window.game.move(moves[Math.floor(Math.random() * moves.length)]);
+            window.board.position(window.game.fen()); window.moveSound.play(); window.updateStatusLocal();
         }
 
-        window.startBoard = function(orientation) {
-            let config = {
-                draggable: true, position: window.game.fen(), orientation: orientation === 'b' ? 'black' : 'white',
-                onDragStart: onDragStart, onDrop: onDrop, onSnapEnd: onSnapEnd,
-                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
-            };
-            if(window.board) window.board.destroy(); 
-            window.board = Chessboard('myBoard', config);
-            window.updateStatusLocal();
+        window.startBoard = function(or) {
+            let cfg = { draggable: true, position: window.game.fen(), orientation: or === 'b' ? 'black' : 'white', onDragStart: onDragStart, onDrop: onDrop, onSnapEnd: onSnapEnd, pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png' };
+            if(window.board) window.board.destroy(); window.board = Chessboard('myBoard', cfg); window.updateStatusLocal();
         };
 
         function startBotMatch() {
-            window.isOnline = false;
-            isPlayingBot = true;
-            window.playerColor = 'w';
-            window.gameStatus = 'playing';
-            window.game.reset();
-            
+            window.isOnline = false; isPlayingBot = true; window.playerColor = 'w'; window.gameStatus = 'playing'; window.gameMode = 'casual'; window.game.reset();
             document.getElementById('waiting-overlay').style.display = 'none';
-            document.getElementById('opponent-name').innerText = "Stockfish Bot";
-            document.getElementById('opponent-avatar').src = "https://api.dicebear.com/7.x/bottts/svg?seed=Stockfish";
-            
-            if(window.currentUserData) {
-                document.getElementById('my-name').innerText = window.currentUserData.displayName;
-                document.getElementById('my-avatar').src = window.currentUserData.avatar;
-            } else {
-                document.getElementById('my-name').innerText = "Gość";
-                document.getElementById('my-avatar').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Gosc";
-            }
-
-            window.startBoard('w');
-            showScreen('game-screen');
-        }
-
-        function quitGame() {
-            window.currentGameId = null;
-            window.isOnline = false;
-            isPlayingBot = false;
-            window.gameStatus = 'menu';
-            showScreen('menu-screen');
+            document.getElementById('opponent-name').innerText = "Stockfish Bot"; document.getElementById('opponent-avatar').src = "https://api.dicebear.com/7.x/bottts/svg?seed=Bot";
+            document.getElementById('my-name').innerText = window.currentUserData ? window.currentUserData.displayName : "Gość";
+            document.getElementById('my-avatar').src = window.currentUserData ? window.currentUserData.avatar : "https://api.dicebear.com/7.x/avataaars/svg?seed=1";
+            document.getElementById('opponent-timer').innerText = '--:--'; document.getElementById('my-timer').innerText = '--:--';
+            document.getElementById('chat-messages').innerHTML = '<i>Z botem nie pogadasz.</i>';
+            window.startBoard('w'); showScreen('game-screen');
         }
     </script>
 </body>

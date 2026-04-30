@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grandmaster Web Chess - Online Edition</title>
+    <title>Grandmaster Web Chess - HD Edition</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
@@ -13,10 +13,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        // Importy nowej bazy danych Firestore
         import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // Twoja konfiguracja
+        // Twoja konfiguracja Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
             authDomain: "xchess-79e2d.firebaseapp.com",
@@ -32,7 +31,7 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        window.db = db; // Globalny dostęp dla reszty skryptu
+        window.db = db; 
         window.auth = auth;
 
         // Logowanie
@@ -53,7 +52,7 @@
             }
         });
 
-        // --- LOGIKA MULTIPLAYER W CHMURZE ---
+        // --- LOGIKA MULTIPLAYER ---
         window.currentGameId = null;
         window.playerColor = 'w';
 
@@ -61,6 +60,7 @@
             if (!auth.currentUser) return alert("Musisz się zalogować, by grać w sieci!");
             
             showScreen('game-screen');
+            document.getElementById('waiting-overlay').style.display = 'flex'; // Pokaż ekran oczekiwania
             document.getElementById('status').innerText = "Szukanie przeciwnika...";
             window.isOnline = true;
             window.game.reset();
@@ -70,38 +70,47 @@
             const querySnapshot = await getDocs(q);
 
             if (!querySnapshot.empty) {
-                // ZNALEZIONO POKÓJ - Dołączasz jako Czarne
+                // ZNALEZIONO POKÓJ - Dołączasz i dostajesz przeciwny kolor
                 const gameDoc = querySnapshot.docs[0];
+                const gameData = gameDoc.data();
                 window.currentGameId = gameDoc.id;
-                window.playerColor = 'b';
                 
-                await updateDoc(doc(db, "games", window.currentGameId), {
-                    status: "playing",
-                    blackPlayer: auth.currentUser.displayName
-                });
+                if (gameData.whitePlayer) {
+                    window.playerColor = 'b';
+                    await updateDoc(doc(db, "games", window.currentGameId), { status: "playing", blackPlayer: auth.currentUser.displayName });
+                } else {
+                    window.playerColor = 'w';
+                    await updateDoc(doc(db, "games", window.currentGameId), { status: "playing", whitePlayer: auth.currentUser.displayName });
+                }
                 
-                startBoard('b');
+                document.getElementById('waiting-overlay').style.display = 'none';
+                startBoard(window.playerColor);
                 listenToGame();
             } else {
-                // BRAK POKOJÓW - Tworzysz nowy jako Białe i czekasz
-                const newGame = await addDoc(gamesRef, {
-                    status: "waiting",
-                    whitePlayer: auth.currentUser.displayName,
-                    fen: "start"
-                });
+                // BRAK POKOJÓW - Tworzysz nowy, losujesz kolor i czekasz na gracza
+                window.playerColor = Math.random() < 0.5 ? 'w' : 'b';
+                const newGameData = { status: "waiting", fen: "start" };
                 
+                if (window.playerColor === 'w') newGameData.whitePlayer = auth.currentUser.displayName;
+                else newGameData.blackPlayer = auth.currentUser.displayName;
+
+                const newGame = await addDoc(gamesRef, newGameData);
                 window.currentGameId = newGame.id;
-                window.playerColor = 'w';
-                startBoard('w');
+                
+                startBoard(window.playerColor);
                 listenToGame();
             }
         };
 
         function listenToGame() {
             onSnapshot(doc(db, "games", window.currentGameId), (docSnap) => {
+                if (!docSnap.exists()) return;
                 const data = docSnap.data();
+                
                 if (data.status === 'playing') {
-                    document.getElementById('status').innerText = `Przeciwnik dołączył! Tura: ${window.game.turn() === 'w' ? 'Białe' : 'Czarne'}`;
+                    // Gra się rozpoczęła, ukryj ekran oczekiwania
+                    document.getElementById('waiting-overlay').style.display = 'none';
+                    window.updateStatusLocal(); // Aktualizacja tekstu statusu
                     
                     // Jeśli ruch wykonał przeciwnik, zaktualizuj planszę
                     if (data.fen !== window.game.fen() && data.fen !== "start") {
@@ -130,15 +139,33 @@
         .btn { display: block; width: 100%; padding: 15px; margin-bottom: 15px; font-size: 16px; font-weight: bold; color: white; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; background-color: var(--primary-btn); }
         .btn:hover { transform: scale(1.05); background-color: var(--primary-hover); }
         .btn-google { background-color: #DB4437; }
-        #myBoard { width: 400px; margin: 20px auto; border: 5px solid #333; }
-        .chessboard-63f37 img { image-rendering: pixelated; }
+        
+        /* Cień szachownicy dla lepszego efektu */
+        #board-wrapper { position: relative; width: 400px; margin: 20px auto; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border-radius: 4px; overflow: hidden; border: 4px solid #333; }
+        #myBoard { width: 400px; }
+        
+        /* Nakładka oczekiwania na gracza */
+        #waiting-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 10;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            color: white; font-size: 20px; font-weight: bold;
+        }
+        
+        /* Animacja ładowania */
+        .spinner {
+            width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.3);
+            border-top-color: var(--primary-hover); border-radius: 50%;
+            animation: spin 1s infinite linear; margin-bottom: 15px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
     <div id="menu-screen" class="screen active">
         <div class="menu-container">
-            <h1 class="game-title">Pixel <span>Chess</span></h1>
+            <h1 class="game-title">Grandmaster <span>Chess</span></h1>
             <p>Gracz: <strong id="player-nick">Gość</strong></p>
             
             <button id="login-btn" class="btn btn-google" onclick="window.loginWithGoogle()">G Zaloguj przez Gmail</button>
@@ -154,7 +181,15 @@
     <div id="game-screen" class="screen">
         <h2>Rozgrywka</h2>
         <p id="status">Ładowanie...</p>
-        <div id="myBoard"></div>
+        
+        <div id="board-wrapper">
+            <div id="myBoard"></div>
+            <div id="waiting-overlay">
+                <div class="spinner"></div>
+                Oczekiwanie na gracza...
+            </div>
+        </div>
+        
         <button class="btn" onclick="quitGame()" style="width:200px; margin:20px auto;">Opuść grę</button>
     </div>
 
@@ -162,31 +197,6 @@
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
-        }
-
-        // Generator Pikseli
-        const pixelArt = {
-            'P': ["00000000","00000000","00011000","00111100","00011000","00011000","00111100","01111110"],
-            'R': ["00000000","01010100","01111100","00111000","00111000","00111000","01111110","01111110"],
-            'N': ["00000000","00011000","00111100","01110000","00111000","00011100","00111100","01111110"],
-            'B': ["00011000","00111100","00011000","00111100","00011000","00111100","01111110","01111110"],
-            'Q': ["01010100","01111100","00111000","00111000","01111100","01111110","01111110","01111110"],
-            'K': ["00011000","00111100","00011000","01111110","00111100","00111100","01111110","01111110"]
-        };
-
-        function generatePixelPiece(pieceCode) {
-            const art = pixelArt[pieceCode[1]];
-            const canvas = document.createElement('canvas');
-            canvas.width = 64; canvas.height = 64;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = pieceCode[0] === 'w' ? '#FFFFFF' : '#111111';
-            for(let y=0; y<8; y++) for(let x=0; x<8; x++) {
-                if(art[y][x] === '1') {
-                    ctx.fillRect(x*8, y*8, 8, 8);
-                    if(pieceCode[0] === 'w') { ctx.strokeStyle = '#000000'; ctx.lineWidth = 1; ctx.strokeRect(x*8, y*8, 8, 8); }
-                }
-            }
-            return canvas.toDataURL(); 
         }
 
         // Globalne zmienne gry
@@ -199,12 +209,12 @@
             if (window.game.game_over()) return false;
             
             if (window.isOnline) {
-                // ONLINE: Nie możesz ruszać figur przeciwnika, ani ruszać się poza swoją turą
+                // Blokada ruchu figur przeciwnika w sieci
                 if ((window.playerColor === 'w' && piece.search(/^b/) !== -1) ||
                     (window.playerColor === 'b' && piece.search(/^w/) !== -1)) return false;
                 if (window.game.turn() !== window.playerColor) return false;
             } else {
-                // OFFLINE: Grasz zawsze białymi
+                // Gracz vs Bot: Gracz zawsze rzuca białymi
                 if (piece.search(/^b/) !== -1) return false;
             }
         }
@@ -216,7 +226,7 @@
             window.updateStatusLocal();
 
             if (window.isOnline) {
-                window.updateGameFen(window.game.fen()); // Wyślij ruch do bazy
+                window.updateGameFen(window.game.fen());
             } else if (isPlayingBot) {
                 window.setTimeout(makeBotMove, 500);
             }
@@ -227,10 +237,14 @@
         window.updateStatusLocal = function() {
             let status = '';
             let moveColor = window.game.turn() === 'b' ? 'Czarne' : 'Białe';
+            let myColorName = window.playerColor === 'w' ? 'Białe' : 'Czarne';
+            
             if (window.game.in_checkmate()) status = `Koniec! ${moveColor} mają mata.`;
             else if (window.game.in_draw()) status = 'Remis.';
             else {
-                status = `Tura: ${moveColor}`;
+                if(window.isOnline) status = `Grasz jako ${myColorName}. Tura: ${moveColor}`;
+                else status = `Tura: ${moveColor}`;
+                
                 if (window.game.in_check()) status += ' (Szach!)';
             }
             $('#status').html(status);
@@ -246,11 +260,16 @@
 
         window.startBoard = function(orientation) {
             let config = {
-                draggable: true, position: window.game.fen(), orientation: orientation === 'b' ? 'black' : 'white',
-                onDragStart: onDragStart, onDrop: onDrop, onSnapEnd: onSnapEnd,
-                pieceTheme: generatePixelPiece
+                draggable: true, 
+                position: window.game.fen(), 
+                orientation: orientation === 'b' ? 'black' : 'white',
+                onDragStart: onDragStart, 
+                onDrop: onDrop, 
+                onSnapEnd: onSnapEnd,
+                // Wczytanie grafiki wysokiej jakości HD z oficjalnego serwera
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
             };
-            if(window.board) window.board.destroy(); // Czyści starą planszę
+            if(window.board) window.board.destroy(); 
             window.board = Chessboard('myBoard', config);
             window.updateStatusLocal();
         };
@@ -258,7 +277,9 @@
         function startBotMatch() {
             window.isOnline = false;
             isPlayingBot = true;
+            window.playerColor = 'w';
             window.game.reset();
+            document.getElementById('waiting-overlay').style.display = 'none'; // Wyłączenie nakładki dla bota
             window.startBoard('w');
             showScreen('game-screen');
         }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vulkan Chess - VIP Admin Edition</title>
+    <title>Vulkan Chess - Social & Pro Edition</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
@@ -13,7 +13,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, onSnapshot, getDoc, setDoc, orderBy, limit, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, onSnapshot, getDoc, setDoc, orderBy, limit, arrayUnion, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         // TWOJA KONFIGURACJA
         const firebaseConfig = {
@@ -52,9 +52,9 @@
                     window.currentUserData = docSnap.data();
                     if(window.currentUserData.banned) {
                         alert("Twoje konto zostało zbanowane przez Administratora.");
-                        signOut(auth);
-                        return;
+                        signOut(auth); return;
                     }
+                    if(!window.currentUserData.friends) window.currentUserData.friends = []; // Zabezpieczenie dla starych kont
                     updateProfileUI(user.email);
                 }
             } else {
@@ -65,7 +65,6 @@
             }
         });
 
-        // --- ZARZĄDZANIE PROFILEM ---
         window.editProfile = () => {
             document.getElementById('nick-input').value = window.currentUserData.displayName;
             document.getElementById('preview-avatar').src = window.currentUserData.avatar;
@@ -105,7 +104,8 @@
             const newProfile = {
                 uid: auth.currentUser.uid, displayName: nick, avatar: finalAvatar,
                 elo: window.currentUserData ? window.currentUserData.elo : 1000,
-                banned: window.currentUserData ? window.currentUserData.banned : false
+                banned: window.currentUserData ? window.currentUserData.banned : false,
+                friends: window.currentUserData && window.currentUserData.friends ? window.currentUserData.friends : []
             };
             await setDoc(doc(db, 'users', auth.currentUser.uid), newProfile);
             window.currentUserData = newProfile;
@@ -120,22 +120,23 @@
             document.getElementById('player-elo').innerText = window.currentUserData.elo;
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('profile-section').style.display = 'flex';
-            
-            // SYSTEM ADMINA
-            if(email === "zawadzkit117@gmail.com") {
-                document.getElementById('admin-btn').style.display = 'block';
-            }
+            if(email === "zawadzkit117@gmail.com") document.getElementById('admin-btn').style.display = 'block';
         }
 
-        // --- TRYBY I MULTIPLAYER ---
+        // --- TRYBY I MULTIPLAYER (NAPRAWIONY BŁĄD KOLORÓW I TUR) ---
         window.currentGameId = null; window.playerColor = 'w'; window.gameStatus = 'menu';
         window.opponentUid = null; window.gameMode = 'casual'; 
         window.myTime = 0; window.opponentTime = 0; window.timerInterval = null;
 
         function setTimersByMode(mode) {
-            if(mode === 'blitz') return 5 * 60;
-            if(mode === 'tournament') return 10 * 60;
-            return 999 * 60; 
+            if(mode === 'bullet1') return 1 * 60;
+            if(mode === 'bullet2') return 2 * 60;
+            if(mode === 'blitz3') return 3 * 60;
+            if(mode === 'blitz5') return 5 * 60;
+            if(mode === 'rapid10') return 10 * 60;
+            if(mode === 'rapid15') return 15 * 60;
+            if(mode === 'classic30') return 30 * 60;
+            return 999 * 60; // casual
         }
 
         window.findOnlineMatch = async () => {
@@ -163,36 +164,44 @@
             snapshot.forEach(d => { if (d.data().creatorUid !== auth.currentUser.uid) gameToJoin = d; });
 
             if (gameToJoin) {
+                // DOŁĄCZANIE (Naprawiona logika przypisania kolorów)
                 const gData = gameToJoin.data(); window.currentGameId = gameToJoin.id;
                 window.opponentUid = gData.creatorUid;
                 
+                // Odwrotność koloru twórcy!
+                window.playerColor = gData.creatorColor === 'w' ? 'b' : 'w'; 
+                
                 const updates = { status: "playing", joinerUid: auth.currentUser.uid };
-                if (gData.whitePlayer) {
-                    window.playerColor = 'b';
+                
+                if (window.playerColor === 'b') {
                     document.getElementById('opponent-avatar').src = gData.whiteAvatar;
                     document.getElementById('opponent-name').innerText = gData.whitePlayer;
                     updates.blackPlayer = window.currentUserData.displayName;
                     updates.blackAvatar = window.currentUserData.avatar;
                 } else {
-                    window.playerColor = 'w';
                     document.getElementById('opponent-avatar').src = gData.blackAvatar;
                     document.getElementById('opponent-name').innerText = gData.blackPlayer;
                     updates.whitePlayer = window.currentUserData.displayName;
                     updates.whiteAvatar = window.currentUserData.avatar;
                 }
+                
                 await updateDoc(doc(db, "games", window.currentGameId), updates);
                 startBoard(window.playerColor); listenToGame();
             } else {
+                // TWORZENIE
                 window.playerColor = Math.random() < 0.5 ? 'w' : 'b';
                 const newGame = { 
                     status: "waiting", fen: "start", mode: window.gameMode, 
-                    creatorUid: auth.currentUser.uid, messages: [] 
+                    creatorUid: auth.currentUser.uid, creatorColor: window.playerColor, // Ważne dołączenie!
+                    messages: [] 
                 };
+                
                 if (window.playerColor === 'w') {
                     newGame.whitePlayer = window.currentUserData.displayName; newGame.whiteAvatar = window.currentUserData.avatar;
                 } else {
                     newGame.blackPlayer = window.currentUserData.displayName; newGame.blackAvatar = window.currentUserData.avatar;
                 }
+                
                 const res = await addDoc(collection(db, "games"), newGame);
                 window.currentGameId = res.id;
                 startBoard(window.playerColor); listenToGame();
@@ -219,7 +228,7 @@
                     startTimers(); 
                 }
 
-                if (data.status === 'playing' && data.fen !== window.game.fen()) {
+                if (data.status === 'playing' && data.fen !== window.game.fen() && data.fen !== "start") {
                     window.game.load(data.fen); window.board.position(window.game.fen());
                     window.moveSound.play(); window.updateStatusLocal();
                 }
@@ -247,9 +256,10 @@
             if(window.gameMode === 'casual') return; 
             window.timerInterval = setInterval(() => {
                 if(window.gameStatus !== 'playing') return stopTimers();
+                
                 if(window.game.turn() === window.playerColor) {
                     window.myTime--;
-                    if(window.myTime <= 0) endGame('timeout', window.opponentUid);
+                    if(window.myTime <= 0) window.endGame('timeout', window.opponentUid);
                 } else { window.opponentTime--; }
                 updateTimerUI();
             }, 1000);
@@ -261,7 +271,6 @@
             document.getElementById('opponent-timer').innerText = formatTime(window.opponentTime);
         }
 
-        // --- ELO I KONIEC GRY ---
         async function adjustElo(uid, amount) {
             if(window.gameMode === 'casual' || !uid) return;
             const ref = doc(db, 'users', uid);
@@ -303,6 +312,121 @@
                     messages: arrayUnion({ nick: window.currentUserData.displayName, text: text })
                 });
             }
+        };
+
+        // --- WYSZUKIWARKA I ZNAJOMI ---
+        window.openSearch = async () => {
+            showScreen('search-screen');
+            document.getElementById('search-results').innerHTML = '<p style="color:#aaa;">Wpisz nick gracza i naciśnij Szukaj...</p>';
+        };
+
+        window.searchPlayers = async () => {
+            const queryText = document.getElementById('search-input').value.trim().toLowerCase();
+            const resultsBox = document.getElementById('search-results');
+            if(!queryText) return;
+            
+            resultsBox.innerHTML = "<div class='spinner' style='margin:20px auto'></div>";
+            const snapshot = await getDocs(collection(db, "users"));
+            let html = "";
+            snapshot.forEach(d => {
+                const u = d.data();
+                if(u.uid !== auth.currentUser.uid && u.displayName.toLowerCase().includes(queryText)) {
+                    html += `
+                    <div class="list-item">
+                        <div style="display:flex; align-items:center;">
+                            <img src="${u.avatar}" style="width:40px; height:40px; border-radius:50%; margin-right:15px; object-fit:cover; border:1px solid var(--vulcan-glow);">
+                            <div>
+                                <span style="font-weight:bold; display:block;">${u.displayName}</span>
+                                <span style="font-size:12px; color:gold;">${u.elo} ELO</span>
+                            </div>
+                        </div>
+                        <button class="btn" style="width:auto; padding:8px 15px; margin:0;" onclick="window.sendFriendRequest('${u.uid}', '${u.displayName}')">Dodaj ➕</button>
+                    </div>`;
+                }
+            });
+            resultsBox.innerHTML = html || "<p style='color:#aaa;'>Nie znaleziono gracza.</p>";
+        };
+
+        window.sendFriendRequest = async (toUid, toName) => {
+            await addDoc(collection(db, "mail"), {
+                type: "friend_request",
+                fromUid: auth.currentUser.uid,
+                fromName: window.currentUserData.displayName,
+                fromAvatar: window.currentUserData.avatar,
+                toUid: toUid,
+                timestamp: Date.now()
+            });
+            alert(`Wysłano zaproszenie do gracza: ${toName}`);
+        };
+
+        // --- POCZTA I LISTA ZNAJOMYCH ---
+        window.openMailbox = async () => {
+            showScreen('mail-screen');
+            const mailBox = document.getElementById('mail-list');
+            const friendsBox = document.getElementById('friends-list');
+            mailBox.innerHTML = "<div class='spinner' style='margin:20px auto'></div>";
+            
+            // Pobieranie poczty (zaproszeń)
+            const q = query(collection(db, "mail"), where("toUid", "==", auth.currentUser.uid));
+            const snapshot = await getDocs(q);
+            let mailHtml = "";
+            snapshot.forEach(d => {
+                const mail = d.data();
+                mailHtml += `
+                <div class="list-item" style="flex-direction:column; align-items:flex-start;">
+                    <div style="display:flex; align-items:center; margin-bottom:10px;">
+                        <img src="${mail.fromAvatar}" style="width:30px; height:30px; border-radius:50%; margin-right:10px;">
+                        <span><b>${mail.fromName}</b> chce zostać Twoim znajomym!</span>
+                    </div>
+                    <div style="display:flex; gap:10px; width:100%;">
+                        <button class="btn" style="background:#28a745; margin:0; padding:8px;" onclick="window.acceptFriend('${d.id}', '${mail.fromUid}', '${mail.fromName}', '${mail.fromAvatar}')">Akceptuj</button>
+                        <button class="btn" style="background:#dc3545; margin:0; padding:8px;" onclick="window.deleteMail('${d.id}')">Odrzuć</button>
+                    </div>
+                </div>`;
+            });
+            mailBox.innerHTML = mailHtml || "<p style='color:#aaa;'>Brak nowych wiadomości.</p>";
+
+            // Wyświetlanie znajomych
+            if(window.currentUserData.friends && window.currentUserData.friends.length > 0) {
+                let friendsHtml = "";
+                window.currentUserData.friends.forEach(f => {
+                    friendsHtml += `
+                    <div class="list-item">
+                        <div style="display:flex; align-items:center;">
+                            <img src="${f.avatar}" style="width:35px; height:35px; border-radius:50%; margin-right:15px;">
+                            <span>${f.name}</span>
+                        </div>
+                        <span style="color:var(--vulcan-glow); font-size:12px;">Znajomy</span>
+                    </div>`;
+                });
+                friendsBox.innerHTML = friendsHtml;
+            } else {
+                friendsBox.innerHTML = "<p style='color:#aaa;'>Nie masz jeszcze znajomych.</p>";
+            }
+        };
+
+        window.deleteMail = async (mailId) => {
+            await deleteDoc(doc(db, "mail", mailId));
+            window.openMailbox();
+        };
+
+        window.acceptFriend = async (mailId, friendUid, friendName, friendAvatar) => {
+            // Dodaj do moich znajomych
+            const myRef = doc(db, "users", auth.currentUser.uid);
+            await updateDoc(myRef, {
+                friends: arrayUnion({ uid: friendUid, name: friendName, avatar: friendAvatar })
+            });
+            window.currentUserData.friends.push({ uid: friendUid, name: friendName, avatar: friendAvatar });
+
+            // Dodaj mnie do znajomych tamtego gracza
+            const friendRef = doc(db, "users", friendUid);
+            await updateDoc(friendRef, {
+                friends: arrayUnion({ uid: auth.currentUser.uid, name: window.currentUserData.displayName, avatar: window.currentUserData.avatar })
+            });
+
+            // Usuń wiadomość
+            await window.deleteMail(mailId);
+            alert(`Dodano ${friendName} do znajomych!`);
         };
 
         // --- RANKING ---
@@ -350,34 +474,18 @@
             });
             list.innerHTML = html;
         };
-
-        window.adminSetElo = async (uid) => {
-            const newElo = parseInt(document.getElementById(`elo-${uid}`).value);
-            await updateDoc(doc(db, "users", uid), { elo: newElo });
-            alert("ELO zaktualizowane!"); window.openAdminPanel();
-        };
-
-        window.adminToggleBan = async (uid, banState) => {
-            await updateDoc(doc(db, "users", uid), { banned: banState });
-            alert(banState ? "Gracz zbanowany!" : "Gracz odbanowany!"); window.openAdminPanel();
-        };
+        window.adminSetElo = async (uid) => { const newElo = parseInt(document.getElementById(`elo-${uid}`).value); await updateDoc(doc(db, "users", uid), { elo: newElo }); alert("ELO zaktualizowane!"); window.openAdminPanel(); };
+        window.adminToggleBan = async (uid, banState) => { await updateDoc(doc(db, "users", uid), { banned: banState }); alert(banState ? "Gracz zbanowany!" : "Gracz odbanowany!"); window.openAdminPanel(); };
 
     </script>
 
     <style>
         /* === VULKAN STYL & LAVA LAMP === */
         :root { --vulcan-red: #9e0000; --vulcan-glow: #ff4500; --text-light: #fff; --glass-bg: rgba(15, 0, 0, 0.65); }
-        
-        body { 
-            margin: 0; font-family: 'Segoe UI', sans-serif; color: var(--text-light); 
-            display: flex; justify-content: center; align-items: center; height: 100vh; 
-            background: linear-gradient(45deg, #0a0000, #2a0000, #0a0000); background-size: 400% 400%; 
-            animation: bgShift 15s ease infinite; overflow: hidden; position: relative;
-        }
-        
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; color: var(--text-light); display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(45deg, #0a0000, #2a0000, #0a0000); background-size: 400% 400%; animation: bgShift 15s ease infinite; overflow: hidden; position: relative; }
         @keyframes bgShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-        /* Tło Lampa z Lawą */
+        /* Lampa Lawa */
         .lava-lamp { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; filter: blur(15px); }
         .bubble { position: absolute; bottom: -150px; background: radial-gradient(circle at 30% 30%, rgba(255, 69, 0, 0.8), rgba(139, 0, 0, 0.9)); border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; animation: rise infinite alternate ease-in-out; mix-blend-mode: screen; box-shadow: 0 0 50px var(--vulcan-glow); }
         .b1 { width: 150px; height: 150px; left: 10%; animation-duration: 12s; animation-delay: 0s; }
@@ -385,82 +493,53 @@
         .b3 { width: 100px; height: 100px; left: 70%; animation-duration: 10s; animation-delay: 5s; }
         .b4 { width: 300px; height: 250px; left: 80%; animation-duration: 20s; animation-delay: 1s; }
         .b5 { width: 180px; height: 180px; left: 25%; animation-duration: 15s; animation-delay: 4s; }
-        
-        @keyframes rise { 
-            0% { transform: translateY(0) scale(1) rotate(0deg); } 
-            100% { transform: translateY(-110vh) scale(1.2) rotate(180deg); } 
-        }
+        @keyframes rise { 0% { transform: translateY(0) scale(1) rotate(0deg); } 100% { transform: translateY(-110vh) scale(1.2) rotate(180deg); } }
 
-        /* Niestandardowy Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: var(--vulcan-red); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--vulcan-glow); }
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 10px; } ::-webkit-scrollbar-thumb { background: var(--vulcan-red); border-radius: 10px; } ::-webkit-scrollbar-thumb:hover { background: var(--vulcan-glow); }
 
         .screen { display: none; width: 100%; max-width: 600px; text-align: center; z-index: 10; } .active { display: block; }
         
-        /* Glassmorphism UI */
-        .menu-container { 
-            background: var(--glass-bg); padding: 35px; border-radius: 20px; 
-            border: 1px solid rgba(255, 69, 0, 0.3); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255, 69, 0, 0.1); 
-            margin: 0 auto; max-height: 90vh; overflow-y: auto; transition: transform 0.3s;
-        }
-        
+        /* UI */
+        .menu-container { background: var(--glass-bg); padding: 35px; border-radius: 20px; border: 1px solid rgba(255, 69, 0, 0.3); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255, 69, 0, 0.1); margin: 0 auto; max-height: 90vh; overflow-y: auto; transition: transform 0.3s; }
         h1 { font-size: 42px; margin-top: 0; text-transform: uppercase; letter-spacing: 3px;}
         h1 span { color: var(--vulcan-glow); text-shadow: 0 0 15px var(--vulcan-glow), 0 0 30px var(--vulcan-red); }
         
-        .btn { 
-            width: 100%; padding: 14px; margin-bottom: 12px; font-weight: bold; font-size: 16px; letter-spacing: 1px;
-            color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; cursor: pointer; 
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); background: linear-gradient(135deg, var(--vulcan-red), #5a0000); 
-            text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
+        .btn { width: 100%; padding: 14px; margin-bottom: 12px; font-weight: bold; font-size: 16px; letter-spacing: 1px; color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); background: linear-gradient(135deg, var(--vulcan-red), #5a0000); text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .btn:hover { background: linear-gradient(135deg, var(--vulcan-glow), var(--vulcan-red)); box-shadow: 0 0 20px rgba(255, 69, 0, 0.6); transform: translateY(-2px); border-color: rgba(255,255,255,0.3);}
         .btn:active { transform: translateY(1px); box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         
         .custom-input { width: 85%; padding: 12px; margin: 10px auto; border-radius: 8px; border: 1px solid rgba(255, 69, 0, 0.4); background: rgba(0,0,0,0.7); color: white; display: block; text-align: center; font-size: 16px; transition: 0.3s; box-sizing: border-box;}
         .custom-input:focus { outline: none; border-color: var(--vulcan-glow); box-shadow: 0 0 15px rgba(255, 69, 0, 0.4); }
         
-        .profile-card { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.5); padding: 15px 20px; border-radius: 12px; border: 1px solid rgba(255,69,0,0.3); margin-bottom: 20px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8);}
+        .profile-card { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.5); padding: 15px 20px; border-radius: 12px; border: 1px solid rgba(255,69,0,0.3); margin-bottom: 15px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8);}
         .profile-img { width: 65px; height: 65px; object-fit: cover; border-radius: 50%; border: 2px solid var(--vulcan-glow); box-shadow: 0 0 15px var(--vulcan-glow); margin-right:15px;}
         
         /* Gra */
         .match-player { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.7); padding: 10px 15px; border-radius: 10px; margin: 8px auto; width: 400px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(5px); box-sizing: border-box;}
-        .player-left { display: flex; align-items: center; }
-        .player-left img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-right: 12px; border: 1px solid #555;}
+        .player-left { display: flex; align-items: center; } .player-left img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; margin-right: 12px; border: 1px solid #555;}
         .timer { font-size: 22px; font-weight: bold; font-family: monospace; color: #fff; background: rgba(255, 69, 0, 0.2); padding: 6px 12px; border-radius: 8px; border: 1px solid var(--vulcan-red); text-shadow: 0 0 5px var(--vulcan-glow);}
         
-        #board-wrapper { position: relative; width: 400px; margin: 0 auto; box-shadow: 0 15px 40px rgba(0,0,0,0.9), 0 0 30px rgba(255,69,0,0.3); border: 4px solid #222; border-radius: 6px; overflow: hidden;} 
-        #myBoard { width: 400px; }
+        #board-wrapper { position: relative; width: 400px; margin: 0 auto; box-shadow: 0 15px 40px rgba(0,0,0,0.9), 0 0 30px rgba(255,69,0,0.3); border: 4px solid #222; border-radius: 6px; overflow: hidden;} #myBoard { width: 400px; }
         #waiting-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index:10; display:flex; flex-direction:column; justify-content:center; align-items:center; color:var(--text-light); font-size:22px; font-weight:bold; text-shadow: 0 0 10px var(--vulcan-glow);}
         
-        /* Czat */
+        /* Czat i Listy */
         .chat-container { width: 400px; margin: 15px auto; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,69,0,0.3); border-radius: 10px; overflow: hidden; backdrop-filter: blur(5px);}
         #chat-messages { height: 100px; overflow-y: auto; padding: 12px; text-align: left; font-size: 14px; color: #eee; }
-        #chat-messages p { margin: 4px 0; background: rgba(255,255,255,0.05); padding: 5px 8px; border-radius: 5px;}
-        #chat-messages b { color: var(--vulcan-glow); }
-        #chat-input { width: 100%; padding: 12px; border: none; background: rgba(0,0,0,0.8); color: white; border-top: 1px solid rgba(255,69,0,0.3); box-sizing: border-box; font-size: 14px;}
-        #chat-input:focus { outline: none; background: #111; }
+        #chat-messages p { margin: 4px 0; background: rgba(255,255,255,0.05); padding: 5px 8px; border-radius: 5px;} #chat-messages b { color: var(--vulcan-glow); }
+        #chat-input { width: 100%; padding: 12px; border: none; background: rgba(0,0,0,0.8); color: white; border-top: 1px solid rgba(255,69,0,0.3); box-sizing: border-box; font-size: 14px;} #chat-input:focus { outline: none; background: #111; }
         
-        /* Tabele */
         .list-container { background: rgba(0,0,0,0.4); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,69,0,0.3); margin-bottom: 15px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);}
-        .list-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;}
-        .list-item:hover { background: rgba(255,69,0,0.1); border-radius: 8px;}
+        .list-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;} .list-item:hover { background: rgba(255,69,0,0.1); border-radius: 8px;}
         
-        .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,69,0,0.2); border-top-color: var(--vulcan-glow); border-radius: 50%; animation: spin 1s infinite cubic-bezier(0.55, 0.15, 0.45, 0.85); margin-bottom: 15px; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spinner { width: 50px; height: 50px; border: 4px solid rgba(255,69,0,0.2); border-top-color: var(--vulcan-glow); border-radius: 50%; animation: spin 1s infinite cubic-bezier(0.55, 0.15, 0.45, 0.85); margin-bottom: 15px; } @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .row-buttons { display: flex; gap: 10px; margin-bottom: 15px;}
+        .row-buttons .btn { margin-bottom: 0; padding: 10px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="lava-lamp">
-        <div class="bubble b1"></div>
-        <div class="bubble b2"></div>
-        <div class="bubble b3"></div>
-        <div class="bubble b4"></div>
-        <div class="bubble b5"></div>
-    </div>
+    <div class="lava-lamp"><div class="bubble b1"></div><div class="bubble b2"></div><div class="bubble b3"></div><div class="bubble b4"></div><div class="bubble b5"></div></div>
 
     <div id="menu-screen" class="screen active">
         <div class="menu-container">
@@ -482,20 +561,53 @@
                     <button onclick="window.editProfile()" style="background:transparent; border:none; cursor:pointer; font-size:24px; transition:0.2s;" onmouseover="this.style.transform='rotate(90deg)'" onmouseout="this.style.transform='rotate(0deg)'">⚙️</button>
                 </div>
                 
-                <select id="game-mode-select" class="custom-input" style="margin-bottom: 20px;">
-                    <option value="casual">🕊️ Rozrywkowy (Bez ELO / Czasu)</option>
-                    <option value="blitz">⚡ Blitz (5 min / +15 ELO)</option>
-                    <option value="tournament">⚔️ Turniej (10 min / +15 ELO)</option>
+                <div class="row-buttons">
+                    <button class="btn" style="background: linear-gradient(135deg, #222, #000);" onclick="window.openSearch()">🔍 Szukaj Graczy</button>
+                    <button class="btn" style="background: linear-gradient(135deg, #222, #000);" onclick="window.openMailbox()">📭 Poczta / Znajomi</button>
+                </div>
+
+                <select id="game-mode-select" class="custom-input" style="margin-bottom: 15px;">
+                    <option value="casual">🕊️ Rozrywkowy (Bez Czasu / ELO)</option>
+                    <option value="bullet1">🚄 Bullet (1 min / +15 ELO)</option>
+                    <option value="bullet2">🚄 Bullet (2 min / +15 ELO)</option>
+                    <option value="blitz3">⚡ Blitz (3 min / +15 ELO)</option>
+                    <option value="blitz5">⚡ Blitz (5 min / +15 ELO)</option>
+                    <option value="rapid10">⚔️ Rapid (10 min / +15 ELO)</option>
+                    <option value="rapid15">⚔️ Rapid (15 min / +15 ELO)</option>
+                    <option value="classic30">🏛️ Klasyczny (30 min / +15 ELO)</option>
                 </select>
 
                 <button class="btn" onclick="window.findOnlineMatch()">🔥 Graj Online</button>
                 <button class="btn" style="background: linear-gradient(135deg, #440000, #220000);" onclick="startBotMatch()">🤖 Graj z Botem</button>
-                <button class="btn" style="background: linear-gradient(135deg, #333, #111);" onclick="window.loadLeaderboard()">🏆 Ranking</button>
+                <button class="btn" style="background: linear-gradient(135deg, #333, #111);" onclick="window.loadLeaderboard()">🏆 Ranking Top 50</button>
                 
                 <button id="admin-btn" class="btn" style="display:none; background: linear-gradient(135deg, #ff0000, #800000); box-shadow: 0 0 15px red;" onclick="window.openAdminPanel()">👑 Panel Admina</button>
-                
                 <button style="background:transparent; color:#aaa; border:none; cursor:pointer; margin-top:10px; font-weight:bold;" onclick="window.logout()">Wyloguj</button>
             </div>
+        </div>
+    </div>
+
+    <div id="search-screen" class="screen">
+        <div class="menu-container">
+            <h2 style="color:var(--text-light); margin-top:0;">🔍 Szukaj Gracza</h2>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="search-input" placeholder="Wpisz nick..." class="custom-input" style="margin:0;">
+                <button class="btn" style="width:100px; margin:0;" onclick="window.searchPlayers()">Szukaj</button>
+            </div>
+            <div class="list-container" id="search-results" style="margin-top:20px; max-height:300px;"></div>
+            <button class="btn" style="background:transparent; border: 1px solid #555;" onclick="showScreen('menu-screen')">Wróć</button>
+        </div>
+    </div>
+
+    <div id="mail-screen" class="screen">
+        <div class="menu-container">
+            <h2 style="color:var(--text-light); margin-top:0;">📭 Poczta i Zaproszenia</h2>
+            <div class="list-container" id="mail-list" style="max-height:200px;"></div>
+            
+            <h2 style="color:var(--text-light); margin-top:20px;">👥 Twoi Znajomi</h2>
+            <div class="list-container" id="friends-list" style="max-height:200px;"></div>
+            
+            <button class="btn" style="background:transparent; border: 1px solid #555;" onclick="showScreen('menu-screen')">Wróć</button>
         </div>
     </div>
 
@@ -522,29 +634,10 @@
     </div>
 
     <div id="game-screen" class="screen">
-        <div class="match-player">
-            <div class="player-left"><img id="opponent-avatar"><span id="opponent-name">...</span></div>
-            <div class="timer" id="opponent-timer">--:--</div>
-        </div>
-
-        <div id="board-wrapper">
-            <div id="myBoard"></div>
-            <div id="waiting-overlay">
-                <div class="spinner"></div>
-                Szukanie przeciwnika...
-            </div>
-        </div>
-
-        <div class="match-player">
-            <div class="player-left"><img id="my-avatar"><span id="my-name">...</span></div>
-            <div class="timer" id="my-timer">--:--</div>
-        </div>
-        
-        <div class="chat-container">
-            <div id="chat-messages"></div>
-            <input type="text" id="chat-input" placeholder="Napisz do przeciwnika... (Enter)" onkeypress="window.sendChat(event)">
-        </div>
-
+        <div class="match-player"><div class="player-left"><img id="opponent-avatar"><span id="opponent-name">...</span></div><div class="timer" id="opponent-timer">--:--</div></div>
+        <div id="board-wrapper"><div id="myBoard"></div><div id="waiting-overlay"><div class="spinner"></div>Szukanie przeciwnika...</div></div>
+        <div class="match-player"><div class="player-left"><img id="my-avatar"><span id="my-name">...</span></div><div class="timer" id="my-timer">--:--</div></div>
+        <div class="chat-container"><div id="chat-messages"></div><input type="text" id="chat-input" placeholder="Napisz do przeciwnika... (Enter)" onkeypress="window.sendChat(event)"></div>
         <p id="status" style="color:var(--text-light); font-weight:bold; font-size:18px; text-shadow: 0 0 8px var(--vulcan-glow);"></p>
         <button class="btn" onclick="window.quitGame()" style="width:250px; margin:10px auto; background: linear-gradient(135deg, #550000, #220000);">Poddaj / Opuść</button>
     </div>
@@ -559,9 +652,7 @@
 
     <script>
         function showScreen(id) { document.querySelectorAll('.screen').forEach(e => e.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-
         window.board = null; window.game = new Chess(); let isPlayingBot = false;
-
         function onDragStart(s, p) {
             if (window.game.game_over()) return false;
             if (window.isOnline) {
@@ -570,43 +661,31 @@
                 if (window.game.turn() !== window.playerColor) return false;
             } else if (p.search(/^b/) !== -1) return false;
         }
-
         function onDrop(s, t) {
             let move = window.game.move({ from: s, to: t, promotion: 'q' });
             if (move === null) return 'snapback';
-            
             if(move.captured) window.captureSound.play(); else window.moveSound.play();
-            
             window.updateStatusLocal();
             if (window.isOnline) window.updateGameFen(window.game.fen());
             else if (isPlayingBot) window.setTimeout(makeBotMove, 500);
         }
-
         function onSnapEnd() { window.board.position(window.game.fen()); }
-
         window.updateStatusLocal = function() {
             let c = window.game.turn() === 'b' ? 'Czarne' : 'Białe';
-            if (window.game.in_checkmate()) { 
-                $('#status').html(`Szach mat!`); 
-                if(window.isOnline) window.endGame('mat', window.game.turn() === 'w' ? window.opponentUid : auth.currentUser.uid);
-            }
+            if (window.game.in_checkmate()) { $('#status').html(`Szach mat!`); if(window.isOnline) window.endGame('mat', window.game.turn() === 'w' ? window.opponentUid : auth.currentUser.uid); }
             else if (window.game.in_draw()) { $('#status').html('Remis.'); if(window.isOnline) window.endGame('remis', null); }
             else $('#status').html(`Tura: ${c} ${window.game.in_check() ? '(Szach!)' : ''}`);
         };
-
         window.updateGameFen = async (f) => { if (window.currentGameId) await updateDoc(doc(db, "games", window.currentGameId), { fen: f }); };
-
         function makeBotMove() {
             if (window.game.game_over()) return;
             let moves = window.game.moves(); window.game.move(moves[Math.floor(Math.random() * moves.length)]);
             window.board.position(window.game.fen()); window.moveSound.play(); window.updateStatusLocal();
         }
-
         window.startBoard = function(or) {
             let cfg = { draggable: true, position: window.game.fen(), orientation: or === 'b' ? 'black' : 'white', onDragStart: onDragStart, onDrop: onDrop, onSnapEnd: onSnapEnd, pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png' };
             if(window.board) window.board.destroy(); window.board = Chessboard('myBoard', cfg); window.updateStatusLocal();
         };
-
         function startBotMatch() {
             window.isOnline = false; isPlayingBot = true; window.playerColor = 'w'; window.gameStatus = 'playing'; window.gameMode = 'casual'; window.game.reset();
             document.getElementById('waiting-overlay').style.display = 'none';

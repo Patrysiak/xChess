@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vulkan Chess - Social MMO Edition</title>
+    <title>Vulkan Chess - Creator Update</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
@@ -33,7 +33,7 @@
 
         window.db = db; window.auth = auth; window.currentUserData = null; window.globalVolume = 0.5;
 
-        // BAZA PRZEDMIOTÓW I DŹWIĘKÓW
+        // BAZA PRZEDMIOTÓW
         window.GAME_ITEMS = {
             boards: {
                 default: { name: "Klasyczna", price: 0, type: "boards", w: "#f0d9b5", b: "#b58863", rarity: "common" },
@@ -64,6 +64,16 @@
         window.hoverSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/premove.mp3'); 
         window.updateVolume = function(val) { window.globalVolume = val; window.gameEndSound.volume = val; window.hoverSound.volume = val * 0.5; if(window.moveSound) window.moveSound.volume = val; if(window.captureSound) window.captureSound.volume = val; };
 
+        // --- TYTUŁY (RANGI ELO) ---
+        window.getRankTitle = function(elo) {
+            if(elo < 1100) return "<span style='color:#a0a0a0'>[Nowicjusz]</span>";
+            if(elo < 1300) return "<span style='color:#80d4ff'>[Uczeń]</span>";
+            if(elo < 1600) return "<span style='color:#28a745'>[Amator]</span>";
+            if(elo < 2000) return "<span style='color:#d9b3ff'>[Ekspert]</span>";
+            if(elo < 2400) return "<span style='color:#ff4500'>[Mistrz]</span>";
+            return "<span style='color:gold; text-shadow:0 0 5px gold;'>[Arcymistrz]</span>";
+        };
+
         // --- LOGOWANIE I INICJALIZACJA PROFILU ---
         window.loginWithGoogle = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
         window.logout = () => signOut(auth);
@@ -86,6 +96,7 @@
                     if(!data.equipped) { data.equipped = { board: 'default', pieces: 'wikipedia', sounds: 'default' }; needsUpdate = true; }
                     if(!data.friends) { data.friends = []; needsUpdate = true; }
                     if(data.stats === undefined) { data.stats = { wins: 0, losses: 0, draws: 0 }; needsUpdate = true; }
+                    if(data.ytClaimed === undefined) { data.ytClaimed = false; needsUpdate = true; }
                     
                     if(needsUpdate) await updateDoc(doc(db, 'users', user.uid), data);
                     
@@ -93,10 +104,7 @@
                     updateProfileUI(user.email); 
                     applyEquippedItems(); 
                     window.updateVolume(0.5);
-                    
-                    // Odpal nasłuchiwanie poczty
                     listenToMailbox();
-                    // Pokaz przycisk sidebaru
                     document.getElementById('sidebar-toggle-btn').style.display = 'block';
                 }
             } else {
@@ -108,53 +116,115 @@
             }
         });
 
-        // --- ZAPIS PROFILU ---
-        window.saveProfile = async () => {
-            if (!auth.currentUser) return;
-            const nick = document.getElementById('nick-input').value.trim(); if (!nick) return;
-            document.getElementById('setup-btn').innerText = "Zapisywanie...";
-            const fileInput = document.getElementById('avatar-upload'); let finalAvatar = document.getElementById('preview-avatar').src;
+        // --- NAPRAWIONY ZAPIS PROFILU ---
+        window.editProfile = () => {
+            document.getElementById('nick-input').value = window.currentUserData.displayName;
+            document.getElementById('preview-avatar').src = window.currentUserData.avatar;
+            showScreen('setup-screen');
+        };
 
-            if (fileInput.files && fileInput.files[0]) {
-                finalAvatar = await new Promise(res => {
-                    const r = new FileReader(); r.onload = e => {
-                        const img = new Image(); img.onload = () => {
-                            const cvs = document.createElement('canvas'); cvs.width = 150; cvs.height = 150;
-                            const size = Math.min(img.width, img.height);
-                            cvs.getContext('2d').drawImage(img, (img.width-size)/2, (img.height-size)/2, size, size, 0, 0, 150, 150);
-                            res(cvs.toDataURL('image/jpeg', 0.8));
-                        }; img.src = e.target.result;
-                    }; r.readAsDataURL(fileInput.files[0]);
-                });
+        document.getElementById('avatar-upload').addEventListener('change', function(e) {
+            if (e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = event => document.getElementById('preview-avatar').src = event.target.result;
+                reader.readAsDataURL(e.target.files[0]);
             }
+        });
 
-            const newProfile = {
-                uid: auth.currentUser.uid, displayName: nick, avatar: finalAvatar,
-                elo: window.currentUserData ? window.currentUserData.elo : 1000,
-                banned: window.currentUserData ? window.currentUserData.banned : false,
-                friends: window.currentUserData ? window.currentUserData.friends : [],
-                coins: window.currentUserData ? window.currentUserData.coins : 200,
-                lastDaily: window.currentUserData ? window.currentUserData.lastDaily : 0,
-                inventory: window.currentUserData ? window.currentUserData.inventory : { boards: ['default'], pieces: ['wikipedia'], sounds: ['default'] },
-                equipped: window.currentUserData ? window.currentUserData.equipped : { board: 'default', pieces: 'wikipedia', sounds: 'default' },
-                stats: window.currentUserData ? window.currentUserData.stats : { wins: 0, losses: 0, draws: 0 }
-            };
-            await setDoc(doc(db, 'users', auth.currentUser.uid), newProfile);
-            window.currentUserData = newProfile; updateProfileUI(auth.currentUser.email); 
-            document.getElementById('setup-btn').innerText = "Zapisz profil"; showScreen('menu-screen');
+        window.saveProfile = async () => {
+            try {
+                if (!auth.currentUser) return;
+                const nick = document.getElementById('nick-input').value.trim(); 
+                if (!nick) return alert("Musisz podać nick!");
+
+                document.getElementById('setup-btn').innerText = "Zapisywanie...";
+                const fileInput = document.getElementById('avatar-upload'); 
+                let finalAvatar = document.getElementById('preview-avatar').src;
+
+                // Bezpieczna konwersja obrazka do base64 (Bez ucinania przez canvas, by uniknąć błędów CORS)
+                if (fileInput.files && fileInput.files[0]) {
+                    finalAvatar = await new Promise((resolve) => {
+                        const reader = new FileReader(); 
+                        reader.onload = e => resolve(e.target.result); 
+                        reader.readAsDataURL(fileInput.files[0]);
+                    });
+                }
+
+                if(!window.currentUserData) window.currentUserData = {};
+
+                const newProfile = {
+                    uid: auth.currentUser.uid, 
+                    displayName: nick, 
+                    avatar: finalAvatar,
+                    elo: window.currentUserData.elo || 1000,
+                    banned: window.currentUserData.banned || false,
+                    friends: window.currentUserData.friends || [],
+                    coins: window.currentUserData.coins || 200,
+                    lastDaily: window.currentUserData.lastDaily || 0,
+                    inventory: window.currentUserData.inventory || { boards: ['default'], pieces: ['wikipedia'], sounds: ['default'] },
+                    equipped: window.currentUserData.equipped || { board: 'default', pieces: 'wikipedia', sounds: 'default' },
+                    stats: window.currentUserData.stats || { wins: 0, losses: 0, draws: 0 },
+                    ytClaimed: window.currentUserData.ytClaimed || false
+                };
+
+                await setDoc(doc(db, 'users', auth.currentUser.uid), newProfile);
+                window.currentUserData = newProfile; 
+                updateProfileUI(auth.currentUser.email); 
+                document.getElementById('setup-btn').innerText = "Zapisz profil"; 
+                showScreen('menu-screen');
+            } catch (err) {
+                console.error(err);
+                alert("Wystąpił błąd przy zapisywaniu profilu! Upewnij się, że zdjęcie nie jest zbyt duże.");
+                document.getElementById('setup-btn').innerText = "Zapisz profil"; 
+            }
         };
 
         function updateProfileUI(email) {
             document.getElementById('profile-img').src = window.currentUserData.avatar;
-            document.getElementById('player-nick').innerText = window.currentUserData.displayName;
+            document.getElementById('player-nick').innerHTML = `${window.getRankTitle(window.currentUserData.elo)} ${window.currentUserData.displayName}`;
             document.getElementById('player-elo').innerText = window.currentUserData.elo;
             document.getElementById('player-coins').innerText = window.currentUserData.coins;
             
             const st = window.currentUserData.stats;
             document.getElementById('stat-wins').innerText = st.wins; document.getElementById('stat-losses').innerText = st.losses; document.getElementById('stat-draws').innerText = st.draws; document.getElementById('stat-total').innerText = st.wins + st.losses + st.draws;
             document.getElementById('login-section').style.display = 'none'; document.getElementById('profile-section').style.display = 'flex'; document.getElementById('wallet-ui').style.display = 'block';
+            
             if(email === "zawadzkit117@gmail.com") document.getElementById('admin-btn').style.display = 'block';
+
+            // Obsługa przycisku YT
+            if(window.currentUserData.ytClaimed) {
+                document.getElementById('yt-btn').style.display = 'none';
+            } else {
+                document.getElementById('yt-btn').style.display = 'block';
+            }
         }
+
+        // --- NAGRODA ZA YOUTUBE ---
+        window.claimYTReward = function() {
+            if(window.currentUserData.ytClaimed) return;
+            
+            // Otwiera YT w nowej karcie z prośbą o suba
+            window.open('https://www.youtube.com/@xPatrysiakGames?sub_confirmation=1', '_blank');
+            
+            const btn = document.getElementById('yt-btn');
+            btn.innerText = "Sprawdzanie subskrypcji...";
+            btn.disabled = true;
+
+            // Udajemy weryfikację po 5 sekundach (Standardowy webowy trik)
+            setTimeout(async () => {
+                window.currentUserData.coins += 500;
+                window.currentUserData.ytClaimed = true;
+                
+                await updateDoc(doc(db, 'users', auth.currentUser.uid), { 
+                    coins: window.currentUserData.coins, 
+                    ytClaimed: true 
+                });
+                
+                updateProfileUI(auth.currentUser.email);
+                confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 }, colors: ['#ff0000', '#ffffff', '#ffd700'] });
+                alert("Dziękujemy za zasubskrybowanie kanału xPatrysiakGames! Otrzymujesz 💎 500 Vulkan Coins!");
+            }, 5000);
+        };
 
         // --- SKLEP I EKWIPUNEK ---
         window.applyEquippedItems = function() {
@@ -232,9 +302,7 @@
             alert(`🎁 Otwarto Daily Box!\n\nZdobywasz: 💎 ${coins} Vulkan Coins!`);
         };
 
-        // ==========================================
-        //  NOWY PANEL ZNAJOMYCH (SIDEBAR)
-        // ==========================================
+        // --- SIDEBAR ZNAJOMYCH ---
         window.toggleSidebar = function() {
             document.getElementById('friends-sidebar').classList.toggle('open');
             window.switchSidebarTab('list');
@@ -243,21 +311,14 @@
         window.switchSidebarTab = function(tabName) {
             document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
             document.getElementById(`tab-${tabName}`).classList.add('active');
-            
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`btn-tab-${tabName}`).classList.add('active');
-
             if(tabName === 'list') renderFriendsList();
         };
 
-        // Renderowanie posiadanych znajomych
         function renderFriendsList() {
-            const container = document.getElementById('friends-list-container');
-            container.innerHTML = "";
-            if(!window.currentUserData.friends || window.currentUserData.friends.length === 0) {
-                container.innerHTML = "<p style='color:#888; text-align:center; margin-top:20px;'>Brak znajomych. Poszukaj ich w zakładce Szukaj!</p>";
-                return;
-            }
+            const container = document.getElementById('friends-list-container'); container.innerHTML = "";
+            if(!window.currentUserData.friends || window.currentUserData.friends.length === 0) { container.innerHTML = "<p style='color:#888; text-align:center; margin-top:20px;'>Brak znajomych. Wyszukaj kogoś!</p>"; return; }
             window.currentUserData.friends.forEach(f => {
                 container.innerHTML += `
                 <div class="sidebar-item">
@@ -265,33 +326,27 @@
                         <img src="${f.avatar}" class="sidebar-avatar">
                         <span>${f.name}</span>
                     </div>
-                    <button class="btn" style="width:auto; padding:5px 10px; font-size:12px; margin:0;" onclick="alert('Wyślij ten kod swojemu znajomemu by zagrać prywatnie!')">Wyzwanie</button>
+                    <button class="btn" style="width:auto; padding:5px 10px; font-size:12px; margin:0;" onclick="alert('Użyj przycisku Graj Prywatnie i wyślij koledze kod pokoju.')">Graj</button>
                 </div>`;
             });
         }
 
-        // Wyszukiwanie z bazy po prawej stronie
         window.searchPlayers = async () => {
             const queryText = document.getElementById('search-input-sidebar').value.trim().toLowerCase();
             const resultsBox = document.getElementById('search-results-sidebar');
             if(!queryText) return;
-            
             resultsBox.innerHTML = "<div class='spinner' style='margin:20px auto'></div>";
             const snapshot = await getDocs(collection(db, "users"));
             let html = "";
             snapshot.forEach(d => {
                 const u = d.data();
                 if(u.uid !== auth.currentUser.uid && u.displayName.toLowerCase().includes(queryText)) {
-                    // Sprawdzenie czy już jest znajomym
                     const isFriend = window.currentUserData.friends.find(f => f.uid === u.uid);
                     html += `
                     <div class="sidebar-item">
                         <div style="display:flex; align-items:center;">
                             <img src="${u.avatar}" class="sidebar-avatar">
-                            <div>
-                                <span style="font-weight:bold; display:block;">${u.displayName}</span>
-                                <span style="font-size:10px; color:gold;">${u.elo} ELO</span>
-                            </div>
+                            <div><span style="font-weight:bold; display:block;">${window.getRankTitle(u.elo)} ${u.displayName}</span><span style="font-size:10px; color:gold;">${u.elo} ELO</span></div>
                         </div>
                         ${isFriend ? `<span style="font-size:12px; color:#888;">Znajomy</span>` : `<button class="btn" style="width:auto; padding:5px 10px; font-size:12px; margin:0;" onclick="window.sendFriendRequest('${u.uid}', '${u.displayName}')">Dodaj</button>`}
                     </div>`;
@@ -301,32 +356,20 @@
         };
 
         window.sendFriendRequest = async (toUid, toName) => {
-            await addDoc(collection(db, "mail"), {
-                type: "friend_request", fromUid: auth.currentUser.uid,
-                fromName: window.currentUserData.displayName, fromAvatar: window.currentUserData.avatar,
-                toUid: toUid, timestamp: Date.now()
-            });
-            alert(`Wysłano zaproszenie do: ${toName}`);
-            document.getElementById('search-input-sidebar').value = '';
-            document.getElementById('search-results-sidebar').innerHTML = '';
+            await addDoc(collection(db, "mail"), { type: "friend_request", fromUid: auth.currentUser.uid, fromName: window.currentUserData.displayName, fromAvatar: window.currentUserData.avatar, toUid: toUid, timestamp: Date.now() });
+            alert(`Wysłano zaproszenie do: ${toName}`); document.getElementById('search-input-sidebar').value = ''; document.getElementById('search-results-sidebar').innerHTML = '';
         };
 
-        // Nasłuchiwanie na pocztę (zaproszenia) w czasie rzeczywistym!
         function listenToMailbox() {
             const q = query(collection(db, "mail"), where("toUid", "==", auth.currentUser.uid));
             onSnapshot(q, (snapshot) => {
-                const mailBox = document.getElementById('mail-list-container');
-                let mailHtml = "";
-                let count = 0;
-                
+                const mailBox = document.getElementById('mail-list-container'); let mailHtml = ""; let count = 0;
                 snapshot.forEach(d => {
-                    count++;
-                    const mail = d.data();
+                    count++; const mail = d.data();
                     mailHtml += `
                     <div class="sidebar-item" style="flex-direction:column; align-items:flex-start;">
                         <div style="display:flex; align-items:center; margin-bottom:10px;">
-                            <img src="${mail.fromAvatar}" class="sidebar-avatar">
-                            <span style="font-size:13px;"><b>${mail.fromName}</b> zaprasza Cię!</span>
+                            <img src="${mail.fromAvatar}" class="sidebar-avatar"><span style="font-size:13px;"><b>${mail.fromName}</b> zaprasza!</span>
                         </div>
                         <div style="display:flex; gap:10px; width:100%;">
                             <button class="btn" style="background:#28a745; margin:0; padding:5px; font-size:12px;" onclick="window.acceptFriend('${d.id}', '${mail.fromUid}', '${mail.fromName}', '${mail.fromAvatar}')">Akceptuj</button>
@@ -335,15 +378,8 @@
                     </div>`;
                 });
                 mailBox.innerHTML = mailHtml || "<p style='color:#888; text-align:center;'>Brak nowych powiadomień.</p>";
-                
-                // Czerwona kropka powiadomienia
                 const notifDot = document.getElementById('sidebar-notif-dot');
-                if(count > 0) {
-                    notifDot.style.display = 'block';
-                    notifDot.innerText = count;
-                } else {
-                    notifDot.style.display = 'none';
-                }
+                if(count > 0) { notifDot.style.display = 'block'; notifDot.innerText = count; } else { notifDot.style.display = 'none'; }
             });
         }
 
@@ -353,18 +389,14 @@
             const myRef = doc(db, "users", auth.currentUser.uid);
             await updateDoc(myRef, { friends: arrayUnion({ uid: friendUid, name: friendName, avatar: friendAvatar }) });
             window.currentUserData.friends.push({ uid: friendUid, name: friendName, avatar: friendAvatar });
-
             const friendRef = doc(db, "users", friendUid);
             await updateDoc(friendRef, { friends: arrayUnion({ uid: auth.currentUser.uid, name: window.currentUserData.displayName, avatar: window.currentUserData.avatar }) });
-            await window.deleteMail(mailId);
-            alert(`Dodano ${friendName} do znajomych!`);
-            window.switchSidebarTab('list'); // powrót do listy
+            await window.deleteMail(mailId); alert(`Dodano ${friendName} do znajomych!`); window.switchSidebarTab('list');
         };
 
-
-        // --- LOGIKA MULTIPLAYER ---
+        // --- ZABEZPIECZONA LOGIKA MULTIPLAYER ---
         window.currentGameId = null; window.playerColor = 'w'; window.gameStatus = 'menu';
-        window.opponentUid = null; window.gameMode = 'casual'; window.myTime = 0; window.opponentTime = 0; window.timerInterval = null;
+        window.opponentUid = null; window.opponentRankedName = ''; window.gameMode = 'casual'; window.myTime = 0; window.opponentTime = 0; window.timerInterval = null;
 
         function setTimersByMode(mode) {
             if(mode.includes('bullet1')) return 60; if(mode.includes('blitz3')) return 180;
@@ -389,8 +421,10 @@
             showScreen('game-screen');
             document.getElementById('waiting-overlay').style.display = 'flex';
             document.getElementById('chat-messages').innerHTML = ''; 
-            document.getElementById('my-avatar').src = window.currentUserData.avatar; document.getElementById('my-name').innerText = window.currentUserData.displayName;
-            document.getElementById('opponent-avatar').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Puste"; document.getElementById('opponent-name').innerText = "Szukanie...";
+            document.getElementById('my-avatar').src = window.currentUserData.avatar; 
+            document.getElementById('my-name').innerHTML = `${window.getRankTitle(window.currentUserData.elo)} ${window.currentUserData.displayName}`;
+            document.getElementById('opponent-avatar').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Puste"; 
+            document.getElementById('opponent-name').innerText = "Szukanie...";
             
             if(isPrivate) document.getElementById('waiting-overlay').innerHTML = `<div class='spinner'></div>Czekaj na znajomego.<br><br>Twój Kod Pokoju:<br><strong style="font-size:30px; color:gold;">${privateCode}</strong>`;
             else document.getElementById('waiting-overlay').innerHTML = `<div class='spinner'></div>Szukanie przeciwnika...`;
@@ -410,11 +444,13 @@
                 
                 const updates = { status: "playing", joinerUid: auth.currentUser.uid };
                 if (window.playerColor === 'b') {
-                    document.getElementById('opponent-avatar').src = gData.whiteAvatar; document.getElementById('opponent-name').innerText = gData.whitePlayer;
-                    updates.blackPlayer = window.currentUserData.displayName; updates.blackAvatar = window.currentUserData.avatar;
+                    document.getElementById('opponent-avatar').src = gData.whiteAvatar; document.getElementById('opponent-name').innerHTML = gData.whitePlayer;
+                    updates.blackPlayer = `${window.getRankTitle(window.currentUserData.elo)} ${window.currentUserData.displayName}`; 
+                    updates.blackAvatar = window.currentUserData.avatar;
                 } else {
-                    document.getElementById('opponent-avatar').src = gData.blackAvatar; document.getElementById('opponent-name').innerText = gData.blackPlayer;
-                    updates.whitePlayer = window.currentUserData.displayName; updates.whiteAvatar = window.currentUserData.avatar;
+                    document.getElementById('opponent-avatar').src = gData.blackAvatar; document.getElementById('opponent-name').innerHTML = gData.blackPlayer;
+                    updates.whitePlayer = `${window.getRankTitle(window.currentUserData.elo)} ${window.currentUserData.displayName}`; 
+                    updates.whiteAvatar = window.currentUserData.avatar;
                 }
                 
                 await updateDoc(doc(db, "games", window.currentGameId), updates);
@@ -424,8 +460,9 @@
                 const newGame = { status: "waiting", fen: "start", mode: window.gameMode, creatorUid: auth.currentUser.uid, creatorColor: window.playerColor, messages: [] };
                 if(isPrivate) newGame.privateCode = privateCode;
 
-                if (window.playerColor === 'w') { newGame.whitePlayer = window.currentUserData.displayName; newGame.whiteAvatar = window.currentUserData.avatar; } 
-                else { newGame.blackPlayer = window.currentUserData.displayName; newGame.blackAvatar = window.currentUserData.avatar; }
+                const myFullNick = `${window.getRankTitle(window.currentUserData.elo)} ${window.currentUserData.displayName}`;
+                if (window.playerColor === 'w') { newGame.whitePlayer = myFullNick; newGame.whiteAvatar = window.currentUserData.avatar; } 
+                else { newGame.blackPlayer = myFullNick; newGame.blackAvatar = window.currentUserData.avatar; }
                 
                 const res = await addDoc(collection(db, "games"), newGame); window.currentGameId = res.id;
                 startBoard(window.playerColor); listenToGame();
@@ -438,8 +475,8 @@
                 if (data.status === 'playing' && window.gameStatus === 'waiting') {
                     window.gameStatus = 'playing'; document.getElementById('waiting-overlay').style.display = 'none';
                     window.opponentUid = data.joinerUid === auth.currentUser.uid ? data.creatorUid : data.joinerUid;
-                    if(window.playerColor === 'w') { document.getElementById('opponent-avatar').src = data.blackAvatar; document.getElementById('opponent-name').innerText = data.blackPlayer; } 
-                    else { document.getElementById('opponent-avatar').src = data.whiteAvatar; document.getElementById('opponent-name').innerText = data.whitePlayer; }
+                    if(window.playerColor === 'w') { document.getElementById('opponent-avatar').src = data.blackAvatar; document.getElementById('opponent-name').innerHTML = data.blackPlayer; } 
+                    else { document.getElementById('opponent-avatar').src = data.whiteAvatar; document.getElementById('opponent-name').innerHTML = data.whitePlayer; }
                     startTimers(); 
                 }
                 if (data.status === 'playing' && data.fen !== window.game.fen() && data.fen !== "start") {
@@ -493,7 +530,7 @@
         };
 
         window.sendChat = async function(e) { if(e.key === 'Enter' && e.target.value.trim() !== '') { const t = e.target.value.trim(); e.target.value = ''; await updateDoc(doc(db, "games", window.currentGameId), { messages: arrayUnion({ nick: window.currentUserData.displayName, text: t }) }); } };
-        document.addEventListener('mouseover', e => { if(e.target.classList.contains('btn') || e.target.classList.contains('shop-card')) window.hoverSound.play(); });
+        document.addEventListener('mouseover', e => { if(e.target.classList.contains('btn') || e.target.classList.contains('shop-card') || e.target.classList.contains('tab-btn')) window.hoverSound.play(); });
 
         // --- RANKING ---
         window.loadLeaderboard = async () => {
@@ -504,7 +541,7 @@
             snapshot.forEach(d => {
                 if(!d.data().banned) {
                     html += `<div class="list-item">
-                        <div style="display:flex; align-items:center;"><strong style="margin-right:15px; color:var(--vulcan-glow);">#${rank}</strong><img src="${d.data().avatar}" style="width:35px; height:35px; border-radius:50%; margin-right:15px; object-fit:cover; border: 1px solid var(--vulcan-glow);"><span>${d.data().displayName}</span></div>
+                        <div style="display:flex; align-items:center;"><strong style="margin-right:15px; color:var(--vulcan-glow);">#${rank}</strong><img src="${d.data().avatar}" style="width:35px; height:35px; border-radius:50%; margin-right:15px; object-fit:cover; border: 1px solid var(--vulcan-glow);"><span>${window.getRankTitle(d.data().elo)} ${d.data().displayName}</span></div>
                         <strong style="color:gold; text-shadow: 0 0 5px rgba(255,215,0,0.5);">${d.data().elo} ELO</strong></div>`; 
                     rank++;
                 }
@@ -516,7 +553,7 @@
 
     <style>
         /* === VULKAN STYL === */
-        :root { --vulcan-red: #9e0000; --vulcan-glow: #ff4500; --text-light: #fff; --glass-bg: rgba(10, 0, 0, 0.8); }
+        :root { --vulcan-red: #9e0000; --vulcan-glow: #ff4500; --text-light: #fff; --glass-bg: rgba(10, 0, 0, 0.85); }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; color: var(--text-light); display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(45deg, #050000, #1a0000, #050000); background-size: 400% 400%; animation: bgShift 20s ease infinite; overflow: hidden; position: relative; }
         @keyframes bgShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         .lava-lamp { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; filter: blur(20px); }
@@ -566,30 +603,18 @@
         .list-container { background: rgba(0,0,0,0.5); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,69,0,0.2); margin-bottom: 20px; overflow-y:auto; text-align:left; max-height:200px;} .list-item { display: flex; justify-content: space-between; align-items:center; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;} .list-item:hover { background: rgba(255,69,0,0.1); border-radius: 8px;}
         .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,69,0,0.1); border-top-color: var(--vulcan-glow); border-radius: 50%; animation: spin 1s infinite cubic-bezier(0.55, 0.15, 0.45, 0.85); margin-bottom: 20px; } @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* =========================================================
-           NOWOŚĆ: SIDEBAR ZNAJOMYCH PO PRAWEJ STRONIE
-           ========================================================= */
+        /* SIDEBAR ZNAJOMYCH */
         .sidebar-toggle-btn { position: fixed; right: 0; top: 50%; transform: translateY(-50%); background: var(--vulcan-red); color: white; padding: 15px 10px; border-radius: 10px 0 0 10px; cursor: pointer; border: 1px solid var(--vulcan-glow); border-right: none; z-index: 101; writing-mode: vertical-rl; text-orientation: mixed; font-weight: bold; font-size: 16px; box-shadow: -5px 0 15px rgba(255,69,0,0.5); transition: 0.3s; display:none;}
         .sidebar-toggle-btn:hover { background: var(--vulcan-glow); padding-right: 15px;}
         .notif-dot { position: absolute; top: 5px; right: 5px; background: red; color: white; font-size: 12px; width: 18px; height: 18px; border-radius: 50%; display: flex; justify-content: center; align-items: center; writing-mode: horizontal-tb; border: 1px solid white; display: none;}
 
         .friends-sidebar { position: fixed; right: -360px; top: 0; width: 340px; height: 100vh; background: rgba(10,0,0,0.95); border-left: 2px solid var(--vulcan-red); transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 105; padding: 20px; box-sizing: border-box; box-shadow: -10px 0 30px rgba(0,0,0,0.9); display: flex; flex-direction: column; text-align: left;}
         .friends-sidebar.open { right: 0; }
-        
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,69,0,0.3); padding-bottom: 15px; margin-bottom: 15px; }
-        .sidebar-header h2 { margin: 0; color: var(--vulcan-glow); font-size: 22px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px var(--vulcan-glow);}
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,69,0,0.3); padding-bottom: 15px; margin-bottom: 15px; } .sidebar-header h2 { margin: 0; color: var(--vulcan-glow); font-size: 22px; text-transform: uppercase; letter-spacing: 2px;}
         .close-btn { background: transparent; color: white; border: none; font-size: 24px; cursor: pointer; transition: 0.2s;} .close-btn:hover { color: var(--vulcan-glow); transform: scale(1.2); }
-
-        .sidebar-tabs { display: flex; margin-bottom: 15px; background: rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);}
-        .tab-btn { flex: 1; background: transparent; border: none; color: #aaa; padding: 10px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px;}
-        .tab-btn.active { background: rgba(255,69,0,0.2); color: white; border-bottom: 2px solid var(--vulcan-glow); }
-
-        .sidebar-tab { display: none; flex-grow: 1; overflow-y: auto; padding-right: 5px;}
-        .sidebar-tab.active { display: block; }
-        
-        .sidebar-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.02);}
-        .sidebar-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; margin-right: 10px; border: 1px solid var(--vulcan-glow);}
-
+        .sidebar-tabs { display: flex; margin-bottom: 15px; background: rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);} .tab-btn { flex: 1; background: transparent; border: none; color: #aaa; padding: 10px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px;} .tab-btn.active { background: rgba(255,69,0,0.2); color: white; border-bottom: 2px solid var(--vulcan-glow); }
+        .sidebar-tab { display: none; flex-grow: 1; overflow-y: auto; padding-right: 5px;} .sidebar-tab.active { display: block; }
+        .sidebar-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.02);} .sidebar-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; margin-right: 10px; border: 1px solid var(--vulcan-glow);}
     </style>
 </head>
 <body>
@@ -598,35 +623,23 @@
     <div id="wallet-ui" class="wallet-display" style="display:none;">💎 <span id="player-coins">0</span></div>
 
     <div class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="window.toggleSidebar()">
-        👥 ZNAJOMI
-        <div class="notif-dot" id="sidebar-notif-dot">!</div>
+        👥 ZNAJOMI <div class="notif-dot" id="sidebar-notif-dot">!</div>
     </div>
 
     <div id="friends-sidebar" class="friends-sidebar">
-        <div class="sidebar-header">
-            <h2>Społeczność</h2>
-            <button class="close-btn" onclick="window.toggleSidebar()">✖</button>
-        </div>
-        
+        <div class="sidebar-header"><h2>Społeczność</h2><button class="close-btn" onclick="window.toggleSidebar()">✖</button></div>
         <div class="sidebar-tabs">
             <button class="tab-btn active" id="btn-tab-list" onclick="window.switchSidebarTab('list')">Lista</button>
             <button class="tab-btn" id="btn-tab-search" onclick="window.switchSidebarTab('search')">Szukaj</button>
             <button class="tab-btn" id="btn-tab-mail" onclick="window.switchSidebarTab('mail')">Poczta</button>
         </div>
-
-        <div id="tab-list" class="sidebar-tab active">
-            <div id="friends-list-container"></div>
-        </div>
-
+        <div id="tab-list" class="sidebar-tab active"><div id="friends-list-container"></div></div>
         <div id="tab-search" class="sidebar-tab">
             <input type="text" id="search-input-sidebar" placeholder="Wpisz nick..." class="custom-input" style="width:100%; margin-top:0;">
             <button class="btn" onclick="window.searchPlayers()">Szukaj w bazie</button>
             <div id="search-results-sidebar" style="margin-top:15px;"></div>
         </div>
-
-        <div id="tab-mail" class="sidebar-tab">
-            <div id="mail-list-container"></div>
-        </div>
+        <div id="tab-mail" class="sidebar-tab"><div id="mail-list-container"></div></div>
     </div>
 
     <div id="menu-screen" class="screen active">
@@ -642,7 +655,7 @@
                     <div style="display:flex; align-items:center;">
                         <img id="profile-img" src="" class="profile-img">
                         <div style="text-align:left;">
-                            <h3 id="player-nick" style="margin:0; font-size:22px; text-shadow: 0 0 5px rgba(255,255,255,0.3);">Gracz</h3>
+                            <h3 id="player-nick" style="margin:0; font-size:18px; text-shadow: 0 0 5px rgba(255,255,255,0.3);">Gracz</h3>
                             <p style="margin:2px 0 0 0; color:gold; font-weight:bold; font-size:16px;">🏆 ELO: <span id="player-elo">1000</span></p>
                         </div>
                     </div>
@@ -656,6 +669,8 @@
                     <div class="stat-box"><span id="stat-draws" style="color:#aaa;">0</span><small>Remisy</small></div>
                 </div>
                 
+                <button id="yt-btn" class="btn" style="background: linear-gradient(135deg, #ff0000, #cc0000); box-shadow: 0 0 15px rgba(255,0,0,0.5);" onclick="window.claimYTReward()">📺 Subskrybuj xPatrysiakGames (+500 💎)</button>
+
                 <div class="row-buttons">
                     <button class="btn" style="background: linear-gradient(135deg, #d4af37, #b8860b);" onclick="window.openDailyBox()">🎁 Daily Box</button>
                     <button class="btn" style="background: linear-gradient(135deg, #0059b3, #003366);" onclick="window.openShop()">🛒 Sklep</button>
@@ -723,7 +738,7 @@
                 </label>
             </div>
             <input type="text" id="nick-input" placeholder="Podaj swój nick..." class="custom-input">
-            <button id="setup-btn" class="btn" style="margin-top:20px; padding:15px; font-size:18px;" onclick="window.saveProfile()">Zapisz profil i wejdź do gry</button>
+            <button id="setup-btn" class="btn" style="margin-top:20px; padding:15px; font-size:18px;" onclick="window.saveProfile()">Zapisz profil</button>
         </div>
     </div>
 
@@ -732,7 +747,7 @@
         <div id="board-wrapper"><div id="myBoard"></div><div id="waiting-overlay">Czekaj...</div></div>
         <div class="match-player"><div class="player-left"><img id="my-avatar"><span id="my-name">...</span></div><div class="timer" id="my-timer">--:--</div></div>
         <div class="chat-container"><div id="chat-messages"></div><input type="text" id="chat-input" placeholder="Napisz wiadomość... (Enter)" onkeypress="window.sendChat(event)"></div>
-        <p id="status" style="color:var(--text-light); font-weight:bold; font-size:18px; margin:10px 0; text-transform:uppercase; letter-spacing:1px; text-shadow: 0 0 10px var(--vulcan-glow);"></p>
+        <p id="status" style="color:var(--text-light); font-weight:bold; font-size:16px; margin:10px 0; text-transform:uppercase; letter-spacing:1px; text-shadow: 0 0 10px var(--vulcan-glow);"></p>
         <button class="btn" onclick="window.quitGame()" style="width:280px; margin:0 auto; background: linear-gradient(135deg, #660000, #220000);">Poddaj Grę / Opuść Pokój</button>
     </div>
 
@@ -800,8 +815,8 @@
         function startBotMatch() {
             window.isOnline = false; isPlayingBot = true; window.playerColor = 'w'; window.gameStatus = 'playing'; window.gameMode = 'casual'; window.game.reset();
             document.getElementById('waiting-overlay').style.display = 'none';
-            document.getElementById('opponent-name').innerText = "Stockfish Bot"; document.getElementById('opponent-avatar').src = "https://api.dicebear.com/7.x/bottts/svg?seed=Bot";
-            document.getElementById('my-name').innerText = window.currentUserData ? window.currentUserData.displayName : "Gość";
+            document.getElementById('opponent-name').innerHTML = "<span style='color:#a0a0a0'>[AI]</span> Stockfish Bot"; document.getElementById('opponent-avatar').src = "https://api.dicebear.com/7.x/bottts/svg?seed=Bot";
+            document.getElementById('my-name').innerHTML = window.currentUserData ? `${window.getRankTitle(window.currentUserData.elo)} ${window.currentUserData.displayName}` : "Gość";
             document.getElementById('my-avatar').src = window.currentUserData ? window.currentUserData.avatar : "https://api.dicebear.com/7.x/avataaars/svg?seed=1";
             document.getElementById('opponent-timer').innerText = '--:--'; document.getElementById('my-timer').innerText = '--:--';
             document.getElementById('chat-messages').innerHTML = '<i><center>Z botem nie pogadasz.</center></i>';

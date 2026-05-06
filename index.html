@@ -2,1309 +2,223 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>33MC.PL - Custom App V-MAX</title>
+    <title>Territorial MMO Engine</title>
     <style>
-        /* =========================================================
-           1. ZMIENNE KOLORYSTYCZNE I MOTYW (Zgodne ze screenami)
-           ========================================================= */
-        :root {
-            --bg-tertiary: #1e1f22;   /* Najciemniejszy - pasek serwerów */
-            --bg-secondary: #2b2d31;  /* Średni - lista znajomych / prawy panel */
-            --bg-primary: #313338;    /* Główny czat */
-            --bg-floating: #111214;   /* Tła modali i wyskakujących okien */
-            --bg-message-hover: #2e3035;
-            --bg-modifier-hover: rgba(78, 80, 88, 0.3);
-            --bg-modifier-active: rgba(78, 80, 88, 0.48);
-            
-            --bg-input: #383a40;
-            --text-normal: #dbdee1;
-            --text-muted: #949ba4;
-            --header-primary: #f2f3f5;
-            --header-secondary: #b5bac1;
-            
-            --brand-color: #5865F2;
-            --brand-hover: #4752c4;
-            --custom-orange: #f39c12; /* Kolor Twojego nowego logo i postów */
-            --danger-color: #da373c;
-            --success-color: #23a559;
-            --warning-color: #f0b232;
-            --orbs-cyan: #00e5ff;
-        }
-
-        /* =========================================================
-           2. RESET BAZOWY
-           ========================================================= */
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-            font-family: 'Segoe UI', Tahoma, Helvetica, sans-serif; 
-        }
-
-        body { 
-            background-color: var(--bg-primary); 
-            color: var(--text-normal); 
-            display: flex; 
-            height: 100vh; 
-            width: 100vw; 
-            overflow: hidden; 
-            font-size: 14px; 
-        }
-
-        button, input, select { 
-            outline: none; 
-            border: none; 
-            font-family: inherit; 
-            background: transparent; 
-        }
-
-        svg { 
-            width: 24px; 
-            height: 24px; 
-            fill: currentColor; 
-        }
-
-        /* Paski przewijania */
-        ::-webkit-scrollbar { 
-            width: 8px; 
-            height: 8px; 
-        }
-        ::-webkit-scrollbar-track { 
-            background: var(--bg-tertiary); 
-            border-radius: 4px; 
-        }
-        ::-webkit-scrollbar-thumb { 
-            background: #1a1b1e; 
-            border-radius: 4px; 
-            border: 2px solid var(--bg-tertiary);
-        }
-        ::-webkit-scrollbar-thumb:hover { 
-            background: #2b2d31; 
-        }
-
-        /* =========================================================
-           3. EKRAN LOGOWANIA I BŁĘDÓW
-           ========================================================= */
-        #login-screen { 
-            position: fixed; 
-            inset: 0; 
-            background: var(--bg-tertiary); 
-            z-index: 9999; 
-            display: none; 
-            justify-content: center; 
-            align-items: center; 
-            flex-direction: column;
-        }
+        :root { --bg: #111; --panel: #222; --text: #eee; --accent: #e67e22; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        #login-screen.active { 
-            display: flex; 
-        }
+        /* UI HUD */
+        #hud { display: flex; justify-content: space-between; background: var(--panel); padding: 15px 30px; border-bottom: 2px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 10; }
+        .hud-section { display: flex; gap: 20px; align-items: center; }
+        .stat-box { background: #000; padding: 5px 15px; border-radius: 5px; font-weight: bold; border: 1px solid #444; }
+        .clan-tag { color: #f1c40f; }
+        button { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #d35400; }
 
-        .login-box { 
-            background: var(--bg-primary); 
-            padding: 40px; 
-            border-radius: 8px; 
-            width: 480px; 
-            text-align: center; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-        }
-
-        .custom-logo { 
-            width: 80px; 
-            height: 80px; 
-            margin-bottom: 20px; 
-        }
-
-        .login-box h2 { 
-            color: var(--header-primary); 
-            font-size: 24px; 
-            margin-bottom: 8px; 
-            font-weight: 700; 
-        }
-
-        .login-box p { 
-            color: var(--header-secondary); 
-            font-size: 15px; 
-            margin-bottom: 30px; 
-        }
-
-        .btn-brand { 
-            background: var(--brand-color); 
-            color: white; 
-            width: 100%; 
-            padding: 14px; 
-            border-radius: 4px; 
-            font-size: 16px; 
-            cursor: pointer; 
-            transition: background 0.2s; 
-            font-weight: 600; 
-        }
-
-        .btn-brand:hover { 
-            background: var(--brand-hover); 
-        }
-
-        #login-error {
-            color: var(--danger-color);
-            background: rgba(218, 55, 60, 0.1);
-            padding: 15px;
-            border-radius: 5px;
-            margin-top: 20px;
-            font-size: 13px;
-            display: none;
-            border: 1px solid var(--danger-color);
-            text-align: left;
-        }
-
-        #app-container { 
-            display: none; 
-            width: 100vw; 
-            height: 100vh; 
-        }
+        /* Game Area */
+        #game-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
+        canvas { border: 2px solid #444; box-shadow: 0 0 20px rgba(0,0,0,0.5); cursor: crosshair; }
         
-        #app-container.active { 
-            display: flex; 
-        }
-
-        /* =========================================================
-           4. PASEK SERWERÓW (Skrajna Lewa)
-           ========================================================= */
-        .servers-nav { 
-            width: 72px; 
-            min-width: 72px; 
-            background-color: var(--bg-tertiary); 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            padding-top: 12px; 
-            gap: 8px; 
-            z-index: 10; 
-            overflow-y: auto; 
-        }
-        
-        .servers-nav::-webkit-scrollbar { 
-            display: none; 
-        }
-
-        .server-icon-wrapper { 
-            position: relative; 
-            display: flex; 
-            justify-content: center; 
-            width: 100%; 
-            cursor: pointer; 
-        }
-
-        .server-pill { 
-            position: absolute; 
-            left: 0; 
-            top: 50%; 
-            transform: translateY(-50%); 
-            width: 4px; 
-            height: 8px; 
-            background: white; 
-            border-radius: 0 4px 4px 0; 
-            transition: 0.2s; 
-            opacity: 0; 
-        }
-
-        .server-icon-wrapper:hover .server-pill { 
-            height: 20px; 
-            opacity: 1; 
-        }
-
-        .server-icon-wrapper.active .server-pill { 
-            height: 40px; 
-            opacity: 1; 
-        }
-
-        .server-icon { 
-            width: 48px; 
-            height: 48px; 
-            border-radius: 50%; 
-            background-color: var(--bg-primary); 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            transition: 0.2s; 
-            overflow: hidden; 
-            font-weight: bold; 
-            font-size: 20px; 
-            color: var(--text-normal); 
-        }
-
-        .server-icon img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-        }
-
-        .server-icon-wrapper:hover .server-icon, 
-        .server-icon-wrapper.active .server-icon { 
-            border-radius: 16px; 
-            background-color: var(--brand-color); 
-            color: white; 
-        }
-
-        /* Twój customowy serwer 33MC ma pomarańczowe podświetlenie */
-        .server-icon-wrapper.server-33mc:hover .server-icon,
-        .server-icon-wrapper.server-33mc.active .server-icon {
-            background-color: var(--custom-orange);
-        }
-
-        .server-separator { 
-            width: 32px; 
-            height: 2px; 
-            background: var(--bg-modifier-active); 
-            margin: 4px 0; 
-            flex-shrink: 0; 
-        }
-
-        /* =========================================================
-           5. BOCZNY PANEL (Lista znajomych / Kanałów)
-           ========================================================= */
-        .sidebar { 
-            width: 240px; 
-            min-width: 240px; 
-            background-color: var(--bg-secondary); 
-            display: flex; 
-            flex-direction: column; 
-        }
-
-        .sidebar-header { 
-            height: 48px; 
-            min-height: 48px; 
-            padding: 0 16px; 
-            display: flex; 
-            align-items: center; 
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2); 
-            font-weight: 600; 
-            color: var(--header-primary); 
-            border-bottom: 1px solid var(--bg-tertiary); 
-            transition: 0.2s; 
-            cursor: pointer; 
-        }
-
-        .sidebar-header:hover { 
-            background: var(--bg-modifier-hover); 
-        }
-
-        .sidebar-search {
-            width: 100%; 
-            background: var(--bg-tertiary); 
-            color: white; 
-            padding: 6px 8px; 
-            border-radius: 4px; 
-            font-size: 13px;
-        }
-
-        .sidebar-content { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 8px; 
-        }
-
-        .category-name { 
-            font-size: 12px; 
-            font-weight: 700; 
-            color: var(--header-secondary); 
-            text-transform: uppercase; 
-            margin: 16px 8px 4px; 
-            display: flex; 
-            justify-content: space-between; 
-        }
-
-        .list-item { 
-            padding: 8px; 
-            border-radius: 4px; 
-            display: flex; 
-            align-items: center; 
-            cursor: pointer; 
-            color: var(--text-muted); 
-            margin-bottom: 2px; 
-            transition: 0.1s; 
-            font-weight: 500;
-        }
-
-        .list-item:hover { 
-            background: var(--bg-modifier-hover); 
-            color: var(--text-normal); 
-        }
-
-        .list-item.active { 
-            background: var(--bg-modifier-active); 
-            color: var(--text-normal); 
-        }
-
-        .avatar-container { 
-            position: relative; 
-            margin-right: 12px; 
-            width: 32px; 
-            height: 32px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            border-radius: 50%; 
-        }
-
-        .list-avatar { 
-            width: 100%; 
-            height: 100%; 
-            border-radius: 50%; 
-            object-fit: cover; 
-        }
-
-        /* Obramówka na posty (Zmieniono na Twój pomarańczowy kolor) */
-        @keyframes storyPulse { 
-            0% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--custom-orange); } 
-            50% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 7px rgba(243, 156, 18, 0.4); } 
-            100% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--custom-orange); } 
-        }
-
-        .list-avatar.has-post { 
-            animation: storyPulse 2.5s infinite; 
-            cursor: pointer; 
-            border: 2px solid var(--bg-secondary); 
-        }
-
-        .status-dot { 
-            position: absolute; 
-            bottom: -2px; 
-            right: -2px; 
-            width: 12px; 
-            height: 12px; 
-            border-radius: 50%; 
-            border: 2px solid var(--bg-secondary); 
-        }
-
-        /* =========================================================
-           6. PANEL UŻYTKOWNIKA NA DOLE (Z ORBSAMI)
-           ========================================================= */
-        .user-panel { 
-            height: 65px; 
-            min-height: 65px; 
-            background: #232428; 
-            display: flex; 
-            align-items: center; 
-            padding: 0 8px; 
-            justify-content: space-between; 
-        }
-
-        .user-profile { 
-            display: flex; 
-            align-items: center; 
-            padding: 4px; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            flex: 1; 
-            overflow: hidden; 
-        }
-
-        .user-profile:hover { 
-            background: var(--bg-modifier-hover); 
-        }
-
-        .user-info { 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden; 
-            width: 100%; 
-        }
-
-        .user-info strong { 
-            font-size: 13px; 
-            color: var(--header-primary); 
-            white-space: nowrap; 
-            text-overflow: ellipsis; 
-        }
-
-        .user-info span { 
-            font-size: 11px; 
-            color: var(--header-secondary); 
-        }
-
-        .orbs-bar-container { 
-            width: 100%; 
-            height: 4px; 
-            background: var(--bg-modifier-active); 
-            border-radius: 2px; 
-            margin-top: 4px; 
-            overflow: hidden; 
-        }
-
-        .orbs-bar-fill { 
-            height: 100%; 
-            background: var(--orbs-cyan); 
-            width: 0%; 
-            transition: width 0.3s ease; 
-            box-shadow: 0 0 5px var(--orbs-cyan); 
-        }
-
-        .user-controls { 
-            display: flex; 
-            gap: 2px; 
-        }
-
-        .control-btn { 
-            width: 32px; 
-            height: 32px; 
-            border-radius: 4px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            color: var(--header-secondary); 
-            cursor: pointer; 
-            transition: 0.1s; 
-        }
-
-        .control-btn:hover { 
-            background: var(--bg-modifier-hover); 
-            color: var(--text-normal); 
-        }
-
-        /* =========================================================
-           7. GŁÓWNY WIDOK CZATU / ZNAJOMYCH
-           ========================================================= */
-        .main-content { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            background: var(--bg-primary); 
-            overflow: hidden; 
-        }
-
-        .top-bar { 
-            height: 48px; 
-            min-height: 48px; 
-            padding: 0 16px; 
-            display: flex; 
-            align-items: center; 
-            border-bottom: 1px solid var(--bg-tertiary); 
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
-        }
-
-        .chat-header-title {
-            color: white; 
-            font-size: 16px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-        }
-        
-        .friends-tabs {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-left: 20px;
-        }
-
-        .tab-btn {
-            color: var(--header-secondary);
-            font-size: 15px;
-            font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .tab-btn:hover {
-            background: var(--bg-modifier-hover);
-            color: var(--text-normal);
-        }
-
-        .tab-btn.active {
-            background: var(--bg-modifier-active);
-            color: white;
-        }
-
-        .tab-btn.add-friend-btn {
-            background: var(--success-color);
-            color: white;
-        }
-        
-        .top-bar-actions { 
-            display: flex; 
-            gap: 15px; 
-            color: var(--header-secondary); 
-            margin-left: auto;
-        }
-
-        .top-bar-actions svg { 
-            cursor: pointer; 
-            transition: 0.2s; 
-        }
-
-        .top-bar-actions svg:hover { 
-            color: var(--text-normal); 
-        }
-
-        .chat-and-members { 
-            flex: 1; 
-            display: flex; 
-            overflow: hidden; 
-        }
-
-        .messages-wrapper { 
-            flex: 1; 
-            display: flex; 
-            flex-direction: column; 
-            min-width: 0; 
-        }
-
-        .messages-list { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 16px 0; 
-            display: flex; 
-            flex-direction: column; 
-        }
-
-        /* Wygląd Wiadomości */
-        .message { 
-            padding: 4px 16px 4px 72px; 
-            position: relative; 
-            margin-top: 17px; 
-        }
-
-        .message:hover { 
-            background: var(--bg-message-hover); 
-        }
-
-        .msg-avatar { 
-            position: absolute; 
-            left: 16px; 
-            top: 4px; 
-            width: 40px; 
-            height: 40px; 
-            border-radius: 50%; 
-            object-fit: cover; 
-        }
-
-        .msg-header { 
-            display: flex; 
-            align-items: baseline; 
-            margin-bottom: 2px; 
-        }
-
-        .msg-author-name { 
-            color: var(--header-primary); 
-            font-weight: 500; 
-            font-size: 16px; 
-            margin-right: 8px; 
-            display: flex; 
-            align-items: center; 
-            gap: 6px; 
-        }
-
-        .msg-time { 
-            color: var(--text-muted); 
-            font-size: 12px; 
-        }
-
-        .msg-content { 
-            color: var(--text-normal); 
-            font-size: 15px; 
-            line-height: 1.4; 
-            word-wrap: break-word; 
-        }
-
-        /* Odznaki w wiadomościach */
-        .orbs-badge { 
-            background: var(--orbs-cyan); 
-            color: black; 
-            font-size: 10px; 
-            padding: 2px 6px; 
-            border-radius: 10px; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            box-shadow: 0 0 5px rgba(0, 229, 255, 0.5); 
-        }
-
-        .lvl-badge { 
-            background: var(--bg-modifier-active); 
-            color: var(--text-normal); 
-            font-size: 10px; 
-            padding: 2px 6px; 
-            border-radius: 4px; 
-            font-weight: bold;
-        }
-
-        /* Pole Input na czacie */
-        .input-area { 
-            padding: 0 16px 24px; 
-            flex-shrink: 0; 
-        }
-
-        .input-wrapper { 
-            background: var(--bg-input); 
-            border-radius: 8px; 
-            display: flex; 
-            align-items: center; 
-            padding: 12px 16px; 
-        }
-
-        .chat-input { 
-            flex: 1; 
-            color: var(--text-normal); 
-            font-size: 15px; 
-            margin: 0 10px; 
-            width: 100%; 
-        }
-
-        /* =========================================================
-           8. WIDOK DODAWANIA ZNAJOMEGO
-           ========================================================= */
-        .add-friend-container {
-            padding: 30px;
-            display: none;
-            flex-direction: column;
-        }
-
-        .add-friend-container.active {
-            display: flex;
-        }
-
-        .add-friend-container h2 {
-            color: white;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .add-friend-container p {
-            color: var(--header-secondary);
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .add-friend-input-box {
-            display: flex;
-            background: var(--bg-tertiary);
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid var(--bg-modifier-active);
-        }
-
-        .add-friend-input-box input {
-            flex: 1;
-            background: transparent;
-            color: white;
-            font-size: 16px;
-            padding: 5px;
-        }
-
-        .add-friend-btn-submit {
-            background: var(--brand-color);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .add-friend-btn-submit.disabled {
-            background: var(--bg-modifier-active);
-            color: var(--text-muted);
-            cursor: not-allowed;
-        }
-
-        /* =========================================================
-           9. PRAWY PANEL (AKTYWNI / ROLE)
-           ========================================================= */
-        .right-panel { 
-            width: 240px; 
-            min-width: 240px; 
-            background: var(--bg-secondary); 
-            border-left: 1px solid var(--bg-modifier-active); 
-            display: flex; 
-            flex-direction: column; 
-            overflow-y: auto; 
-            padding: 16px 8px; 
-        }
-
-        .role-header { 
-            font-size: 12px; 
-            font-weight: 800; 
-            color: var(--header-secondary); 
-            text-transform: uppercase; 
-            margin: 10px 8px 4px; 
-        }
-
-        .member-item { 
-            padding: 6px 8px; 
-            border-radius: 4px; 
-            display: flex; 
-            align-items: center; 
-            cursor: pointer; 
-            margin-bottom: 2px; 
-        }
-
-        .member-item:hover { 
-            background: var(--bg-modifier-hover); 
-        }
-
-        .member-avatar { 
-            width: 32px; 
-            height: 32px; 
-            border-radius: 50%; 
-            margin-right: 12px; 
-            object-fit: cover; 
-        }
-
-        /* =========================================================
-           10. MODALE I WYSKAKUJĄCE OKNA
-           ========================================================= */
-        .modal-overlay { 
-            position: fixed; 
-            inset: 0; 
-            background: rgba(0,0,0,0.85); 
-            z-index: 20000; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            opacity: 0; 
-            pointer-events: none; 
-            transition: 0.2s;
-        }
-
-        .modal-overlay.active { 
-            opacity: 1; 
-            pointer-events: all; 
-        }
-
-        .modal-content { 
-            background: var(--bg-primary); 
-            border-radius: 8px; 
-            width: 460px; 
-            padding: 24px; 
-            position: relative; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-        }
-
-        .modal-content h2 { 
-            color: white; 
-            margin-bottom: 20px; 
-            text-align: center; 
-        }
-        
-        .modal-close { 
-            position: absolute; 
-            top: 15px; 
-            right: 15px; 
-            color: var(--header-secondary); 
-            cursor: pointer; 
-        }
-
-        .modal-close:hover { 
-            color: white; 
-        }
-        
-        .btn-submit { 
-            background: var(--brand-color); 
-            color: white; 
-            padding: 12px 24px; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            width: 100%; 
-            font-weight: bold; 
-            margin-top: 15px; 
-        }
-
-        .form-group { 
-            margin-bottom: 15px; 
-        }
-
-        .form-label { 
-            display: block; 
-            color: var(--header-secondary); 
-            font-size: 12px; 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            margin-bottom: 5px; 
-        }
-
-        .form-input { 
-            width: 100%; 
-            padding: 10px; 
-            background: var(--bg-tertiary); 
-            color: white; 
-            border-radius: 4px; 
-            font-size: 14px; 
-        }
-
-        /* Toasty powiadomień */
-        #toast-container { 
-            position: fixed; 
-            bottom: 20px; 
-            right: 20px; 
-            z-index: 99999; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-            pointer-events: none; 
-        }
-
-        .toast { 
-            background: var(--bg-floating); 
-            border-left: 4px solid var(--orbs-cyan); 
-            padding: 15px 20px; 
-            border-radius: 4px; 
-            color: white; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
-            display: flex; 
-            align-items: center; 
-            gap: 15px; 
-            font-weight: 500;
-        }
-
+        /* Ukryty canvas do czytania mapy (maski kolizji) */
+        #collisionCanvas { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="active">
-        <div class="login-box">
-            <svg class="custom-logo" viewBox="0 0 100 100">
-                <polygon points="50,5 95,25 95,75 50,95 5,75 5,25" fill="var(--custom-orange)"/>
-                <text x="50" y="60" font-size="36" text-anchor="middle" fill="white" font-family="Arial" font-weight="bold">33</text>
-            </svg>
-            <h2>Witaj w 33MC.PL</h2>
-            <p>Zaloguj się przez Firebase, aby wejść na serwer, odblokować Orbsy i dodawać znajomych!</p>
-            <button class="btn-brand" id="google-login">Zaloguj przez Google</button>
-            
-            <div id="login-error">
-                <strong>Wystąpił błąd logowania!</strong><br>
-                Zapewne uruchomiłeś ten plik dwukrotnym kliknięciem (lokalizacja file://). <br><br>
-                Zabezpieczenia Firebase tego nie przepuszczą. Musisz zainstalować rozszerzenie <b>Live Server</b> w VS Code i uruchomić to przez niego.
-            </div>
+    <div id="hud">
+        <div class="hud-section">
+            <div class="stat-box">Gracz: <span class="clan-tag">[DEV]</span> <span id="ui-name">Admin</span></div>
+            <div class="stat-box">Terytorium: <span id="ui-score">0</span> px</div>
+        </div>
+        <div class="hud-section">
+            <button onclick="Engine.changeMap('poland')">Mapa Polski</button>
+            <button onclick="Engine.changeMap('world')">Mapa Świata</button>
+            <button id="btn-login" style="background: #2980b9;">Połącz z Firebase</button>
         </div>
     </div>
 
-    <div id="app-container">
-        
-        <nav class="servers-nav">
-            <div class="server-icon-wrapper active" id="btn-home-view">
-                <div class="server-pill" style="opacity:1; height:40px;"></div>
-                <div class="server-icon" style="background: var(--brand-color);">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-                </div>
-            </div>
-            
-            <div class="server-separator"></div>
-            
-            <div class="server-icon-wrapper server-33mc" id="btn-server-view">
-                <div class="server-pill"></div>
-                <div class="server-icon">
-                    <img src="https://api.dicebear.com/7.x/initials/svg?seed=33MC&backgroundColor=f39c12">
-                </div>
-            </div>
-        </nav>
-
-        <aside class="sidebar">
-            <div class="sidebar-header" id="sidebar-label">
-                <input type="text" class="sidebar-search" placeholder="Znajdź rozmowę...">
-            </div>
-            
-            <div class="sidebar-content" id="sidebar-content">
-                </div>
-
-            <div class="user-panel">
-                <div class="user-profile" id="open-settings">
-                    <div class="avatar-container" style="margin-right: 8px;">
-                        <img id="my-av" src="" class="list-avatar">
-                        <div id="my-dot" class="stat-dot" style="background:var(--success-color)"></div>
-                    </div>
-                    <div class="user-info">
-                        <strong id="my-name-val">Ładowanie...</strong>
-                        <span id="my-lvl-val">Poziom 1</span>
-                        <div class="orbs-bar-container"><div id="my-orbs-bar" class="orbs-bar-fill"></div></div>
-                    </div>
-                </div>
-                <div class="user-controls">
-                    <button class="control-btn" title="Dodaj posta / relację" onclick="document.getElementById('modal-post-add').classList.add('active')">
-                        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                    </button>
-                    <button class="control-btn" title="Ustawienia Profilu" onclick="document.getElementById('modal-settings').classList.add('active')">
-                        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.04.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                    </button>
-                </div>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <header class="top-bar">
-                <div style="display:flex; align-items:center;">
-                    <svg style="color:#80848e; margin-right:8px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-                    <strong class="chat-header-title" id="chat-header-title">Znajomi</strong>
-                    
-                    <div class="friends-tabs" id="friends-tabs">
-                        <div class="tab-btn active" id="tab-online">Dostępny</div>
-                        <div class="tab-btn" id="tab-all">Wszystkie</div>
-                        <div class="tab-btn" id="tab-pending">Oczekujące <span style="background:var(--danger-color); border-radius:50%; width:16px; height:16px; display:inline-block; text-align:center; font-size:11px; color:white; line-height:16px;">1</span></div>
-                        <div class="tab-btn add-friend-btn" id="tab-add">Dodaj znajomego</div>
-                    </div>
-                </div>
-                
-                <div class="top-bar-actions">
-                    <svg title="Pomoc"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
-                </div>
-            </header>
-
-            <div class="chat-and-members">
-                
-                <section class="messages-wrapper" id="chat-section">
-                    <div class="messages-list" id="msg-area"></div>
-                    <div class="input-area">
-                        <div class="input-wrapper">
-                            <svg style="color:var(--header-secondary); margin-right:15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
-                            <input type="text" class="chat-input" id="msg-input" placeholder="Napisz tutaj (Zdobywaj Orbs!)">
-                        </div>
-                    </div>
-                </section>
-
-                <section class="messages-wrapper add-friend-container" id="add-friend-section">
-                    <h2>DODAJ ZNAJOMEGO</h2>
-                    <p>Możesz dodać znajomego używając jego nazwy użytkownika Discorda.</p>
-                    <div class="add-friend-input-box">
-                        <input type="text" id="friend-search-input" placeholder="Wpisz nazwę znajomego np. patrysiak" onkeyup="checkFriendInput()">
-                        <button class="add-friend-btn-submit disabled" id="send-friend-req">Wyślij zaproszenie znajomemu</button>
-                    </div>
-                </section>
-
-                <aside class="right-panel" id="members-list"></aside>
-            </div>
-        </main>
+    <div id="game-wrapper">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <canvas id="collisionCanvas" width="800" height="600"></canvas>
     </div>
 
-    <div class="modal-overlay" id="modal-settings">
-        <div class="modal-content">
-            <svg class="modal-close" onclick="document.getElementById('modal-settings').classList.remove('active')"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            <h2>Ustawienia Konta</h2>
-            
-            <div style="text-align:center; margin-bottom:20px;">
-                <img id="prev-av" src="" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:3px solid var(--custom-orange);">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Nazwa Wyświetlana</label>
-                <input type="text" id="edit-nick" class="form-input">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Status Aktywności</label>
-                <select id="edit-stat" class="form-input">
-                    <option value="online">Dostępny 🟢</option>
-                    <option value="idle">Zaraz wracam 🌙</option>
-                    <option value="dnd">Nie przeszkadzać 🔴</option>
-                </select>
-            </div>
-            <button class="btn-submit" id="save-prof">Zapisz Ustawienia</button>
-            <button class="btn-submit" style="background:transparent; border:1px solid var(--danger-color); color:var(--danger-color); margin-top:10px;" id="logout-btn">Wyloguj z Firebase</button>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="modal-post-add">
-        <div class="modal-content">
-            <svg class="modal-close" onclick="document.getElementById('modal-post-add').classList.remove('active')"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            <h2>Dodaj Relację (Znika po 24h)</h2>
-            <div class="form-group">
-                <label class="form-label">Treść relacji</label>
-                <input type="text" id="post-txt-input" class="form-input" placeholder="Co tam słychać?">
-            </div>
-            <button class="btn-submit" id="publish-btn">Opublikuj Post</button>
-        </div>
-    </div>
-
-    <div id="toast-container"></div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-        // Konfiguracja Twojego Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
-            authDomain: "xchess-79e2d.firebaseapp.com",
-            projectId: "xchess-79e2d"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
-
-        let currentUser = null;
-        let activeView = "home"; 
-        let activeTab = "online"; 
-        let postTimer = null;
-
-        const ORBS_PER_MSG = 25;
-        const ONE_DAY = 24 * 60 * 60 * 1000;
-
-        function getReqOrbs(lvl) { 
-            return Math.floor(150 * Math.pow(1.3, lvl - 1)); 
+    <script>
+        /**
+         * KLASY DANYCH (Przygotowane pod Firebase)
+         */
+        class Player {
+            constructor(id, name, clan, color) {
+                this.id = id;
+                this.name = name;
+                this.clan = clan;
+                this.color = color;
+                this.pixelsOwned = 0;
+            }
         }
 
-        // --- BAZA DANYCH (MOCK) ---
-        const mockData = {
-            friends: [
-                { id: "f1", name: "Anna Nowak", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anna", status: "online", post: {text: "Hejka!", ts: Date.now() - 5000000} },
-                { id: "f2", name: "Blaaqu", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Blaaqu", status: "idle", post: null },
-                { id: "f3", name: "Kamil", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kamil", status: "offline", post: null }
-            ],
-            pending: [
-                { name: "xPatrysiak", avatar: "https://api.dicebear.com/7.x/bot/svg?seed=Patryk", type: "Przychodzące" }
-            ],
-            messages: [
-                { author: "Blaaqu", av: "https://api.dicebear.com/7.x/avataaars/svg?seed=Blaaqu", text: "Siema, działa wam nowy system orbsów?", lvl: 150, orbsBadge: 3, time: "Wczoraj 22:23" }
-            ],
-            serverRoles: [
-                { name: "Zarząd", color: "color:#e91e63;", users: [{ name: "Blaaqu", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Blaaqu", lvl: 150, pr: 5, status: "idle" }] },
-                { name: "Gracze", color: "", users: [] }
-            ]
-        };
+        class Cell {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.ownerId = null; // Kto posiada piksel
+                this.defense = 0;    // Siła obrony
+            }
+        }
 
-        // --- LOGOWANIE (TRY CATCH) ---
-        document.getElementById('google-login').onclick = () => {
-            const btn = document.getElementById('google-login');
-            btn.innerText = "Łączenie...";
+        /**
+         * GŁÓWNY SILNIK GRY
+         */
+        const Engine = {
+            canvas: document.getElementById('gameCanvas'),
+            ctx: document.getElementById('gameCanvas').getContext('2d'),
+            colCanvas: document.getElementById('collisionCanvas'),
+            colCtx: document.getElementById('collisionCanvas').getContext('2d', { willReadFrequently: true }),
             
-            signInWithPopup(auth, provider).catch(e => {
-                console.error(e);
-                btn.innerText = "Zaloguj przez Google";
-                document.getElementById('login-error').style.display = "block"; // Pokazuje błąd Live Servera
-            });
-        };
+            width: 800,
+            height: 600,
+            gridSize: 5, // Wielkość jednego terytorium (5x5 pikseli)
+            
+            mapData: null, // Dane o kolorach maski (ląd vs woda)
+            grid: [],      // Tablica stanu gry
+            players: {},   // Lista graczy (docelowo z Firebase)
+            myPlayerId: 'user_1', // Moje tymczasowe ID
 
-        document.getElementById('logout-btn').onclick = () => {
-            signOut(auth);
-            window.location.reload();
-        };
+            init() {
+                this.setupGrid();
+                this.createLocalPlayer();
+                this.bindEvents();
+                // Domyślnie ładujemy testową maskę (czarne tło = ląd, np. na całości)
+                this.loadMapMask(''); 
+                this.gameLoop();
+            },
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                document.getElementById('login-screen').classList.remove('active');
-                document.getElementById('app-container').classList.add('active');
-                
-                const docRef = doc(db, 'users', user.uid);
-                const docSnap = await getDoc(docRef);
-                let avatarUrl = user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`;
-                
-                if (!docSnap.exists()) {
-                    currentUser = { uid: user.uid, name: user.displayName, avatar: avatarUrl, orbs: 0, lvl: 1, prestige: 0, status: "online", post: null };
-                    await setDoc(docRef, currentUser);
-                } else {
-                    currentUser = docSnap.data();
-                    if(currentUser.orbs === undefined) { currentUser.orbs = 0; currentUser.lvl = 1; currentUser.prestige = 0; }
+            setupGrid() {
+                const cols = Math.floor(this.width / this.gridSize);
+                const rows = Math.floor(this.height / this.gridSize);
+                for (let y = 0; y < rows; y++) {
+                    let row = [];
+                    for (let x = 0; x < cols; x++) {
+                        row.push(new Cell(x, y));
+                    }
+                    this.grid.push(row);
                 }
+            },
+
+            createLocalPlayer() {
+                this.players[this.myPlayerId] = new Player(this.myPlayerId, "Admin", "DEV", "#e74c3c");
+            },
+
+            loadMapMask(imageUrl) {
+                // W prawdziwej grze imageUrl to link do czarno-białej mapy (np. kontur Polski)
+                // Używamy ukrytego canvasa, by narysować tam mapę i zczytać gdzie jest czarny kolor
                 
-                mockData.friends.unshift({ id: "me", name: currentUser.name, avatar: currentUser.avatar, status: currentUser.status, post: currentUser.post });
-                mockData.serverRoles[1].users.push({ name: currentUser.name, avatar: currentUser.avatar, lvl: currentUser.lvl, pr: currentUser.prestige, status: currentUser.status });
+                // SYMULACJA MAPY: Rysujemy białe tło (woda) i czarną wyspę na środku (ląd)
+                this.colCtx.fillStyle = "#ffffff"; // Woda
+                this.colCtx.fillRect(0, 0, this.width, this.height);
                 
-                updateUserUI();
-                switchToDM();
-            } else {
-                document.getElementById('login-screen').classList.add('active');
-                document.getElementById('app-container').classList.remove('active');
-            }
-        });
+                this.colCtx.fillStyle = "#000000"; // Ląd
+                this.colCtx.beginPath();
+                this.colCtx.arc(this.width/2, this.height/2, 200, 0, Math.PI * 2);
+                this.colCtx.fill();
 
-        // --- SYSTEM UI ---
-        function updateUserUI() {
-            document.getElementById('my-av').src = currentUser.avatar;
-            document.getElementById('my-name-val').innerText = currentUser.name;
-            const colors = { "online": "var(--success-color)", "idle": "var(--warning-color)", "dnd": "var(--danger-color)" };
-            document.getElementById('my-dot').style.background = colors[currentUser.status];
-            
-            let prStr = currentUser.prestige > 0 ? `[P${currentUser.prestige}] ` : "";
-            document.getElementById('my-lvl-val').innerText = `${prStr}Poziom ${currentUser.lvl}`;
-            
-            let percent = (currentUser.orbs / getReqOrbs(currentUser.lvl)) * 100;
-            document.getElementById('my-orbs-bar').style.width = percent + "%";
-        }
+                // Zapisujemy mapę kolizji do pamięci RAM dla wydajności
+                this.mapData = this.colCtx.getImageData(0, 0, this.width, this.height).data;
+                console.log("Mapa kolizji załadowana pomyślnie.");
+            },
 
-        async function gainOrbs() {
-            currentUser.orbs += ORBS_PER_MSG;
-            let req = getReqOrbs(currentUser.lvl);
-            if(currentUser.orbs >= req) {
-                currentUser.orbs -= req;
-                currentUser.lvl++;
-                showToast(`🎉 Awans na Poziom ${currentUser.lvl}! Zebrano wystarczająco Orbsów.`, "var(--orbs-cyan)");
-                mockData.serverRoles[1].users[0].lvl = currentUser.lvl;
-            }
-            updateUserUI();
-            await setDoc(doc(db, 'users', currentUser.uid), currentUser);
-        }
+            isLand(x, y) {
+                // Obliczamy indeks w tablicy pikseli [R, G, B, A]
+                const index = (y * this.width + x) * 4;
+                const r = this.mapData[index];
+                // Jeśli czerwony kanał to 0 (czarny), to znaczy że to ląd
+                return r < 128; 
+            },
 
-        function showToast(msg, color) {
-            const wrap = document.getElementById('toast-container');
-            const t = document.createElement('div');
-            t.className = 'toast'; t.style.borderLeftColor = color;
-            t.innerHTML = `<span>🔮</span> <div>${msg}</div>`;
-            wrap.appendChild(t);
-            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 4000);
-        }
-
-        // --- NAWIGACJA ZAKŁADEK I WIDOKÓW ---
-        function switchToDM() {
-            activeView = "home";
-            document.getElementById('btn-home-view').classList.add('active');
-            document.getElementById('btn-server-view').classList.remove('active');
-            document.getElementById('friends-tabs').style.display = "flex";
-            document.getElementById('chat-header-title').innerText = "Znajomi";
-            
-            let sb = `<div class="category-name">Prywatne wiadomości</div>`;
-            const now = Date.now();
-            mockData.friends.forEach(f => {
-                let validPost = f.post && (now - f.post.ts < ONE_DAY);
-                const ring = validPost ? "has-post" : "";
-                const dot = { online: "var(--success-color)", idle: "var(--warning-color)", dnd: "var(--danger-color)", offline: "gray" }[f.status] || "gray";
+            bindEvents() {
+                let isDragging = false;
                 
-                sb += `
-                    <div class="list-item channel-link">
-                        <div class="avatar-container" onclick="${validPost ? `alert('Post od ${f.name}: ${f.post.text}')` : ''}">
-                            <img src="${f.avatar}" class="list-avatar ${ring}">
-                            <div class="status-dot" style="background:${dot}"></div>
-                        </div>
-                        <div>${f.id === "me" ? "Ty" : f.name}</div>
-                    </div>`;
-            });
-            document.getElementById('sidebar-content').innerHTML = sb;
-            renderRightPanel();
-            handleTabSwitch('online');
-        }
-
-        function switchToServer() {
-            activeView = "server";
-            document.getElementById('btn-server-view').classList.add('active');
-            document.getElementById('btn-home-view').classList.remove('active');
-            document.getElementById('friends-tabs').style.display = "none";
-            document.getElementById('chat-header-title').innerText = "# strona-prowizja";
-            document.getElementById('sidebar-content').innerHTML = `<div class="category-name">Kanały Tekstowe</div><div class="list-item active"># strona-prowizja</div>`;
-            
-            document.getElementById('chat-section').style.display = "flex";
-            document.getElementById('add-friend-section').style.display = "none";
-            
-            renderMessages();
-            renderRightPanel();
-        }
-
-        document.getElementById('btn-home-view').onclick = switchToDM;
-        document.getElementById('btn-server-view').onclick = switchToServer;
-
-        const tabs = ['online', 'all', 'pending', 'add'];
-        tabs.forEach(t => {
-            document.getElementById(`tab-${t}`).onclick = () => handleTabSwitch(t);
-        });
-
-        function handleTabSwitch(tabName) {
-            tabs.forEach(t => document.getElementById(`tab-${t}`).classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).classList.add('active');
-            activeTab = tabName;
-
-            const chatSec = document.getElementById('chat-section');
-            const addSec = document.getElementById('add-friend-section');
-            const msgArea = document.getElementById('msg-area');
-
-            if(tabName === 'add') {
-                chatSec.style.display = "none"; addSec.style.display = "flex";
-            } else {
-                chatSec.style.display = "flex"; addSec.style.display = "none";
-                msgArea.innerHTML = `<div style="padding:40px;"><h2 style="color:white;">Aktywni Znajomi</h2><p style="color:var(--text-muted)">Wybierz znajomego z lewej strony, by wysłać mu wiadomość.</p></div>`;
-            }
-        }
-
-        // --- CZAT ---
-        function renderMessages() {
-            let html = "";
-            mockData.messages.forEach(m => {
-                let badge = m.orbsBadge > 0 ? `<span class="orbs-badge">ORBS ${m.orbsBadge}</span>` : "";
-                html += `
-                    <div class="message">
-                        <img src="${m.av}" class="msg-avatar">
-                        <div class="msg-header">
-                            <span class="msg-author-name">${m.author} ${badge} <span class="lvl-badge">Lvl ${m.lvl}</span></span>
-                            <span class="msg-time">${m.time}</span>
-                        </div>
-                        <div class="msg-content">${m.text}</div>
-                    </div>`;
-            });
-            document.getElementById('msg-area').innerHTML = html;
-            document.getElementById('msg-area').scrollTop = document.getElementById('msg-area').scrollHeight;
-        }
-
-        document.getElementById('msg-input').onkeypress = (e) => {
-            if(e.key === "Enter" && e.target.value.trim() !== "") {
-                mockData.messages.push({ author: currentUser.name, av: currentUser.avatar, text: e.target.value.trim(), orbsBadge: currentUser.prestige, lvl: currentUser.lvl, time: "Przed chwilą" });
-                e.target.value = "";
-                gainOrbs();
-                if(activeView === "server") renderMessages();
-            }
-        };
-
-        // --- PRAWY PANEL ---
-        function renderRightPanel() {
-            let rp = "";
-            if (activeView === "server") {
-                mockData.serverRoles.forEach(r => {
-                    if(r.users.length > 0) {
-                        rp += `<div class="role-header">${r.name} - ${r.users.length}</div>`;
-                        r.users.forEach(u => {
-                            rp += `<div class="member-item"><img src="${u.avatar}" class="member-avatar"><div><h4 style="${r.color}">${u.name}</h4><div style="font-size:10px; color:var(--text-muted);">Poziom ${u.lvl}</div></div></div>`;
-                        });
-                    }
+                this.canvas.addEventListener('mousedown', () => isDragging = true);
+                this.canvas.addEventListener('mouseup', () => isDragging = false);
+                this.canvas.addEventListener('mousemove', (e) => {
+                    if(isDragging) this.handleInteraction(e);
                 });
-            } else {
-                rp = `<div class="role-header">Aktywni Teraz</div>`;
-                mockData.friends.forEach(f => {
-                    if(f.id !== "me" && f.status === "online") {
-                        rp += `<div class="member-item"><img src="${f.avatar}" class="member-avatar"><div><h4 style="color:white;">${f.name}</h4></div></div>`;
+                this.canvas.addEventListener('click', (e) => this.handleInteraction(e));
+            },
+
+            handleInteraction(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const mouseX = Math.floor(e.clientX - rect.left);
+                const mouseY = Math.floor(e.clientY - rect.top);
+                
+                // Czy kliknięto w wodę czy ląd na maskach?
+                if (!this.isLand(mouseX, mouseY)) return; // To woda, ignoruj!
+
+                // Konwersja pikseli na kordynaty siatki (Grid)
+                const gridX = Math.floor(mouseX / this.gridSize);
+                const gridY = Math.floor(mouseY / this.gridSize);
+
+                this.attemptCapture(gridX, gridY, this.myPlayerId);
+            },
+
+            attemptCapture(gx, gy, playerId) {
+                if (gx < 0 || gy < 0 || gy >= this.grid.length || gx >= this.grid[0].length) return;
+                
+                let cell = this.grid[gy][gx];
+                
+                // Reguła: zajmij tylko jeśli jest puste lub słabsze (tu uproszczone do po prostu zajęcia)
+                if (cell.ownerId !== playerId) {
+                    // TUTAJ BĘDZIE WYSYŁKA DO FIREBASE:
+                    // FirebaseDB.ref('map/' + gx + '_' + gy).set({ owner: playerId });
+                    
+                    if (cell.ownerId) this.players[cell.ownerId].pixelsOwned--; // Zabierz poprzedniemu
+                    
+                    cell.ownerId = playerId;
+                    this.players[playerId].pixelsOwned++;
+                    this.updateUI();
+                }
+            },
+
+            updateUI() {
+                const me = this.players[this.myPlayerId];
+                document.getElementById('ui-score').innerText = me.pixelsOwned;
+            },
+
+            draw() {
+                // Tło (Woda)
+                this.ctx.fillStyle = "#1e3743"; 
+                this.ctx.fillRect(0, 0, this.width, this.height);
+
+                // Rysowanie Lądu (Ciemny Szary) na podstawie ukrytego canvasu kolizji
+                this.ctx.drawImage(this.colCanvas, 0, 0); // W wersji ostatecznej trzeba to zoptymalizować
+                // Półprzezroczysty czarny, żeby ląd wyglądał fajnie
+                this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+                this.ctx.fillRect(0,0, this.width, this.height);
+
+                // Rysowanie siatki posiadanej przez graczy
+                for (let y = 0; y < this.grid.length; y++) {
+                    for (let x = 0; x < this.grid[y].length; x++) {
+                        let cell = this.grid[y][x];
+                        if (cell.ownerId) {
+                            this.ctx.fillStyle = this.players[cell.ownerId].color;
+                            this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
+                        }
                     }
-                });
-            }
-            document.getElementById('members-list').innerHTML = rp;
-        }
+                }
+            },
 
-        // --- DODAJ ZNAJOMEGO ---
-        window.checkFriendInput = () => {
-            const input = document.getElementById('friend-search-input').value;
-            const btn = document.getElementById('send-friend-req');
-            if(input.length > 2) btn.classList.remove('disabled'); else btn.classList.add('disabled');
-        };
+            gameLoop() {
+                this.draw();
+                // Renderowanie ok. 60 klatek na sekundę
+                requestAnimationFrame(() => this.gameLoop());
+            },
 
-        document.getElementById('send-friend-req').onclick = () => {
-            const input = document.getElementById('friend-search-input');
-            if(input.value.length > 2) {
-                showToast(`Wysłano zaproszenie do ${input.value}!`, "var(--success-color)");
-                input.value = ""; checkFriendInput();
+            changeMap(mapName) {
+                alert(`Przygotowanie zmiany mapy na: ${mapName}. \nWymaga to wczytania pliku maski PNG przez Firebase Storage.`);
             }
         };
 
-        // --- MODALE (USTAWIENIA I POST) ---
-        document.getElementById('save-prof').onclick = async () => {
-            currentUser.name = document.getElementById('edit-nick').value;
-            currentUser.status = document.getElementById('edit-stat').value;
-            await setDoc(doc(db, 'users', currentUser.uid), currentUser);
-            updateUserUI();
-            mockData.friends[0].name = currentUser.name; mockData.friends[0].status = currentUser.status;
-            document.getElementById('modal-settings').classList.remove('active');
-            showToast("Ustawienia profilu zostały zaktualizowane.", "var(--success-color)");
-            if(activeView === "home") switchToDM();
-        };
-
-        document.getElementById('publish-btn').onclick = async () => {
-            const txt = document.getElementById('post-txt-input').value;
-            if(!txt) return alert("Wpisz tekst relacji.");
-            
-            currentUser.post = { text: txt, ts: Date.now() };
-            await setDoc(doc(db, 'users', currentUser.uid), currentUser);
-            mockData.friends[0].post = currentUser.post;
-            
-            document.getElementById('modal-post-add').classList.remove('active');
-            document.getElementById('post-txt-input').value = "";
-            showToast("Opublikowano! Zniknie za 24h.", "var(--story-orange)");
-            if(activeView === "home") switchToDM();
-        };
+        // Uruchom silnik po załadowaniu
+        window.onload = () => Engine.init();
 
     </script>
 </body>

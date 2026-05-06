@@ -3,294 +3,739 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>33MC.PL - Discord V-MAX Project</title>
+    <title>33MC.PL - Discord GIGA-MAX</title>
     <style>
+        /* ================= ZMIENNE DISCORDA ================= */
         :root {
-            --bg-tertiary: #1e1f22; --bg-secondary: #2b2d31; --bg-primary: #313338;
-            --bg-floating: #111214; --bg-message-hover: #2e3035;
-            --bg-modifier-hover: rgba(78, 80, 88, 0.3); --bg-modifier-active: rgba(78, 80, 88, 0.48);
-            --bg-input: #383a40; --text-normal: #dbdee1; --text-muted: #949ba4;
-            --header-primary: #f2f3f5; --header-secondary: #b5bac1;
-            --brand-color: #5865F2; --brand-hover: #4752c4;
-            --danger-color: #da373c; --success-color: #23a559; --warning-color: #f0b232;
-            --story-orange: #f39c12; --prestige-gold: #ffd700; --boost-pink: #ff73fa;
+            --bg-tertiary: #1e1f22;
+            --bg-secondary: #2b2d31;
+            --bg-primary: #313338;
+            --bg-floating: #111214;
+            --bg-message-hover: #2e3035;
+            --bg-modifier-hover: rgba(78, 80, 88, 0.3);
+            --bg-modifier-active: rgba(78, 80, 88, 0.48);
+            --bg-input: #383a40;
+            --text-normal: #dbdee1;
+            --text-muted: #949ba4;
+            --header-primary: #f2f3f5;
+            --header-secondary: #b5bac1;
+            --brand-color: #5865F2;
+            --brand-hover: #4752c4;
+            --danger-color: #da373c;
+            --success-color: #23a559;
+            --warning-color: #f0b232;
+            --story-orange: #f39c12;
+            --orbs-cyan: #00e5ff;
         }
 
-        /* RESET I BAZA */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-primary); color: var(--text-normal); display: flex; height: 100vh; width: 100vw; overflow: hidden; font-size: 14px; }
-        ul { list-style: none; }
-        button { cursor: pointer; border: none; background: none; color: inherit; transition: 0.2s; }
-        input, select { outline: none; border: none; font-family: inherit; }
-
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-tertiary); }
-        ::-webkit-scrollbar-thumb { background: #1a1b1e; border-radius: 4px; }
-
-        /* ANIMACJE */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes modalPop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes storyRingPulse { 
-            0% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--story-orange); } 
-            50% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 7px rgba(243, 156, 18, 0.4); } 
-            100% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--story-orange); } 
+        /* ================= BAZA I RESET ================= */
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
         }
-        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-        /* EKRAN LOGOWANIA */
-        #login-screen { position: fixed; inset: 0; background: var(--bg-tertiary); z-index: 9999; display: flex; justify-content: center; align-items: center; }
-        #login-screen.hidden { display: none; }
-        .login-box { background: var(--bg-primary); padding: 48px; border-radius: 8px; width: 480px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.4); animation: slideUp 0.5s ease; }
-        .btn-brand { background: var(--brand-color); color: white; width: 100%; padding: 14px; border-radius: 4px; font-size: 16px; font-weight: bold; }
-        .btn-brand:hover { background: var(--brand-hover); }
+        body { 
+            background-color: var(--bg-primary); 
+            color: var(--text-normal); 
+            display: flex; 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; 
+            font-size: 14px; 
+        }
 
-        #app-container { display: none; width: 100vw; height: 100vh; }
-        #app-container.active { display: flex; animation: fadeIn 0.5s ease; }
+        button, input, select { 
+            outline: none; 
+            border: none; 
+            font-family: inherit; 
+            background: transparent; 
+        }
 
-        /* LEWA KOLUMNA - SERWERY */
-        .nav-servers { width: 72px; background: var(--bg-tertiary); display: flex; flex-direction: column; align-items: center; padding-top: 12px; gap: 8px; flex-shrink: 0; }
-        .server-item { position: relative; width: 48px; height: 48px; border-radius: 50%; background: var(--bg-primary); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; overflow: hidden; }
-        .server-item:hover, .server-item.active { border-radius: 16px; background: var(--brand-color); color: white; }
-        .server-item img { width: 100%; height: 100%; object-fit: cover; }
-        .server-pill { position: absolute; left: -4px; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; background: white; border-radius: 0 4px 4px 0; opacity: 0; transition: 0.2s; }
-        .server-item:hover + .server-pill, .server-item.active + .server-pill { opacity: 1; height: 20px; }
-        .server-sep { width: 32px; height: 2px; background: var(--bg-modifier-active); margin: 4px 0; }
+        svg { 
+            width: 24px; 
+            height: 24px; 
+            fill: currentColor; 
+        }
 
-        /* KOLUMNA KANAŁÓW / DM */
-        .sidebar { width: 240px; background: var(--bg-secondary); display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-header { height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--bg-tertiary); font-weight: bold; color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-        .sidebar-scroll { flex: 1; overflow-y: auto; padding: 12px 8px; }
-        .cat-title { font-size: 11px; font-weight: 800; color: var(--header-secondary); text-transform: uppercase; margin: 16px 8px 4px; display: flex; justify-content: space-between; }
-        .channel-link { padding: 8px; border-radius: 4px; display: flex; align-items: center; cursor: pointer; color: var(--text-muted); margin-bottom: 2px; font-weight: 500; }
-        .channel-link:hover, .channel-link.active { background: var(--bg-modifier-hover); color: var(--text-normal); }
-        .channel-link.active { background: var(--bg-modifier-active); }
+        /* Scrollbary Webkit */
+        ::-webkit-scrollbar { 
+            width: 8px; 
+            height: 8px; 
+        }
+        ::-webkit-scrollbar-track { 
+            background: var(--bg-tertiary); 
+            border-radius: 4px; 
+        }
+        ::-webkit-scrollbar-thumb { 
+            background: #1a1b1e; 
+            border-radius: 4px; 
+            border: 2px solid var(--bg-tertiary);
+        }
+        ::-webkit-scrollbar-thumb:hover { 
+            background: #2b2d31; 
+        }
 
-        /* AWATARY I RINGI POSTÓW */
-        .av-wrap { position: relative; width: 32px; height: 32px; margin-right: 12px; flex-shrink: 0; }
-        .av-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        .av-img.ring { animation: storyRingPulse 2s infinite; border: 2px solid var(--bg-secondary); }
-        .stat-dot { position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--bg-secondary); }
+        /* ================= EKRAN LOGOWANIA ================= */
+        #login-screen { 
+            position: fixed; 
+            inset: 0; 
+            background: var(--bg-tertiary); 
+            z-index: 9999; 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+        }
+        #login-screen.active { 
+            display: flex; 
+        }
+        .login-box { 
+            background: var(--bg-primary); 
+            padding: 40px; 
+            border-radius: 8px; 
+            width: 480px; 
+            text-align: center; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+        }
+        .discord-logo { 
+            width: 60px; 
+            height: 60px; 
+            color: var(--brand-color); 
+            margin-bottom: 20px; 
+        }
+        .login-box h2 { 
+            color: var(--header-primary); 
+            font-size: 24px; 
+            margin-bottom: 8px; 
+            font-weight: 700; 
+        }
+        .login-box p { 
+            color: var(--header-secondary); 
+            font-size: 15px; 
+            margin-bottom: 30px; 
+        }
+        .btn-brand { 
+            background: var(--brand-color); 
+            color: white; 
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 4px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            transition: background 0.2s; 
+            font-weight: 600; 
+        }
+        .btn-brand:hover { 
+            background: var(--brand-hover); 
+        }
 
-        /* PANEL UŻYTKOWNIKA */
-        .user-panel { height: 62px; background: #232428; display: flex; align-items: center; padding: 0 8px; gap: 4px; }
-        .u-info-box { display: flex; align-items: center; padding: 4px; border-radius: 4px; flex: 1; overflow: hidden; cursor: pointer; }
-        .u-info-box:hover { background: var(--bg-modifier-hover); }
-        .u-text { display: flex; flex-direction: column; overflow: hidden; }
-        .u-text strong { font-size: 13px; color: white; white-space: nowrap; text-overflow: ellipsis; }
-        .u-xp-container { width: 100%; height: 4px; background: var(--bg-modifier-active); border-radius: 2px; margin-top: 4px; }
-        .u-xp-fill { height: 100%; background: var(--brand-color); width: 0%; transition: 0.3s; box-shadow: 0 0 4px var(--brand-color); }
+        #app-container { 
+            display: none; 
+            width: 100vw; 
+            height: 100vh; 
+        }
+        #app-container.active { 
+            display: flex; 
+        }
 
-        /* GŁÓWNY CZAT */
-        .chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-primary); }
-        .chat-header { height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--bg-tertiary); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .chat-title { font-size: 16px; font-weight: bold; color: white; display: flex; align-items: center; gap: 8px; }
-        .chat-body-wrap { flex: 1; display: flex; overflow: hidden; }
-        .msg-list { flex: 1; overflow-y: auto; padding: 16px 0; display: flex; flex-direction: column; }
-        .msg-item { padding: 4px 16px 4px 72px; position: relative; margin-top: 17px; animation: slideUp 0.3s ease-out; }
-        .msg-item:hover { background: var(--bg-message-hover); }
-        .msg-av { position: absolute; left: 16px; top: 4px; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .msg-author-row { display: flex; align-items: baseline; margin-bottom: 4px; }
-        .msg-author-name { color: white; font-weight: 600; margin-right: 8px; font-size: 16px; display: flex; align-items: center; gap: 6px; }
+        /* ================= 1. PASEK SERWERÓW ================= */
+        .servers-nav { 
+            width: 72px; 
+            min-width: 72px; 
+            background-color: var(--bg-tertiary); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding-top: 12px; 
+            gap: 8px; 
+            z-index: 10; 
+            overflow-y: auto; 
+        }
+        .servers-nav::-webkit-scrollbar { display: none; }
+        .server-icon-wrapper { 
+            position: relative; 
+            display: flex; 
+            justify-content: center; 
+            width: 100%; 
+            cursor: pointer; 
+        }
+        .server-pill { 
+            position: absolute; 
+            left: 0; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            width: 4px; 
+            height: 8px; 
+            background: white; 
+            border-radius: 0 4px 4px 0; 
+            transition: 0.2s; 
+            opacity: 0; 
+        }
+        .server-icon-wrapper:hover .server-pill { 
+            height: 20px; 
+            opacity: 1; 
+        }
+        .server-icon-wrapper.active .server-pill { 
+            height: 40px; 
+            opacity: 1; 
+        }
+        .server-icon { 
+            width: 48px; 
+            height: 48px; 
+            border-radius: 50%; 
+            background-color: var(--bg-primary); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            transition: 0.2s; 
+            overflow: hidden; 
+            font-weight: bold; 
+            font-size: 20px; 
+            color: var(--text-normal); 
+        }
+        .server-icon img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+        .server-icon-wrapper:hover .server-icon, 
+        .server-icon-wrapper.active .server-icon { 
+            border-radius: 16px; 
+            background-color: var(--brand-color); 
+            color: white; 
+        }
+        .server-separator { 
+            width: 32px; 
+            height: 2px; 
+            background: var(--bg-modifier-active); 
+            margin: 4px 0; 
+            flex-shrink: 0; 
+        }
+
+        /* ================= 2. BOCZNY PANEL ================= */
+        .sidebar { 
+            width: 240px; 
+            min-width: 240px; 
+            background-color: var(--bg-secondary); 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .sidebar-header { 
+            height: 48px; 
+            min-height: 48px; 
+            padding: 0 16px; 
+            display: flex; 
+            align-items: center; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2); 
+            font-weight: 600; 
+            color: var(--header-primary); 
+            border-bottom: 1px solid var(--bg-tertiary); 
+            transition: 0.2s; 
+            cursor: pointer; 
+        }
+        .sidebar-header:hover { 
+            background: var(--bg-modifier-hover); 
+        }
+        .sidebar-search {
+            width: 100%; 
+            background: var(--bg-tertiary); 
+            color: white; 
+            padding: 6px 8px; 
+            border-radius: 4px; 
+            font-size: 13px;
+        }
+        .sidebar-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 8px; 
+        }
+        .category-name { 
+            font-size: 12px; 
+            font-weight: 700; 
+            color: var(--header-secondary); 
+            text-transform: uppercase; 
+            margin: 16px 8px 4px; 
+            display: flex; 
+            justify-content: space-between; 
+        }
+        .list-item { 
+            padding: 8px; 
+            border-radius: 4px; 
+            display: flex; 
+            align-items: center; 
+            cursor: pointer; 
+            color: var(--text-muted); 
+            margin-bottom: 2px; 
+            transition: 0.1s; 
+            font-weight: 500;
+        }
+        .list-item:hover { 
+            background: var(--bg-modifier-hover); 
+            color: var(--text-normal); 
+        }
+        .list-item.active { 
+            background: var(--bg-modifier-active); 
+            color: var(--text-normal); 
+        }
+        .avatar-container { 
+            position: relative; 
+            margin-right: 12px; 
+            width: 32px; 
+            height: 32px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            border-radius: 50%; 
+        }
+        .list-avatar { 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 50%; 
+            object-fit: cover; 
+        }
+        .status-dot { 
+            position: absolute; 
+            bottom: -2px; 
+            right: -2px; 
+            width: 12px; 
+            height: 12px; 
+            border-radius: 50%; 
+            border: 2px solid var(--bg-secondary); 
+        }
+
+        /* ================= 3. PANEL UŻYTKOWNIKA (ORBSY) ================= */
+        .user-panel { 
+            height: 65px; 
+            min-height: 65px; 
+            background: #232428; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 8px; 
+            justify-content: space-between; 
+        }
+        .user-profile { 
+            display: flex; 
+            align-items: center; 
+            padding: 4px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            flex: 1; 
+            overflow: hidden; 
+        }
+        .user-profile:hover { 
+            background: var(--bg-modifier-hover); 
+        }
+        .user-profile img { 
+            width: 32px; 
+            height: 32px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            margin-right: 8px; 
+        }
+        .user-info { 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            width: 100%; 
+        }
+        .user-info strong { 
+            font-size: 13px; 
+            color: var(--header-primary); 
+            white-space: nowrap; 
+            text-overflow: ellipsis; 
+        }
+        .user-info span { 
+            font-size: 11px; 
+            color: var(--header-secondary); 
+        }
+        .orbs-bar-container { 
+            width: 100%; 
+            height: 4px; 
+            background: var(--bg-modifier-active); 
+            border-radius: 2px; 
+            margin-top: 4px; 
+            overflow: hidden; 
+        }
+        .orbs-bar-fill { 
+            height: 100%; 
+            background: var(--orbs-cyan); 
+            width: 0%; 
+            transition: width 0.3s ease; 
+            box-shadow: 0 0 5px var(--orbs-cyan); 
+        }
+        .user-controls { display: flex; gap: 2px; }
+        .control-btn { 
+            width: 32px; 
+            height: 32px; 
+            border-radius: 4px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            color: var(--header-secondary); 
+            cursor: pointer; 
+            transition: 0.1s; 
+        }
+        .control-btn:hover { 
+            background: var(--bg-modifier-hover); 
+            color: var(--text-normal); 
+        }
+
+        /* ================= 4. GŁÓWNY CZAT ================= */
+        .main-content { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            background: var(--bg-primary); 
+            overflow: hidden; 
+        }
+        .top-bar { 
+            height: 48px; 
+            min-height: 48px; 
+            padding: 0 16px; 
+            display: flex; 
+            align-items: center; 
+            border-bottom: 1px solid var(--bg-tertiary); 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
+        }
+        
+        /* ZAKŁADKI ZNAJOMYCH */
+        .friends-tabs {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-left: 20px;
+        }
+        .tab-btn {
+            color: var(--header-secondary);
+            font-size: 15px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab-btn:hover {
+            background: var(--bg-modifier-hover);
+            color: var(--text-normal);
+        }
+        .tab-btn.active {
+            background: var(--bg-modifier-active);
+            color: white;
+        }
+        .tab-btn.add-friend-btn {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .top-bar-actions { 
+            display: flex; 
+            gap: 15px; 
+            color: var(--header-secondary); 
+            margin-left: auto;
+        }
+        .top-bar-actions svg { cursor: pointer; transition: 0.2s; }
+        .top-bar-actions svg:hover { color: var(--text-normal); }
+
+        .chat-and-members { flex: 1; display: flex; overflow: hidden; }
+        .messages-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .messages-list { flex: 1; overflow-y: auto; padding: 16px 0; display: flex; flex-direction: column; }
+
+        .message { padding: 4px 16px 4px 72px; position: relative; margin-top: 17px; }
+        .message:hover { background: var(--bg-message-hover); }
+        .msg-avatar { position: absolute; left: 16px; top: 4px; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .msg-header { display: flex; align-items: baseline; margin-bottom: 2px; }
+        .msg-author { color: var(--header-primary); font-weight: 500; font-size: 16px; margin-right: 8px; display: flex; align-items: center; gap: 6px; }
         .msg-time { color: var(--text-muted); font-size: 12px; }
-        .msg-text { font-size: 15px; line-height: 1.4; color: var(--text-normal); word-break: break-word; }
-        .msg-img-attach { max-width: 450px; max-height: 350px; border-radius: 8px; margin-top: 8px; border: 1px solid var(--bg-tertiary); cursor: zoom-in; }
+        .msg-content { color: var(--text-normal); font-size: 15px; line-height: 1.4; word-wrap: break-word; }
 
-        .badge-lvl { background: var(--bg-modifier-active); color: var(--text-normal); font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-        .badge-prestige { background: var(--prestige-gold); color: black; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: 900; box-shadow: 0 0 8px rgba(255,215,0,0.6); }
+        /* ODZNAKI ORBS / LVL */
+        .orbs-badge { 
+            background: var(--orbs-cyan); 
+            color: black; 
+            font-size: 10px; 
+            padding: 2px 6px; 
+            border-radius: 10px; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            box-shadow: 0 0 5px rgba(0, 229, 255, 0.5); 
+        }
+        .lvl-badge { 
+            background: var(--bg-modifier-active); 
+            color: var(--text-normal); 
+            font-size: 10px; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-weight: bold;
+        }
 
-        /* INPUT */
-        .chat-input-area { padding: 0 16px 24px; flex-shrink: 0; }
-        .chat-input-box { background: var(--bg-input); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; }
-        .chat-input-box input { flex: 1; color: white; font-size: 15px; margin: 0 10px; }
+        .input-area { padding: 0 16px 24px; flex-shrink: 0; }
+        .input-wrapper { background: var(--bg-input); border-radius: 8px; display: flex; align-items: center; padding: 12px 16px; }
+        .chat-input { flex: 1; color: var(--text-normal); font-size: 15px; margin: 0 10px; width: 100%; }
 
-        /* PRAWY PANEL */
-        .members-panel { width: 240px; background: var(--bg-secondary); border-left: 1px solid var(--bg-modifier-active); flex-shrink: 0; overflow-y: auto; padding: 16px 8px; }
-        .role-title { font-size: 12px; font-weight: 800; color: var(--header-secondary); text-transform: uppercase; margin: 12px 8px 4px; }
-        .member-card { padding: 6px 8px; border-radius: 4px; display: flex; align-items: center; cursor: pointer; }
-        .member-card:hover { background: var(--bg-modifier-hover); }
-        .role-pink { color: #e91e63 !important; }
-        .role-gold { color: #f1c40f !important; }
+        /* ================= 5. DODAWANIE ZNAJOMYCH ================= */
+        .add-friend-container {
+            padding: 30px;
+            display: none;
+            flex-direction: column;
+        }
+        .add-friend-container.active {
+            display: flex;
+        }
+        .add-friend-container h2 {
+            color: white;
+            margin-bottom: 10px;
+        }
+        .add-friend-container p {
+            color: var(--header-secondary);
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .add-friend-input-box {
+            display: flex;
+            background: var(--bg-tertiary);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--bg-modifier-active);
+        }
+        .add-friend-input-box input {
+            flex: 1;
+            background: transparent;
+            color: white;
+            font-size: 16px;
+            padding: 5px;
+        }
+        .add-friend-btn-submit {
+            background: var(--brand-color);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .add-friend-btn-submit.disabled {
+            background: var(--bg-modifier-active);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
 
-        /* MODALE */
-        .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 20000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); opacity: 0; transition: 0.2s; }
-        .modal-mask.active { display: flex; opacity: 1; }
-        .modal-body { background: var(--bg-primary); border-radius: 8px; width: 480px; padding: 28px; animation: modalPop 0.2s ease; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .modal-close { position: absolute; top: 15px; right: 15px; color: var(--header-secondary); cursor: pointer; }
+        /* ================= 6. PRAWY PANEL (CZŁONKOWIE / AKTYWNI) ================= */
+        .right-panel { 
+            width: 240px; 
+            min-width: 240px; 
+            background: var(--bg-secondary); 
+            border-left: 1px solid var(--bg-modifier-active); 
+            display: flex; 
+            flex-direction: column; 
+            overflow-y: auto; 
+            padding: 16px 8px; 
+        }
+        .role-header { 
+            font-size: 12px; 
+            font-weight: 800; 
+            color: var(--header-secondary); 
+            text-transform: uppercase; 
+            margin: 10px 8px 4px; 
+        }
+        .member-item { 
+            padding: 6px 8px; 
+            border-radius: 4px; 
+            display: flex; 
+            align-items: center; 
+            cursor: pointer; 
+            margin-bottom: 2px; 
+        }
+        .member-item:hover { 
+            background: var(--bg-modifier-hover); 
+        }
+        .member-avatar { 
+            width: 32px; 
+            height: 32px; 
+            border-radius: 50%; 
+            margin-right: 12px; 
+            object-fit: cover; 
+        }
+
+        /* ================= MODALE & TOASTS ================= */
+        .modal-overlay { 
+            position: fixed; 
+            inset: 0; 
+            background: rgba(0,0,0,0.85); 
+            z-index: 20000; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            opacity: 0; 
+            pointer-events: none; 
+            transition: 0.2s;
+        }
+        .modal-overlay.active { 
+            opacity: 1; 
+            pointer-events: all; 
+        }
+        .modal-content { 
+            background: var(--bg-primary); 
+            border-radius: 8px; 
+            width: 460px; 
+            padding: 24px; 
+            position: relative; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+        }
+        .modal-content h2 { color: white; margin-bottom: 20px; text-align: center; }
+        
+        .modal-close { 
+            position: absolute; 
+            top: 15px; 
+            right: 15px; 
+            color: var(--header-secondary); 
+            cursor: pointer; 
+        }
         .modal-close:hover { color: white; }
+        
+        .btn-submit { background: var(--brand-color); color: white; padding: 12px 24px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; color: var(--header-secondary); font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+        .form-input { width: 100%; padding: 10px; background: var(--bg-tertiary); color: white; border-radius: 4px; font-size: 14px; }
 
-        .btn-full { background: var(--brand-color); color: white; padding: 12px; border-radius: 4px; width: 100%; font-weight: bold; margin-top: 20px; }
-        .btn-full:hover { background: var(--brand-hover); }
-        .btn-ghost { background: transparent; border: 1px solid var(--danger-color); color: var(--danger-color); width: 100%; padding: 10px; margin-top: 10px; border-radius: 4px; font-weight: bold; }
-        .btn-ghost:hover { background: var(--danger-color); color: white; }
+        /* Toasty */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { background: var(--bg-floating); border-left: 4px solid var(--orbs-cyan); padding: 15px 20px; border-radius: 4px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 15px; font-weight: 500;}
 
-        .up-area { border: 2px dashed var(--bg-modifier-active); padding: 30px; text-align: center; border-radius: 8px; cursor: pointer; color: var(--header-secondary); margin-bottom: 20px; transition: 0.2s; position: relative; }
-        .up-area:hover { border-color: var(--brand-color); color: white; background: var(--bg-modifier-hover); }
-        .up-preview { max-width: 100%; max-height: 200px; border-radius: 6px; display: none; margin-top: 10px; }
-
-        /* TOASTY */
-        #toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 999999; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
-        .toast { background: var(--bg-floating); border-left: 4px solid var(--brand-color); padding: 16px 24px; border-radius: 4px; color: white; box-shadow: 0 8px 16px rgba(0,0,0,0.5); animation: slideInRight 0.3s forwards; display: flex; align-items: center; gap: 12px; }
-
-        /* WIDOK POSTA */
-        .post-box { width: 420px; height: 650px; background: black; border-radius: 12px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
-        .post-top { padding: 15px; position: absolute; top: 0; width: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); z-index: 5; display: flex; align-items: center; }
-        .post-prog-bar { position: absolute; top: 8px; left: 10px; right: 10px; height: 3px; background: rgba(255,255,255,0.3); z-index: 10; border-radius: 2px; }
-        .post-prog-fill { height: 100%; background: white; width: 0%; border-radius: 2px; }
-        .post-media { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
-        .post-img-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.5); }
-        .post-txt-val { position: relative; z-index: 2; color: white; font-size: 28px; font-weight: bold; text-align: center; padding: 40px; text-shadow: 0 4px 12px black; }
-
-        svg { width: 24px; height: 24px; fill: currentColor; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
+    <div id="login-screen" class="active">
         <div class="login-box">
-            <svg class="discord-logo" viewBox="0 0 127.14 96.36"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.68,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.36,46,96.26,53,91.08,65.69,84.69,65.69Z"/></svg>
+            <svg class="discord-logo" viewBox="0 0 127.14 96.36">
+                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.68,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.36,46,96.26,53,91.08,65.69,84.69,65.69Z"/>
+            </svg>
             <h2>33MC.PL - Discord V-MAX</h2>
-            <p>Zaloguj się, aby odblokować Prestiż i Posty!</p>
-            <button class="btn-brand" id="google-login">Zaloguj przez Google (Firebase)</button>
+            <p>Zaloguj się, aby odblokować Orbsy i znajomych!</p>
+            <button class="btn-brand" id="google-login">Zaloguj przez Google</button>
         </div>
     </div>
 
     <div id="app-container">
         
-        <nav class="nav-servers">
-            <div class="server-item active" id="btn-home-view">🏠</div>
-            <div class="server-pill" style="opacity:1; height:40px;"></div>
-            <div class="server-sep"></div>
-            <div class="server-item" id="btn-server-view"><img src="https://api.dicebear.com/7.x/initials/svg?seed=33MC&backgroundColor=111"></div>
-            <div class="server-pill"></div>
-            <div class="server-item" style="color:var(--success-color); margin-top: auto; margin-bottom: 20px;" onclick="alert('Ulepszanie serwera już wkrótce!')">💎</div>
+        <nav class="servers-nav">
+            <div class="server-icon-wrapper active" id="btn-home-view">
+                <div class="server-pill" style="opacity:1; height:40px;"></div>
+                <div class="server-icon" style="background: var(--brand-color);">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                </div>
+            </div>
+            <div class="server-separator"></div>
+            <div class="server-icon-wrapper" id="btn-server-view">
+                <div class="server-pill"></div>
+                <div class="server-icon"><img src="https://api.dicebear.com/7.x/initials/svg?seed=33MC&backgroundColor=111"></div>
+            </div>
         </nav>
 
         <aside class="sidebar">
-            <div class="sidebar-header" id="sidebar-label">Prywatne wiadomości</div>
-            <div class="sidebar-scroll" id="sidebar-list"></div>
+            <div class="sidebar-header" id="sidebar-label">
+                <input type="text" class="sidebar-search" placeholder="Znajdź rozmowę...">
+            </div>
+            
+            <div class="sidebar-content" id="sidebar-content">
+                </div>
 
             <div class="user-panel">
-                <div class="u-info-box" id="open-settings">
-                    <div class="av-wrap">
-                        <img id="my-av" src="" class="av-img">
+                <div class="user-profile" id="open-settings">
+                    <div class="avatar-container" style="margin-right: 8px;">
+                        <img id="my-av" src="" class="list-avatar">
                         <div id="my-dot" class="stat-dot" style="background:var(--success-color)"></div>
                     </div>
-                    <div class="u-text">
+                    <div class="user-info">
                         <strong id="my-name-val">Ładowanie...</strong>
-                        <span id="my-lvl-val" style="font-size:10px; color:var(--text-muted)">Lvl 1</span>
-                        <div class="u-xp-container"><div id="my-xp-bar" class="u-xp-fill"></div></div>
+                        <span id="my-lvl-val">Poziom 1</span>
+                        <div class="orbs-bar-container"><div id="my-orbs-bar" class="orbs-bar-fill"></div></div>
                     </div>
                 </div>
                 <div class="user-controls">
-                    <button class="control-btn" id="add-post-trigger" title="Dodaj Post (24h)"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></button>
-                    <button class="control-btn" id="settings-trigger"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.04.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
+                    <button class="control-btn" title="Zmutuj"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
+                    <button class="control-btn" title="Ustawienia Profilu" onclick="document.getElementById('modal-settings').classList.add('active')"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.04.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
                 </div>
             </div>
         </aside>
 
-        <main class="chat-main">
+        <main class="main-content">
             <header class="top-bar">
-                <div class="chat-title" id="chat-header-title">Znajomi</div>
+                <div style="display:flex; align-items:center;">
+                    <svg style="color:#80848e; margin-right:8px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                    <strong style="color:white; font-size:16px;">Znajomi</strong>
+                    
+                    <div class="friends-tabs" id="friends-tabs">
+                        <div class="tab-btn active" id="tab-online">Dostępny</div>
+                        <div class="tab-btn" id="tab-all">Wszystkie</div>
+                        <div class="tab-btn" id="tab-pending">Oczekujące <span style="background:var(--danger-color); border-radius:50%; width:16px; height:16px; display:inline-block; text-align:center; font-size:11px; color:white; line-height:16px;">1</span></div>
+                        <div class="tab-btn" id="tab-blocked">Zablokowani</div>
+                        <div class="tab-btn add-friend-btn" id="tab-add">Dodaj znajomego</div>
+                    </div>
+                </div>
+                
                 <div class="top-bar-actions">
-                    <svg title="Dzwonienie" id="call-start"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
-                    <svg title="Kamera" id="video-start"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                    <svg title="Pomoc"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
                 </div>
             </header>
 
-            <div class="chat-body-wrap">
-                <section class="msg-list" id="msg-area"></section>
-                <aside class="members-panel" id="members-list"></aside>
-            </div>
+            <div class="chat-and-members">
+                
+                <section class="messages-wrapper" id="chat-section">
+                    <div class="messages-list" id="msg-area"></div>
+                    <div class="input-area">
+                        <div class="input-wrapper">
+                            <svg style="color:var(--header-secondary); margin-right:15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                            <input type="text" class="chat-input" id="msg-input" placeholder="Napisz do znajomych (Zdobądź Orbs!)">
+                        </div>
+                    </div>
+                </section>
 
-            <div class="chat-input-area">
-                <div class="chat-input-box">
-                    <svg style="color:var(--header-secondary); cursor:pointer;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
-                    <input type="text" id="msg-input" placeholder="Napisz do znajomych (Zdobądź XP!)">
-                </div>
+                <section class="messages-wrapper add-friend-container" id="add-friend-section">
+                    <h2>DODAJ ZNAJOMEGO</h2>
+                    <p>Możesz dodać znajomego używając jego nazwy użytkownika Discorda.</p>
+                    <div class="add-friend-input-box">
+                        <input type="text" id="friend-search-input" placeholder="Możesz dodać znajomych, wpisując ich nazwy. Pamiętaj, że w wielkości liter jest różnica." onkeyup="checkFriendInput()">
+                        <button class="add-friend-btn-submit disabled" id="send-friend-req">Wyślij zaproszenie znajomemu</button>
+                    </div>
+                    
+                    <div style="margin-top: 50px; text-align: center; color: var(--text-muted);">
+                        <svg style="width: 250px; height: 150px; color: var(--bg-modifier-active);" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                        <p style="margin-top: 20px;">Wumpus czeka na znajomych. Ty też powinieneś!</p>
+                    </div>
+                </section>
+
+                <aside class="right-panel" id="members-list"></aside>
             </div>
         </main>
     </div>
 
-    <div id="modal-container">
-        <div class="modal-mask" id="modal-settings">
-            <div class="modal-body">
-                <svg class="modal-close" id="close-set"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-                <h2>Profil Użytkownika</h2>
-                <div style="display:flex; gap:20px; margin-top:20px;">
-                    <label class="up-area" style="width:120px; height:120px; border-radius:50%; padding:0; display:flex; justify-content:center; align-items:center;">
-                        <input type="file" id="av-upload" style="display:none;" accept="image/*">
-                        <img id="prev-av" src="" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
-                        <div class="upload-overlay">ZMIEŃ</div>
-                    </label>
-                    <div style="flex:1;">
-                        <div class="form-group">
-                            <label class="form-label">Pseudonim</label>
-                            <input type="text" id="edit-nick" class="form-input">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Status</label>
-                            <select id="edit-stat" class="form-input">
-                                <option value="online">Online 🟢</option>
-                                <option value="idle">Zaraz wracam 🌙</option>
-                                <option value="dnd">Nie przeszkadzać 🔴</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <button class="btn-full" id="save-prof">Zapisz Zmiany</button>
-                <button class="btn-ghost" id="logout-btn">Wyloguj</button>
+    <div class="modal-overlay" id="modal-settings">
+        <div class="modal-content">
+            <svg class="modal-close" onclick="document.getElementById('modal-settings').classList.remove('active')"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            <h2>Ustawienia Konta</h2>
+            <div class="form-group">
+                <label class="form-label">Nazwa Wyświetlana</label>
+                <input type="text" id="edit-nick" class="form-input">
             </div>
-        </div>
-
-        <div class="modal-mask" id="modal-post-add">
-            <div class="modal-body">
-                <svg class="modal-close" id="close-post-add"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-                <h2>Stwórz nową relację</h2>
-                <p style="color:var(--text-muted); font-size:12px; margin-bottom:15px;">Twoi znajomi będą widzieć pomarańczową obwódkę przez 24h.</p>
-                <label class="up-area" id="post-up-box">
-                    <input type="file" id="post-img-input" style="display:none;" accept="image/*">
-                    <div id="post-up-text">Kliknij, aby wgrać zdjęcie (opcjonalnie)</div>
-                    <img id="post-img-prev" class="up-preview">
-                </label>
-                <input type="text" id="post-txt-input" class="form-input" placeholder="Co u Ciebie słychać?">
-                <button class="btn-full" id="publish-btn">Opublikuj Post</button>
-            </div>
-        </div>
-
-        <div class="modal-mask" id="modal-post-view">
-            <div class="post-box">
-                <div class="post-prog-bar"><div class="post-prog-fill" id="post-prog"></div></div>
-                <div class="post-top">
-                    <img id="post-v-av" src="" style="width:40px; height:40px; border-radius:50%; margin-right:10px;">
-                    <div><strong id="post-v-name" style="color:white; display:block;">Nazwa</strong><span id="post-v-time" style="color:#aaa; font-size:11px;">2h temu</span></div>
-                    <svg class="modal-close" id="close-v-post" style="right:15px; color:white;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-                </div>
-                <div class="post-media">
-                    <img id="post-v-img" class="post-img-bg" src="">
-                    <div class="post-txt-val" id="post-v-txt"></div>
-                </div>
-            </div>
+            <button class="btn-submit" id="save-prof">Zapisz Ustawienia</button>
+            <button class="btn-submit" style="background:transparent; border:1px solid var(--danger-color); color:var(--danger-color); margin-top:10px;" id="logout-btn">Wyloguj z Firebase</button>
         </div>
     </div>
 
-    <div id="toast-wrap"></div>
-    <audio id="ringtone" loop><source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3" type="audio/mpeg"></audio>
+    <div id="toast-container"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // CONFIG FIREBASE (Z Twojego prompta)
+        // Konfiguracja Firebase (Z twoich danych)
         const firebaseConfig = {
             apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
             authDomain: "xchess-79e2d.firebaseapp.com",
-            projectId: "xchess-79e2d",
-            storageBucket: "xchess-79e2d.firebasestorage.app",
-            messagingSenderId: "382071993193",
-            appId: "1:382071993193:web:86dbe5211f2151cb5383f8"
+            projectId: "xchess-79e2d"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -298,47 +743,36 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        // STAŁE
-        const ONE_DAY = 24 * 60 * 60 * 1000;
-        const XP_PER_MSG = 25;
-
-        // STAN APLIKACJI
         let currentUser = null;
-        let activeView = "server"; // "home" lub "server"
-        let tempAvBase64 = null;
-        let tempPostBase64 = null;
-        let postTimer = null;
+        let activeView = "home"; // home lub server
+        let activeTab = "online"; // Zakładki znajomych
 
-        // BAZA MOCK (SYMULACJA)
+        // SYSTEM ORBÓW
+        const ORBS_PER_MSG = 25;
+        function getReqOrbs(lvl) { return Math.floor(150 * Math.pow(1.3, lvl - 1)); }
+
+        // BAZA MOCK DATA
         const mockData = {
             friends: [
-                { id: "f1", name: "Anna Nowak", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anna", status: "online", post: { text: "Uczę się HTML! 💻", img: null, ts: Date.now() - 3600000 } },
-                { id: "f2", name: "Blaaqu", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Blaaqu", status: "idle", post: null },
-                { id: "f3", name: "xPatrysiak", avatar: "https://api.dicebear.com/7.x/bot/svg?seed=Patryk", status: "dnd", post: { text: "Stary post", ts: Date.now() - 90000000 } }
+                { id: "f1", name: "Anna Nowak", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anna", status: "online" },
+                { id: "f2", name: "Blaaqu", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Blaaqu", status: "idle" },
+                { id: "f3", name: "Kamil", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kamil", status: "offline" }
             ],
-            serverRoles: [
-                { name: "Zarząd", color: "role-pink", users: [{ name: "Blaaqu", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Blaaqu", lvl: 150, pr: 5, status: "dnd" }] },
-                { name: "VIP", color: "role-gold", users: [{ name: "Anna Nowak", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anna", lvl: 45, pr: 0, status: "online" }] },
-                { name: "Gracze", color: "", users: [] }
+            pending: [
+                { name: "xPatrysiak", avatar: "https://api.dicebear.com/7.x/bot/svg?seed=Patryk", type: "Przychodzące" }
             ],
             messages: [
-                { author: "System", av: "https://api.dicebear.com/7.x/bot/svg?seed=Bot", text: "Witaj na 33MC.PL! Napisz coś, by zdobyć XP.", lvl: 99, pr: 1, time: "Wczoraj" }
+                { author: "Blaaqu", av: "https://api.dicebear.com/7.x/avataaars/svg?seed=Blaaqu", text: "Siema, działa wam nowy system orbsów?", lvl: 150, orbsBadge: 3, time: "Wczoraj 22:23" }
             ]
         };
 
         // --- AUTH ---
-        document.getElementById('google-login').onclick = () => {
-            signInWithPopup(auth, provider).catch(e => alert(e.message));
-        };
-
-        document.getElementById('logout-btn').onclick = () => {
-            signOut(auth);
-            window.location.reload();
-        };
+        document.getElementById('btn-login').onclick = () => signInWithPopup(auth, provider);
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('login-screen').classList.remove('active');
                 document.getElementById('app-container').classList.add('active');
                 
                 const docRef = doc(db, 'users', user.uid);
@@ -346,244 +780,192 @@
                 let avatarUrl = user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`;
                 
                 if (!docSnap.exists()) {
-                    currentUser = { uid: user.uid, name: user.displayName, avatar: avatarUrl, xp: 0, lvl: 1, pr: 0, status: "online", post: null };
+                    currentUser = { uid: user.uid, name: user.displayName, avatar: avatarUrl, orbs: 0, lvl: 1, prestige: 0, status: "online" };
                     await setDoc(docRef, currentUser);
                 } else {
                     currentUser = docSnap.data();
-                    if(currentUser.xp === undefined) { currentUser.xp = 0; currentUser.lvl = 1; currentUser.pr = 0; }
+                    if(currentUser.orbs === undefined) { currentUser.orbs = 0; currentUser.lvl = 1; currentUser.prestige = 0; }
                 }
                 
-                // My w Mocku
-                mockData.serverRoles[2].users.push({ name: currentUser.name, avatar: currentUser.avatar, lvl: currentUser.lvl, pr: currentUser.pr, status: currentUser.status });
-                mockData.friends.unshift({ id: "me", name: currentUser.name, avatar: currentUser.avatar, post: currentUser.post, status: currentUser.status });
-                
                 updateUserUI();
-                switchToServer();
+                switchToDM();
+            } else {
+                document.getElementById('login-screen').classList.add('active');
+                document.getElementById('app-container').classList.remove('active');
             }
         });
-
-        // --- XP SYSTEM ---
-        function getReqXp(lvl) { return Math.floor(100 * Math.pow(1.3, lvl - 1)); }
 
         function updateUserUI() {
             document.getElementById('my-av').src = currentUser.avatar;
             document.getElementById('my-name-val').innerText = currentUser.name;
-            const colors = { online: "var(--success-color)", idle: "var(--warning-color)", dnd: "var(--danger-color)" };
-            document.getElementById('my-dot').style.background = colors[currentUser.status];
             
-            let prStr = currentUser.pr > 0 ? `[P${currentUser.pr}] ` : "";
+            let prStr = currentUser.prestige > 0 ? `[P${currentUser.prestige}] ` : "";
             document.getElementById('my-lvl-val').innerText = `${prStr}Poziom ${currentUser.lvl}`;
             
-            let percent = (currentUser.xp / getReqXp(currentUser.lvl)) * 100;
+            let percent = (currentUser.orbs / getReqOrbs(currentUser.lvl)) * 100;
             document.getElementById('my-xp-bar').style.width = percent + "%";
         }
 
-        async function giveXp() {
-            currentUser.xp += XP_PER_MSG;
-            let req = getReqXp(currentUser.lvl);
-            if(currentUser.xp >= req) {
-                currentUser.xp -= req;
+        async function gainOrbs() {
+            currentUser.orbs += ORBS_PER_MSG;
+            let req = getReqOrbs(currentUser.lvl);
+            if(currentUser.orbs >= req) {
+                currentUser.orbs -= req;
                 currentUser.lvl++;
-                if(currentUser.lvl > 50) {
-                    currentUser.lvl = 1; currentUser.pr++;
-                    showToast("🏆 OSIĄGNIĘTO NOWY PRESTIŻ!", "var(--prestige-gold)");
-                } else {
-                    showToast(`🎉 Awans na Poziom ${currentUser.lvl}!`, "var(--brand-color)");
-                }
-                mockData.serverRoles[2].users[0].lvl = currentUser.lvl;
-                mockData.serverRoles[2].users[0].pr = currentUser.pr;
-                if(activeView === "server") renderRightPanel();
+                showToast(`🎉 Awans na Poziom ${currentUser.lvl}! Zebrano wystarczająco Orbsów.`, "var(--orbs-cyan)");
             }
             updateUserUI();
             await setDoc(doc(db, 'users', currentUser.uid), currentUser);
         }
 
         function showToast(msg, color) {
-            const wrap = document.getElementById('toast-wrap');
+            const wrap = document.getElementById('toast-container');
             const t = document.createElement('div');
             t.className = 'toast'; t.style.borderLeftColor = color;
-            t.innerHTML = `<span>⭐</span> <div>${msg}</div>`;
+            t.innerHTML = `<span>🔮</span> <div>${msg}</div>`;
             wrap.appendChild(t);
             setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }, 4000);
         }
 
-        // --- RENDEROWANIE WIDOKÓW ---
-        function switchToServer() {
-            activeView = "server";
-            document.getElementById('nav-server').classList.add('active');
-            document.getElementById('nav-home').classList.remove('active');
-            document.getElementById('sidebar-label').innerText = "33MC.PL";
-            document.getElementById('chat-header-title').innerText = "# strona-prowizja";
-            document.getElementById('sidebar-list').innerHTML = `
-                <div class="cat-title">Informacje</div>
-                <div class="channel-link active"># strona-prowizja</div>
-                <div class="channel-link"># lobby</div>
-            `;
-            renderMessages();
-            renderRightPanel();
-        }
-
+        // --- NAWIGACJA (DM / SERWER) ---
         function switchToDM() {
             activeView = "home";
-            document.getElementById('nav-home').classList.add('active');
-            document.getElementById('nav-server').classList.remove('active');
-            document.getElementById('sidebar-label').innerText = "Znajomi";
-            document.getElementById('chat-header-title').innerText = "Znajomi";
+            document.getElementById('btn-home-view').classList.add('active');
+            document.getElementById('btn-server-view').classList.remove('active');
+            document.getElementById('friends-tabs').style.display = "flex";
             
-            let html = `<div class="cat-title">Prywatne wiadomości</div>`;
-            const now = Date.now();
+            let sb = `<div class="category-name">Prywatne wiadomości</div>`;
             mockData.friends.forEach(f => {
-                let validPost = f.post && (now - f.post.ts < ONE_DAY);
-                const ring = validPost ? "ring" : "";
-                const onClick = validPost ? `onclick="window.viewPost('${f.id}')"` : "";
-                const dot = { online: "var(--success-color)", idle: "var(--warning-color)", dnd: "var(--danger-color)", offline: "gray" }[f.status];
-                
-                html += `
-                    <div class="list-item channel-link">
-                        <div class="av-wrap" ${onClick}>
-                            <img src="${f.avatar}" class="av-img ${ring}">
-                            <div class="stat-dot" style="background:${dot}"></div>
-                        </div>
-                        <div>${f.id === "me" ? "Ty" : f.name}</div>
-                    </div>`;
+                sb += `<div class="list-item"><img src="${f.avatar}" class="list-avatar" style="width:32px;height:32px;margin-right:12px;"> <div>${f.name}</div></div>`;
             });
-            document.getElementById('sidebar-list').innerHTML = html;
-            document.getElementById('msg-area').innerHTML = `<div style="padding:40px; text-align:center;"><h1 style="color:white">Wybierz znajomego!</h1><p style="color:var(--text-muted)">Lub kliknij w avatar z pomarańczową obwódką.</p></div>`;
-            document.getElementById('members-list').innerHTML = "";
+            document.getElementById('sidebar-content').innerHTML = sb;
+            
+            renderRightPanel();
+            handleTabSwitch('online'); // Domyślna zakładka
+        }
+
+        function switchToServer() {
+            activeView = "server";
+            document.getElementById('btn-server-view').classList.add('active');
+            document.getElementById('btn-home-view').classList.remove('active');
+            document.getElementById('friends-tabs').style.display = "none";
+            document.getElementById('sidebar-content').innerHTML = `<div class="category-name">Kanały Tekstowe</div><div class="list-item active"># strona-prowizja</div>`;
+            
+            document.getElementById('chat-section').style.display = "flex";
+            document.getElementById('add-friend-section').style.display = "none";
+            
+            renderMessages();
+            document.getElementById('right-panel').innerHTML = `<div class="role-header">Użytkownicy Serwera</div><div class="member-item"><img src="${currentUser.avatar}" class="member-avatar"><div>${currentUser.name}</div></div>`;
         }
 
         document.getElementById('btn-home-view').onclick = switchToDM;
         document.getElementById('btn-server-view').onclick = switchToServer;
 
+        // --- ZAKŁADKI ZNAJOMYCH (DODAWANIE) ---
+        const tabs = ['online', 'all', 'pending', 'blocked', 'add'];
+        tabs.forEach(t => {
+            document.getElementById(`tab-${t}`).onclick = () => handleTabSwitch(t);
+        });
+
+        function handleTabSwitch(tabName) {
+            tabs.forEach(t => document.getElementById(`tab-${t}`).classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            activeTab = tabName;
+
+            const chatSec = document.getElementById('chat-section');
+            const addSec = document.getElementById('add-friend-section');
+            const msgArea = document.getElementById('msg-area');
+
+            if(tabName === 'add') {
+                chatSec.style.display = "none";
+                addSec.style.display = "flex";
+            } else {
+                chatSec.style.display = "flex";
+                addSec.style.display = "none";
+                
+                if(tabName === 'online') {
+                    msgArea.innerHTML = `<div style="padding:20px;"><h2 style="color:white;">Dostępni znajomi</h2><p style="color:var(--text-muted)">Znajomi, którzy są teraz online.</p></div>`;
+                } else if(tabName === 'pending') {
+                    let html = `<div style="padding:20px;"><h2 style="color:white;">Oczekujące (${mockData.pending.length})</h2><br>`;
+                    mockData.pending.forEach(p => {
+                        html += `<div class="list-item" style="justify-content:space-between; padding:15px; border-top:1px solid var(--bg-modifier-active);"><div style="display:flex; align-items:center;"><img src="${p.avatar}" style="width:40px;height:40px;border-radius:50%;margin-right:15px;"> <div><strong style="color:white">${p.name}</strong><br><span style="font-size:12px; color:var(--text-muted)">${p.type} zaproszenie</span></div></div> <div style="display:flex; gap:10px;"><button style="background:var(--success-color); color:white; padding:8px; border-radius:50%; width:35px;height:35px;">✓</button><button style="background:var(--danger-color); color:white; padding:8px; border-radius:50%; width:35px;height:35px;">✖</button></div></div>`;
+                    });
+                    html += `</div>`;
+                    msgArea.innerHTML = html;
+                } else {
+                    msgArea.innerHTML = `<div style="padding:20px;"><h2 style="color:white;">Brak nowych wiadomości</h2></div>`;
+                }
+            }
+        }
+
+        // --- LOGIKA DODAWANIA ZNAJOMEGO ---
+        window.checkFriendInput = () => {
+            const input = document.getElementById('friend-search-input').value;
+            const btn = document.getElementById('send-friend-req');
+            if(input.length > 2) btn.classList.remove('disabled');
+            else btn.classList.add('disabled');
+        };
+
+        document.getElementById('send-friend-req').onclick = () => {
+            const input = document.getElementById('friend-search-input');
+            if(input.value.length > 2) {
+                showToast(`Pomyślnie wysłano zaproszenie do ${input.value}!`, "var(--success-color)");
+                input.value = "";
+                checkFriendInput();
+            }
+        };
+
+        // --- CZAT I WIADOMOŚCI ---
         function renderMessages() {
             let html = "";
             mockData.messages.forEach(m => {
-                let pr = m.pr > 0 ? `<span class="badge-prestige">P${m.pr}</span>` : "";
+                let badge = m.orbsBadge > 0 ? `<span class="orbs-badge">ORBS ${m.orbsBadge}</span>` : "";
                 html += `
-                    <div class="msg-item">
-                        <img src="${m.av}" class="msg-av">
-                        <div class="msg-author-row">
-                            <span class="msg-author-name">${m.author} <span class="badge-lvl">Lvl ${m.lvl}</span> ${pr}</span>
+                    <div class="message">
+                        <img src="${m.av}" class="msg-avatar">
+                        <div class="msg-header">
+                            <span class="msg-author-name">${m.author} ${badge}</span>
                             <span class="msg-time">${m.time}</span>
                         </div>
                         <div class="msg-content">${m.text}</div>
                     </div>`;
             });
-            document.getElementById('msg-area').innerHTML = html;
-            document.getElementById('msg-area').scrollTop = document.getElementById('msg-area').scrollHeight;
-        }
-
-        function renderRightPanel() {
-            let html = "";
-            mockData.serverRoles.forEach(role => {
-                if(role.users.length > 0) {
-                    html += `<div class="role-title">${role.name} - ${role.users.length}</div>`;
-                    role.users.forEach(u => {
-                        html += `
-                            <div class="member-card">
-                                <div class="av-wrap">
-                                    <img src="${u.avatar}" class="av-img">
-                                    <div class="stat-dot" style="background:${{online:"var(--success-color)", idle:"var(--warning-color)", dnd:"var(--danger-color)"}[u.status]}"></div>
-                                </div>
-                                <div>
-                                    <h4 class="${role.color}">${u.name}</h4>
-                                    <div style="display:flex; gap:4px; margin-top:2px;"><span class="badge-lvl">Lvl ${u.lvl}</span>${u.pr>0?`<span class="badge-prestige">P${u.pr}</span>`:""}</div>
-                                </div>
-                            </div>`;
-                    });
-                }
-            });
-            document.getElementById('members-list').innerHTML = html;
+            const container = document.getElementById('msg-area');
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
         }
 
         document.getElementById('msg-input').onkeypress = (e) => {
             if(e.key === "Enter" && e.target.value.trim() !== "") {
-                const text = e.target.value.trim();
-                mockData.messages.push({ author: currentUser.name, av: currentUser.avatar, text, lvl: currentUser.lvl, pr: currentUser.pr, time: "Dzisiaj o " + new Date().toLocaleTimeString().slice(0,5) });
+                mockData.messages.push({ author: currentUser.name, av: currentUser.avatar, text: e.target.value.trim(), orbsBadge: currentUser.prestige, time: "Przed chwilą" });
                 e.target.value = "";
-                giveXp();
-                if(activeView === "server") renderMessages();
+                gainOrbs();
+                renderMessages();
             }
         };
 
-        // --- POSTY I MODALE ---
-        function openMod(id) { 
-            document.getElementById(id).classList.add('active'); 
-            if(id==='modal-settings') {
-                document.getElementById('edit-nick').value = currentUser.name;
-                document.getElementById('edit-stat').value = currentUser.status;
-                document.getElementById('prev-av').src = currentUser.avatar;
-                tempAvBase64 = currentUser.avatar;
-            }
+        function renderRightPanel() {
+            let rp = `<div class="role-header">Aktywni Teraz</div>`;
+            mockData.friends.forEach(f => {
+                if(f.status === "online") {
+                    rp += `
+                        <div class="member-card">
+                            <img src="${f.avatar}" class="member-avatar">
+                            <div><h4 style="color:white;">${f.name}</h4></div>
+                        </div>`;
+                }
+            });
+            document.getElementById('members-list').innerHTML = rp;
         }
-        function closeMod(id) { document.getElementById(id).classList.remove('active'); clearTimeout(postTimer); }
 
-        document.getElementById('add-post-trigger').onclick = () => openMod('modal-post-add');
-        document.getElementById('settings-trigger').onclick = () => openMod('modal-settings');
-        document.getElementById('open-settings').onclick = () => openMod('modal-settings');
-        document.getElementById('close-set').onclick = () => closeMod('modal-settings');
-        document.getElementById('close-post-add').onclick = () => closeMod('modal-post-add');
-        document.getElementById('close-v-post').onclick = () => closeMod('modal-post-view');
-
-        // Avatar Upload
-        document.getElementById('av-upload').onchange = (e) => {
-            const f = e.target.files[0];
-            if(f) {
-                const reader = new FileReader();
-                reader.onload = (ev) => { tempAvBase64 = ev.target.result; document.getElementById('prev-av').src = tempAvBase64; };
-                reader.readAsDataURL(f);
-            }
-        };
-
+        // --- USTAWIENIA ---
         document.getElementById('save-prof').onclick = async () => {
             currentUser.name = document.getElementById('edit-nick').value;
-            currentUser.status = document.getElementById('edit-stat').value;
-            currentUser.avatar = tempAvBase64;
             await setDoc(doc(db, 'users', currentUser.uid), currentUser);
-            mockData.friends.find(x => x.id === "me").name = currentUser.name;
-            mockData.friends.find(x => x.id === "me").avatar = currentUser.avatar;
-            updateUserUI(); closeMod('modal-settings'); showToast("Profil zaktualizowany!", "var(--success-color)");
-            if(activeView === "home") switchToDM(); else switchToServer();
+            updateUserUI();
+            document.getElementById('modal-settings').classList.remove('active');
+            showToast("Ustawienia zapisane pomyślnie!", "var(--success-color)");
         };
-
-        // Post Upload
-        document.getElementById('post-img-input').onchange = (e) => {
-            const f = e.target.files[0];
-            if(f) {
-                const r = new FileReader();
-                r.onload = (ev) => { tempPostBase64 = ev.target.result; document.getElementById('post-img-prev').src = tempPostBase64; document.getElementById('post-img-prev').style.display='block'; document.getElementById('post-up-text').style.display='none'; };
-                r.readAsDataURL(f);
-            }
-        };
-
-        document.getElementById('publish-btn').onclick = async () => {
-            const txt = document.getElementById('post-txt-input').value;
-            currentUser.post = { text: txt, img: tempPostBase64, ts: Date.now() };
-            await setDoc(doc(db, 'users', currentUser.uid), currentUser);
-            mockData.friends.find(x => x.id === "me").post = currentUser.post;
-            closeMod('modal-post-add'); switchToDM(); showToast("Post dodany na 24h!", "var(--story-orange)");
-            tempPostBase64 = null;
-        };
-
-        window.viewPost = (uid) => {
-            const f = mockData.friends.find(x => x.id === uid);
-            document.getElementById('modal-post-view').classList.add('active');
-            document.getElementById('post-v-av').src = f.avatar;
-            document.getElementById('post-v-name').innerText = f.id === "me" ? "Twój Post" : f.name;
-            document.getElementById('post-v-txt').innerText = f.post.text;
-            document.getElementById('post-v-img').src = f.post.img || "";
-            document.getElementById('post-v-img').style.display = f.post.img ? 'block' : 'none';
-            
-            const fill = document.getElementById('post-prog');
-            fill.style.transition = "none"; fill.style.width = "0%";
-            setTimeout(() => { fill.style.transition = "width 5s linear"; fill.style.width = "100%"; }, 50);
-            postTimer = setTimeout(() => closeMod('modal-post-view'), 5000);
-        };
-
-        // Call Sound
-        const ring = document.getElementById('ringtone');
-        document.getElementById('call-start').onclick = () => { ring.play(); alert("Dzwonię do grupy..."); setTimeout(() => ring.pause(), 5000); };
-        document.getElementById('video-start').onclick = () => { ring.play(); alert("Rozpoczynam wideo..."); setTimeout(() => ring.pause(), 5000); };
 
     </script>
 </body>

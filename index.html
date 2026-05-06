@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hybrid: Discord x Messenger x Insta</title>
+    <title>HybridPro: Discord x Messenger x Insta</title>
     <style>
+        /* ================= CSS: ZMIENNE I BAZA ================= */
         :root {
-            /* Discord Colors */
             --bg-darkest: #1e1f22;
             --bg-sidebar: #2b2d31;
             --bg-chat: #313338;
             --text-main: #dbdee1;
             --text-muted: #949ba4;
             --bg-input: #383a40;
-            
-            /* Messenger & Insta Colors */
+            --bg-hover: rgba(255, 255, 255, 0.08);
             --messenger-blue: #0084ff;
             --insta-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
         }
+
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -29,45 +30,68 @@
             overflow: hidden;
         }
 
-        /* 1. DISCORD: Wąski panel nawigacyjny (Serwery/Opcje) */
+        /* Niestandardowy pasek przewijania */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #1a1b1e; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #111214; }
+
+        /* ================= 1. DISCORD NAV ================= */
         .app-nav {
-            width: 70px;
+            width: 75px;
             background-color: var(--bg-darkest);
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 10px;
-            gap: 10px;
+            padding-top: 15px;
+            gap: 12px;
+            z-index: 10;
         }
 
         .nav-icon {
-            width: 48px;
-            height: 48px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background-color: var(--bg-sidebar);
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: 0.2s;
-            font-size: 20px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 22px;
+            position: relative;
         }
 
         .nav-icon:hover {
-            border-radius: 15px;
+            border-radius: 16px;
             background-color: var(--messenger-blue);
             color: white;
+            transform: scale(1.05);
         }
 
         .nav-icon.active {
             background: var(--insta-gradient);
-            border-radius: 15px;
+            border-radius: 16px;
             color: white;
         }
 
-        /* 2. MESSENGER/INSTA: Panel boczny z czatami i relacjami */
+        /* Notyfikacje na ikonach */
+        .badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background-color: #f23f42;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 3px solid var(--bg-darkest);
+        }
+
+        /* ================= 2. SIDEBAR (INSTA + MESSENGER) ================= */
         .sidebar {
-            width: 320px;
+            width: 340px;
             background-color: var(--bg-sidebar);
             display: flex;
             flex-direction: column;
@@ -75,86 +99,132 @@
         }
 
         .sidebar-header {
-            padding: 20px;
-            font-size: 20px;
-            font-weight: bold;
+            padding: 25px 20px 15px;
+            font-size: 22px;
+            font-weight: 800;
             color: white;
-            border-bottom: 1px solid #1f2023;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        /* INSTAGRAM: Relacje (Stories) */
+        /* Insta Stories */
         .stories-container {
             display: flex;
-            padding: 15px;
+            padding: 0 15px 15px;
             gap: 15px;
             overflow-x: auto;
             border-bottom: 1px solid #1f2023;
         }
 
-        .stories-container::-webkit-scrollbar { display: none; }
-
         .story {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             cursor: pointer;
+            min-width: 60px;
+            transition: 0.2s;
         }
 
+        .story:hover { transform: translateY(-2px); }
+
         .story-img-wrapper {
-            width: 50px;
-            height: 50px;
+            width: 58px;
+            height: 58px;
             border-radius: 50%;
             padding: 3px;
             background: var(--insta-gradient);
         }
+
+        .story.viewed .story-img-wrapper { background: #4f545c; }
 
         .story img {
             width: 100%;
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid var(--bg-sidebar);
+            border: 3px solid var(--bg-sidebar);
         }
 
         .story span {
             font-size: 11px;
-            color: var(--text-muted);
+            color: var(--text-main);
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 60px;
         }
 
-        /* MESSENGER: Lista czatów */
+        /* Szukajka */
+        .search-bar {
+            padding: 15px;
+        }
+        .search-bar input {
+            width: 100%;
+            background-color: var(--bg-darkest);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        /* Lista czatów */
         .chat-list {
             flex: 1;
             overflow-y: auto;
         }
 
         .chat-item {
-            padding: 12px 20px;
+            padding: 12px 15px;
+            margin: 0 10px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             cursor: pointer;
-            transition: 0.2s;
+            transition: 0.1s;
         }
 
-        .chat-item:hover { background-color: rgba(255, 255, 255, 0.05); }
+        .chat-item:hover { background-color: var(--bg-hover); }
+        .chat-item.active { background-color: rgba(255, 255, 255, 0.1); }
 
-        .chat-avatar {
-            width: 45px;
-            height: 45px;
+        .chat-avatar-wrapper { position: relative; margin-right: 15px; }
+        .chat-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+        
+        .status-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 14px;
+            height: 14px;
+            background-color: #23a559;
             border-radius: 50%;
-            margin-right: 15px;
-            object-fit: cover;
+            border: 3px solid var(--bg-sidebar);
         }
 
-        .chat-info h4 { margin: 0; font-size: 15px; color: white; }
-        .chat-info p { margin: 4px 0 0 0; font-size: 13px; color: var(--text-muted); }
+        .chat-info { flex: 1; overflow: hidden; }
+        .chat-info h4 { margin: 0; font-size: 15px; color: white; font-weight: 600; }
+        .chat-info p { 
+            margin: 4px 0 0 0; 
+            font-size: 13px; 
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-        /* 3. DISCORD/MESSENGER: Główny obszar czatu */
+        .chat-time { font-size: 11px; color: var(--text-muted); margin-bottom: auto; margin-top: 5px;}
+
+        /* ================= 3. CHAT AREA ================= */
         .chat-area {
             flex: 1;
             background-color: var(--bg-chat);
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .chat-header {
@@ -164,21 +234,24 @@
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid #1f2023;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            background: var(--bg-chat);
+            z-index: 5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        .chat-header-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        .chat-header-info { display: flex; align-items: center; gap: 15px; }
+        .chat-header-info img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; }
+        .chat-header-info h3 { margin: 0; font-size: 16px; color: white; }
+        .chat-header-info span { font-size: 13px; color: var(--text-muted); }
 
-        .chat-header-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
+        .header-actions span {
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 20px;
+            margin-left: 20px;
+            transition: 0.2s;
         }
+        .header-actions span:hover { color: white; }
 
         /* Wiadomości */
         .messages {
@@ -190,60 +263,53 @@
             overflow-y: auto;
         }
 
-        .message-row {
-            display: flex;
-            width: 100%;
-        }
-
-        .message-row.received { justify-content: flex-start; }
-        .message-row.sent { justify-content: flex-end; }
+        .message-row { display: flex; width: 100%; flex-direction: column; }
+        .message-row.received { align-items: flex-start; }
+        .message-row.sent { align-items: flex-end; }
 
         .message-bubble {
-            max-width: 60%;
-            padding: 10px 15px;
+            max-width: 65%;
+            padding: 12px 16px;
             border-radius: 20px;
             font-size: 15px;
             line-height: 1.4;
             position: relative;
+            word-wrap: break-word;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        .received .message-bubble {
-            background-color: var(--bg-input);
-            border-bottom-left-radius: 5px;
-        }
+        .received .message-bubble { background-color: var(--bg-input); border-bottom-left-radius: 4px; }
+        .sent .message-bubble { background-color: var(--messenger-blue); color: white; border-bottom-right-radius: 4px; }
 
-        .sent .message-bubble {
-            background-color: var(--messenger-blue);
-            color: white;
-            border-bottom-right-radius: 5px;
-        }
+        .message-time { font-size: 11px; color: var(--text-muted); margin-top: 4px; padding: 0 5px; }
 
-        /* INSTA: Przycisk polubienia wiadomości */
+        /* Insta Like System */
         .like-btn {
             position: absolute;
-            bottom: -10px;
-            right: -10px;
-            background: var(--bg-sidebar);
+            bottom: -12px;
+            right: 10px;
+            background: var(--bg-chat);
             border-radius: 50%;
-            padding: 4px;
-            font-size: 12px;
+            padding: 4px 6px;
+            font-size: 14px;
             cursor: pointer;
-            border: 1px solid #1f2023;
-            display: none;
+            border: 2px solid var(--bg-chat);
+            opacity: 0;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
+        
+        .sent .like-btn { left: 10px; right: auto; }
+        .message-bubble:hover .like-btn { opacity: 1; transform: translateY(-2px); }
+        .like-btn.liked { opacity: 1; color: #ed4956; }
+        .like-btn:active { transform: scale(1.3); }
 
-        .message-bubble:hover .like-btn { display: block; }
-        .like-btn:active { transform: scale(1.2); }
-
-        /* Pole wpisywania */
-        .input-area {
-            padding: 20px;
-        }
-
+        /* Input Area */
+        .input-area { padding: 0 20px 25px; }
         .input-wrapper {
             background-color: var(--bg-input);
-            border-radius: 24px;
-            padding: 12px 20px;
+            border-radius: 12px;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
             gap: 15px;
@@ -258,136 +324,353 @@
             font-size: 15px;
         }
 
-        .action-icon {
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 20px;
-            transition: 0.2s;
+        .input-wrapper input::placeholder { color: #6a717a; }
+
+        /* ================= MODAL RELACJI (STORIES) ================= */
+        #story-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.95);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
-        .action-icon:hover { color: white; }
+        .close-story {
+            position: absolute;
+            top: 20px; right: 30px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        .story-content {
+            width: 400px;
+            height: 700px;
+            background: #222;
+            border-radius: 15px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            padding: 20px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .story-bar {
+            position: absolute;
+            top: 15px; left: 15px; right: 15px;
+            height: 3px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .story-progress {
+            height: 100%;
+            background: white;
+            width: 0%;
+        }
 
     </style>
 </head>
 <body>
 
     <div class="app-nav">
-        <div class="nav-icon active">🏠</div>
-        <div class="nav-icon">💬</div>
-        <div class="nav-icon">🔔</div>
-        <div class="nav-icon">⚙️</div>
+        <div class="nav-icon active" title="Strona Główna">🏠</div>
+        <div class="nav-icon" title="Wiadomości">💬<div class="badge">3</div></div>
+        <div class="nav-icon" title="Powiadomienia">🔔</div>
+        <div class="nav-icon" title="Ustawienia" style="margin-top: auto; margin-bottom: 20px;">⚙️</div>
     </div>
 
     <div class="sidebar">
-        <div class="sidebar-header">Wiadomości</div>
+        <div class="sidebar-header">
+            Wiadomości
+            <span style="cursor: pointer; font-size: 18px;">📝</span>
+        </div>
         
-        <div class="stories-container">
-            <div class="story">
-                <div class="story-img-wrapper">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ty" alt="Twoja relacja">
-                </div>
-                <span>Twój profil</span>
-            </div>
-            <div class="story">
-                <div class="story-img-wrapper">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Anna" alt="Anna">
-                </div>
-                <span>Anna</span>
-            </div>
-            <div class="story">
-                <div class="story-img-wrapper">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Marek" alt="Marek">
-                </div>
-                <span>Marek</span>
-            </div>
+        <div class="stories-container" id="stories-box"></div>
+
+        <div class="search-bar">
+            <input type="text" placeholder="Szukaj w konwersacjach..." onkeyup="filterChats(this.value)">
         </div>
 
-        <div class="chat-list">
-            <div class="chat-item" style="background-color: rgba(255,255,255,0.05);">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Anna" class="chat-avatar">
-                <div class="chat-info">
-                    <h4>Anna Nowak</h4>
-                    <p>Wysłała Ci relację • 5 min</p>
-                </div>
-            </div>
-            <div class="chat-item">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Grupa" class="chat-avatar">
-                <div class="chat-info">
-                    <h4>Grupa Projektowa</h4>
-                    <p>Marek: Dobry pomysł!</p>
-                </div>
+        <div class="chat-list" id="chats-box"></div>
+    </div>
+
+    <div class="chat-area">
+        <div class="chat-header" id="chat-header"></div>
+
+        <div class="messages" id="messages-box"></div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <span class="action-icon" style="color:var(--text-muted); cursor:pointer; font-size:22px;">➕</span>
+                <span class="action-icon" style="color:var(--text-muted); cursor:pointer; font-size:20px;">📷</span>
+                <input type="text" placeholder="Napisz wiadomość..." id="msg-input" onkeypress="handleKeyPress(event)" autocomplete="off">
+                <span class="action-icon" style="color:var(--text-muted); cursor:pointer; font-size:20px;">🎙️</span>
             </div>
         </div>
     </div>
 
-    <div class="chat-area">
-        <div class="chat-header">
-            <div class="chat-header-info">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Anna" alt="Anna">
-                <div>
-                    <h3 style="margin: 0; font-size: 16px; color: white;">Anna Nowak</h3>
-                    <span style="font-size: 12px; color: var(--text-muted);">Aktywna(y) teraz</span>
-                </div>
-            </div>
-            <div style="display: flex; gap: 15px;">
-                <span class="action-icon">📞</span>
-                <span class="action-icon">📹</span>
-                <span class="action-icon">ℹ️</span>
-            </div>
-        </div>
-
-        <div class="messages" id="chat-box">
-            <div class="message-row received">
-                <div class="message-bubble">
-                    Hej! Widziałeś najnowsze Insta Stories? 😂
-                    <div class="like-btn" onclick="this.innerHTML='❤️'">🤍</div>
-                </div>
-            </div>
-            
-            <div class="message-row sent">
-                <div class="message-bubble">
-                    Tak, mega zabawne! Zrobiłem zrzut ekranu.
-                </div>
-            </div>
-            
-            <div class="message-row received">
-                <div class="message-bubble">
-                    Podeślesz mi? Zapomniałam zapisać.
-                    <div class="like-btn" onclick="this.innerHTML='❤️'">🤍</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="input-area">
-            <div class="input-wrapper">
-                <span class="action-icon">➕</span>
-                <span class="action-icon">📷</span>
-                <input type="text" placeholder="Napisz wiadomość..." id="msg-input" onkeypress="handleEnter(event)">
-                <span class="action-icon">🎙️</span>
-            </div>
+    <div id="story-modal">
+        <span class="close-story" onclick="closeStory()">✖</span>
+        <div class="story-content" id="story-content">
+            <div class="story-bar"><div class="story-progress" id="story-progress"></div></div>
+            <h2 id="story-text" style="text-shadow: 2px 2px 10px rgba(0,0,0,0.8);">Ładowanie...</h2>
         </div>
     </div>
 
     <script>
-        // Prosty skrypt symulujący wysyłanie wiadomości (wcisnij Enter)
-        function handleEnter(e) {
-            if (e.key === 'Enter') {
-                const input = document.getElementById('msg-input');
+        // --- BAZA DANYCH (MOCK DB) ---
+        const MY_USER_ID = "u_me";
+        let activeChatId = "c_1";
+        let storyTimer = null;
+
+        const users = {
+            "u_1": { name: "Anna Nowak", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anna", status: "online", lastSeen: "Teraz" },
+            "u_2": { name: "Kamil Kowalski", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kamil", status: "offline", lastSeen: "15 min temu" },
+            "u_3": { name: "Grupa Projektowa", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=GP&backgroundColor=0084ff", status: "online", lastSeen: "Teraz", isGroup: true },
+            "u_4": { name: "Julia", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Julia", status: "offline", lastSeen: "Wczoraj" },
+        };
+
+        const stories = [
+            { id: "s_me", userId: MY_USER_ID, name: "Twój profil", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Me", viewed: false, bg: "#2c3e50", text: "Kliknij by dodać relację!" },
+            { id: "s_1", userId: "u_1", name: "Anna Nowak", avatar: users["u_1"].avatar, viewed: false, bg: "#e74c3c", text: "Kawa na mieście ☕" },
+            { id: "s_4", userId: "u_4", name: "Julia", avatar: users["u_4"].avatar, viewed: false, bg: "#8e44ad", text: "Nowy projekt w drodze! 💻" }
+        ];
+
+        const chats = [
+            { id: "c_1", userId: "u_1", lastMsg: "Podeślesz mi to zdjęcie?", time: "10:45", unread: 0 },
+            { id: "c_3", userId: "u_3", lastMsg: "Kamil: Zrobię to jutro.", time: "09:30", unread: 3 },
+            { id: "c_2", userId: "u_2", lastMsg: "Haha, dokładnie!", time: "Wczoraj", unread: 0 },
+            { id: "c_4", userId: "u_4", lastMsg: "Dzięki za pomoc :)", time: "Wczoraj", unread: 0 }
+        ];
+
+        const messagesDb = {
+            "c_1": [
+                { id: "m_1", senderId: "u_1", text: "Hej! Widziałeś najnowsze Insta Stories? 😂", time: "10:40", liked: false },
+                { id: "m_2", senderId: MY_USER_ID, text: "Tak, mega zabawne! Zrobiłem zrzut ekranu.", time: "10:42", liked: true },
+                { id: "m_3", senderId: "u_1", text: "Podeślesz mi to zdjęcie? Zapomniałam zapisać.", time: "10:45", liked: false }
+            ],
+            "c_3": [
+                { id: "m_4", senderId: MY_USER_ID, text: "Kto ogarnia front-end?", time: "09:20", liked: false },
+                { id: "m_5", senderId: "u_2", text: "Zrobię to jutro.", time: "09:30", liked: false }
+            ],
+            "c_2": [
+                { id: "m_6", senderId: MY_USER_ID, text: "To był niezły mecz.", time: "Wczoraj", liked: false },
+                { id: "m_7", senderId: "u_2", text: "Haha, dokładnie!", time: "Wczoraj", liked: true }
+            ],
+            "c_4": [
+                { id: "m_8", senderId: "u_4", text: "Dzięki za pomoc :)", time: "Wczoraj", liked: false }
+            ]
+        };
+
+        // --- INICJALIZACJA APLIKACJI ---
+        function initApp() {
+            renderStories();
+            renderChats();
+            loadChat(activeChatId);
+        }
+
+        // --- RENDEROWANIE RELACJI (STORIES) ---
+        function renderStories() {
+            const box = document.getElementById("stories-box");
+            box.innerHTML = "";
+            stories.forEach(story => {
+                const viewedClass = story.viewed ? "viewed" : "";
+                box.innerHTML += `
+                    <div class="story ${viewedClass}" onclick="openStory('${story.id}')">
+                        <div class="story-img-wrapper">
+                            <img src="${story.avatar}" alt="${story.name}">
+                        </div>
+                        <span>${story.name === "Twój profil" ? "Ty" : story.name.split(" ")[0]}</span>
+                    </div>
+                `;
+            });
+        }
+
+        // --- RENDEROWANIE LISTY CZATÓW ---
+        function renderChats(filterText = "") {
+            const box = document.getElementById("chats-box");
+            box.innerHTML = "";
+            
+            chats.forEach(chat => {
+                const user = users[chat.userId];
+                // Filtrowanie
+                if (filterText && !user.name.toLowerCase().includes(filterText.toLowerCase())) return;
+
+                const activeClass = chat.id === activeChatId ? "active" : "";
+                const boldMsg = chat.unread > 0 ? "font-weight: bold; color: white;" : "";
+                const dotStatus = user.status === "online" ? `<div class="status-dot"></div>` : "";
+
+                box.innerHTML += `
+                    <div class="chat-item ${activeClass}" onclick="loadChat('${chat.id}')">
+                        <div class="chat-avatar-wrapper">
+                            <img src="${user.avatar}" class="chat-avatar">
+                            ${dotStatus}
+                        </div>
+                        <div class="chat-info">
+                            <h4>${user.name}</h4>
+                            <p style="${boldMsg}">${chat.lastMsg}</p>
+                        </div>
+                        <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                            <span class="chat-time">${chat.time}</span>
+                            ${chat.unread > 0 ? `<div style="background:#f23f42; color:white; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:bold;">${chat.unread}</div>` : ""}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filterChats(val) { renderChats(val); }
+
+        // --- ŁADOWANIE KONKRETNEGO CZATU ---
+        function loadChat(chatId) {
+            activeChatId = chatId;
+            renderChats(); // Odśwież by zaznaczyć aktywny
+            
+            const chatObj = chats.find(c => c.id === chatId);
+            const user = users[chatObj.userId];
+            
+            // Reset unread
+            chatObj.unread = 0;
+
+            // Render Header
+            document.getElementById("chat-header").innerHTML = `
+                <div class="chat-header-info">
+                    <img src="${user.avatar}">
+                    <div>
+                        <h3>${user.name}</h3>
+                        <span>${user.status === 'online' ? 'Aktywny(a) teraz' : 'Aktywność: ' + user.lastSeen}</span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <span title="Rozpocznij połączenie głosowe">📞</span>
+                    <span title="Rozpocznij rozmowę wideo">📹</span>
+                    <span title="Informacje o profilu">ℹ️</span>
+                </div>
+            `;
+
+            // Render Messages
+            renderMessages();
+        }
+
+        // --- RENDEROWANIE WIADOMOŚCI ---
+        function renderMessages() {
+            const box = document.getElementById("messages-box");
+            box.innerHTML = "";
+            const msgs = messagesDb[activeChatId] || [];
+
+            msgs.forEach(msg => {
+                const isMe = msg.senderId === MY_USER_ID;
+                const rowClass = isMe ? "sent" : "received";
+                const likedHTML = msg.liked ? `<div class="like-btn liked" onclick="toggleLike('${msg.id}')">❤️</div>` : `<div class="like-btn" onclick="toggleLike('${msg.id}')">🤍</div>`;
+
+                box.innerHTML += `
+                    <div class="message-row ${rowClass}">
+                        <div class="message-bubble">
+                            ${msg.text}
+                            ${likedHTML}
+                        </div>
+                        <span class="message-time">${msg.time}</span>
+                    </div>
+                `;
+            });
+
+            // Przewiń na dół
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // --- WYSYŁANIE WIADOMOŚCI ---
+        function handleKeyPress(e) {
+            if (e.key === "Enter") {
+                const input = document.getElementById("msg-input");
                 const text = input.value.trim();
                 
                 if (text) {
-                    const chatBox = document.getElementById('chat-box');
-                    const newMsg = `
-                        <div class="message-row sent">
-                            <div class="message-bubble">${text}</div>
-                        </div>
-                    `;
-                    chatBox.innerHTML += newMsg;
-                    input.value = '';
-                    chatBox.scrollTop = chatBox.scrollHeight; // przewija w dół
+                    const now = new Date();
+                    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                    
+                    // Dodaj do bazy
+                    const newMsg = {
+                        id: "m_" + Date.now(),
+                        senderId: MY_USER_ID,
+                        text: text,
+                        time: timeStr,
+                        liked: false
+                    };
+                    
+                    if(!messagesDb[activeChatId]) messagesDb[activeChatId] = [];
+                    messagesDb[activeChatId].push(newMsg);
+                    
+                    // Aktualizuj listę czatów z boku
+                    const chatObj = chats.find(c => c.id === activeChatId);
+                    chatObj.lastMsg = "Ty: " + text;
+                    chatObj.time = timeStr;
+
+                    input.value = "";
+                    renderMessages();
+                    renderChats();
                 }
             }
         }
+
+        // --- SYSTEM LIKE (INSTA) ---
+        function toggleLike(msgId) {
+            const msgs = messagesDb[activeChatId];
+            const msg = msgs.find(m => m.id === msgId);
+            if(msg) {
+                msg.liked = !msg.liked;
+                renderMessages();
+            }
+        }
+
+        // --- ODTWARZACZ RELACJI ---
+        function openStory(storyId) {
+            const story = stories.find(s => s.id === storyId);
+            story.viewed = true;
+            renderStories();
+
+            const modal = document.getElementById("story-modal");
+            const content = document.getElementById("story-content");
+            const text = document.getElementById("story-text");
+            const progress = document.getElementById("story-progress");
+
+            content.style.background = story.bg;
+            text.innerText = story.text;
+            modal.style.display = "flex";
+            
+            // Reset animacji paska
+            progress.style.transition = "none";
+            progress.style.width = "0%";
+            
+            setTimeout(() => {
+                progress.style.transition = "width 5s linear";
+                progress.style.width = "100%";
+            }, 50);
+
+            // Zamknij po 5 sekundach
+            clearTimeout(storyTimer);
+            storyTimer = setTimeout(() => {
+                closeStory();
+            }, 5000);
+        }
+
+        function closeStory() {
+            document.getElementById("story-modal").style.display = "none";
+            clearTimeout(storyTimer);
+        }
+
+        // Uruchom aplikację po załadowaniu
+        window.onload = initApp;
+
     </script>
 </body>
 </html>

@@ -3,363 +3,463 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Age of Territorial</title>
+<title>Age of Territorial - Giga MMO</title>
 <style>
-:root {
-    --bg: rgb(2, 6, 23);
-    --panel: rgb(15, 23, 42);
-    --border: rgb(30, 41, 59);
-    --text: rgb(248, 250, 252);
-    --muted: rgb(148, 163, 184);
-    --blue: rgb(59, 130, 246);
-    --red: rgb(239, 68, 68);
-    --green: rgb(16, 185, 129);
-    --gold: rgb(245, 158, 11);
-}
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    user-select: none;
-    font-family: sans-serif;
-}
-body {
-    background-color: var(--bg);
-    color: var(--text);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    width: 100vw;
-    height: 100vh;
-}
-.screen {
-    display: none;
-    width: 100%;
-    height: 100%;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background: radial-gradient(circle at center, rgb(30, 41, 59) 0%, rgb(2, 6, 23) 100%);
-    z-index: 10;
-}
-.active {
-    display: flex;
-}
-.box {
-    background: rgba(15, 23, 42, 0.8);
-    padding: 40px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    text-align: center;
-    width: 450px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
-}
-.title {
-    font-size: 3.5rem;
-    color: var(--text);
-    margin-bottom: 20px;
-    font-weight: 900;
-}
-.title-span {
-    color: var(--blue);
-}
-.btn {
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--border);
-    color: rgb(255, 255, 255);
-    padding: 15px;
-    margin: 8px 0;
-    font-size: 1.1rem;
-    cursor: pointer;
-    border-radius: 10px;
-    width: 100%;
-    font-weight: bold;
-    transition: 0.3s;
-}
-.btn:hover {
-    border-color: var(--blue);
-    background: rgba(59, 130, 246, 0.1);
-    transform: translateY(-2px);
-}
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-    border-color: rgb(50, 50, 50);
-}
-.btn-green {
-    border-color: var(--green);
-    color: var(--green);
-}
-.btn-green:hover {
-    background: var(--green);
-    color: rgb(0, 0, 0);
-}
-.btn-red {
-    border-color: var(--red);
-    color: var(--red);
-}
-.btn-red:hover {
-    background: var(--red);
-    color: rgb(255, 255, 255);
-}
-.btn-google {
-    border-color: rgb(219, 68, 55);
-    color: rgb(219, 68, 55);
-}
-.btn-anon {
-    border-color: var(--muted);
-    color: var(--muted);
-}
-.loader {
-    border: 4px solid rgba(255, 255, 255, 0.1);
-    border-top: 4px solid var(--blue);
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-    margin: 20px auto;
-}
-@keyframes spin {
-    100% {
-        transform: rotate(360deg);
+    :root {
+        --bg-dark: rgb(2, 6, 23);
+        --bg-panel: rgba(15, 23, 42, 0.9);
+        --border-color: rgba(51, 65, 85, 0.9);
+        --color-blue: rgb(59, 130, 246);
+        --color-red: rgb(239, 68, 68);
+        --color-green: rgb(16, 185, 129);
+        --color-gold: rgb(245, 158, 11);
+        --color-wood: rgb(180, 83, 9);
+        --color-stone: rgb(100, 116, 139);
+        --text-light: rgb(248, 250, 252);
+        --text-muted: rgb(148, 163, 184);
     }
-}
-.game-ui {
-    z-index: 5;
-    background: rgb(0, 0, 0);
-    display: none;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-}
-.hud {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--panel);
-    padding: 15px 30px;
-    border-bottom: 1px solid var(--border);
-    z-index: 20;
-}
-.res-bar {
-    display: flex;
-    gap: 20px;
-    font-weight: bold;
-    font-size: 1.2rem;
-}
-.res-item {
-    background: rgba(0, 0, 0, 0.6);
-    padding: 8px 15px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.map-container {
-    flex-grow: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: rgb(2, 6, 23);
-}
-canvas {
-    border: 2px solid var(--border);
-    cursor: crosshair;
-}
-.modal-overlay {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 100;
-}
-.modal {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--panel);
-    border: 2px solid var(--blue);
-    padding: 30px;
-    border-radius: 15px;
-    width: 400px;
-    display: flex;
-    flex-direction: column;
-}
-.modal h2 {
-    text-align: center;
-    margin-bottom: 20px;
-    color: var(--text);
-}
-input[type="range"] {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 8px;
-    background: rgb(30, 41, 59);
-    outline: none;
-    margin: 25px 0;
-    border-radius: 4px;
-}
-input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
-    background: var(--blue);
-    cursor: pointer;
-    transition: 0.2s;
-}
-input[type="range"]::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-}
-.build-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-height: 350px;
-    overflow-y: auto;
-}
-.build-item {
-    background: rgba(0, 0, 0, 0.4);
-    padding: 15px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-}
-.build-item:hover {
-    border-color: var(--gold);
-    background: rgba(245, 158, 11, 0.1);
-}
-.toast-box {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 200;
-    pointer-events: none;
-}
-.toast {
-    background: rgba(15, 23, 42, 0.95);
-    padding: 12px 25px;
-    border-radius: 30px;
-    border: 1px solid var(--border);
-    font-weight: bold;
-    color: rgb(255, 255, 255);
-    animation: slideUp 0.3s ease-out, fadeOut 0.5s ease-in 2.5s forwards;
-}
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+
+    body {
+        background-color: var(--bg-dark);
+        color: var(--text-light);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        width: 100vw;
+        height: 100vh;
     }
-}
-@keyframes fadeOut {
-    to {
-        opacity: 0;
+
+    .screen {
+        display: none;
+        width: 100%;
+        height: 100%;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: radial-gradient(circle at top, rgb(15, 23, 42), rgb(2, 6, 23));
+        z-index: 10;
+        backdrop-filter: blur(5px);
     }
-}
-.txt-gold { color: var(--gold); }
-.txt-wood { color: rgb(180, 83, 9); }
-.txt-stone { color: var(--muted); }
-.txt-troops { color: var(--red); }
-.txt-blue { color: var(--blue); }
-.txt-muted { color: var(--muted); }
-.flex-row { display: flex; gap: 10px; margin-top: 20px; }
-.flex-between { display: flex; justify-content: space-between; font-size: 0.9rem; }
-.val-big { font-size: 3rem; text-align: center; font-weight: 900; }
+
+    .screen-active {
+        display: flex;
+    }
+
+    .panel-box {
+        background: var(--bg-panel);
+        padding: 40px;
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+        backdrop-filter: blur(15px);
+        width: 500px;
+        max-width: 90%;
+    }
+
+    .main-title {
+        font-size: 3.5rem;
+        color: var(--text-light);
+        margin-bottom: 20px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    .main-title-accent {
+        color: var(--color-blue);
+    }
+
+    .btn {
+        background: rgba(0,0,0,0.6);
+        border: 1px solid var(--border-color);
+        color: rgb(255, 255, 255);
+        padding: 15px;
+        margin: 8px 0;
+        font-size: 1.1rem;
+        cursor: pointer;
+        border-radius: 10px;
+        width: 100%;
+        transition: 0.3s;
+        font-weight: bold;
+    }
+
+    .btn:hover {
+        border-color: var(--color-blue);
+        background: rgba(59, 130, 246, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        border-color: rgb(50, 50, 50);
+        background: rgba(0,0,0,0.4);
+    }
+
+    .btn-green {
+        border-color: var(--color-green);
+        color: var(--color-green);
+    }
+
+    .btn-green:hover {
+        background: var(--color-green);
+        color: rgb(0, 0, 0);
+    }
+
+    .btn-red {
+        border-color: var(--color-red);
+        color: var(--color-red);
+    }
+
+    .btn-red:hover {
+        background: var(--color-red);
+        color: rgb(255, 255, 255);
+    }
+
+    .spinner {
+        border: 4px solid rgba(255,255,255,0.1);
+        border-top: 4px solid var(--color-blue);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 15px auto;
+    }
+
+    @keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
+
+    .game-layer {
+        z-index: 5;
+        background: rgb(0, 0, 0);
+        display: none;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+    }
+
+    .hud-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--bg-panel);
+        padding: 10px 25px;
+        border-bottom: 1px solid var(--border-color);
+        z-index: 20;
+    }
+
+    .resources-container {
+        display: flex;
+        gap: 15px;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .resource-item {
+        background: rgba(0,0,0,0.7);
+        padding: 5px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .hint-text {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    .map-area {
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: var(--bg-dark);
+        position: relative;
+    }
+
+    canvas {
+        border: 2px solid var(--border-color);
+        cursor: crosshair;
+    }
+
+    .modal-layer {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.7);
+        z-index: 99;
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-box {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--bg-panel);
+        border: 2px solid var(--color-blue);
+        padding: 25px;
+        border-radius: 15px;
+        flex-direction: column;
+        width: 420px;
+    }
+
+    .modal-title {
+        text-align: center;
+        color: var(--text-light);
+        margin-bottom: 15px;
+        font-weight: 800;
+    }
+
+    .range-input {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 8px;
+        border-radius: 4px;
+        background: rgb(30, 41, 59);
+        outline: none;
+        margin: 20px 0;
+        cursor: pointer;
+    }
+
+    .range-input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--color-blue);
+        transition: 0.2s;
+    }
+
+    .range-input::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+    }
+
+    .build-container {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 350px;
+        overflow-y: auto;
+    }
+
+    .build-card {
+        background: rgba(0,0,0,0.6);
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: 0.2s;
+        cursor: pointer;
+    }
+
+    .build-card:hover {
+        border-color: var(--color-gold);
+        background: rgba(245, 158, 11, 0.15);
+    }
+
+    .flex-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .toast-container {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        pointer-events: none;
+        z-index: 200;
+    }
+
+    .toast-message {
+        background: rgba(15,23,42,0.95);
+        padding: 12px 25px;
+        border-radius: 30px;
+        border: 1px solid var(--border-color);
+        font-weight: bold;
+        color: rgb(255, 255, 255);
+        animation: slideUpToast 0.3s ease-out, fadeOutToast 0.5s ease-in 2.5s forwards;
+    }
+
+    @keyframes slideUpToast {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeOutToast {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+
+    .lobby-player-list {
+        background: rgba(0,0,0,0.5);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        min-height: 100px;
+        margin: 15px 0;
+        padding: 10px;
+        text-align: left;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .lobby-player-item {
+        color: var(--text-light);
+        padding: 5px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .color-dot {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .settings-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 10px 0;
+        color: var(--text-muted);
+    }
+
+    .settings-val {
+        color: var(--color-gold);
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    .slider-small {
+        width: 150px;
+        margin: 0;
+    }
 </style>
 </head>
 <body>
 
-<div class="screen active class-screen-main">
-    <div class="box">
-        <h1 class="title">Age of <span class="title-span">War</span></h1>
-        <p style="margin-bottom: 10px;">Gracz: <strong class="txt-gold class-player-nick">Gosc</strong></p>
-        <p class="txt-muted class-db-status" style="margin-bottom: 20px; font-size: 0.9rem;">Czekam na system...</p>
+<div class="screen screen-main screen-active">
+    <div class="panel-box">
+        <h1 class="main-title">Age of <span class="main-title-accent">War</span></h1>
         
-        <button class="btn btn-google class-btn-login">Zaloguj przez Google</button>
-        <button class="btn btn-anon class-btn-anon">Zaloguj jako Anonim</button>
-        <button class="btn btn-red class-btn-logout" style="display:none;">Wyloguj</button>
+        <p style="margin-bottom: 5px;">Zalogowano jako: <strong class="display-nick" style="color: var(--color-gold);">Gosc</strong></p>
+        <p class="display-status" style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">Oczekiwanie na Firebase...</p>
         
-        <hr style="border-color: rgba(255,255,255,0.1); margin: 20px 0;">
-        <button class="btn btn-green class-btn-host" disabled>Utworz Pokoj (Host)</button>
-        <button class="btn class-btn-join" disabled>Dolacz do Pokoju</button>
+        <button class="btn btn-login-google" style="border-color: rgb(219, 68, 55); color: rgb(219, 68, 55);">Zaloguj przez Google</button>
+        <button class="btn btn-login-anon" style="border-color: var(--text-muted); color: var(--text-muted);">Graj jako Gosc (Anonim)</button>
+        <button class="btn btn-logout btn-red" style="display:none;">Wyloguj</button>
+        
+        <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;">
+        
+        <button class="btn btn-green btn-host-menu" disabled>Stworz Pokoj (Host)</button>
+        <button class="btn btn-join-menu" disabled>Znajdz Pokoj (Dolacz)</button>
     </div>
 </div>
 
-<div class="screen class-screen-lobby">
-    <div class="box">
-        <h2 class="txt-gold" style="margin-bottom: 15px; font-size: 2.5rem;">Oczekiwanie...</h2>
-        <p class="txt-muted class-lobby-status" style="font-size: 1.2rem;">Laczenie z serwerem...</p>
-        <div class="loader"></div>
-        <button class="btn btn-red class-btn-cancel-lobby" style="margin-top: 25px;">Przerwij wyszukiwanie</button>
+<div class="screen screen-lobby">
+    <div class="panel-box">
+        <h2 style="color: var(--color-gold); margin-bottom: 10px; font-size: 2.2rem;">Poczekalnia</h2>
+        <p class="lobby-status-text" style="color: var(--text-muted); font-size: 1.1rem;">Przygotowanie...</p>
+        
+        <div class="lobby-player-list"></div>
+        
+        <div class="lobby-settings-area" style="display: none;">
+            <div class="settings-row">
+                <span>Max Graczy:</span>
+                <span class="settings-val val-max-players">4</span>
+                <input type="range" class="range-input slider-small slider-max-players" min="2" max="8" value="4">
+            </div>
+            <div class="settings-row">
+                <span>Liczba Botow:</span>
+                <span class="settings-val val-bot-count">2</span>
+                <input type="range" class="range-input slider-small slider-bot-count" min="0" max="7" value="2">
+            </div>
+            <button class="btn btn-green btn-start-game">Rozpocznij Gre</button>
+        </div>
+        
+        <div class="loader lobby-spinner"></div>
+        <button class="btn btn-red btn-cancel-lobby" style="margin-top: 15px;">Wyjdz z Pokoju</button>
     </div>
 </div>
 
-<div class="game-ui class-game-ui">
-    <div class="hud">
-        <div class="res-bar">
-            <div class="res-item txt-gold">Monety <span class="class-r-gold">0</span></div>
-            <div class="res-item txt-wood">Drewno <span class="class-r-wood">0</span></div>
-            <div class="res-item txt-stone">Kamien <span class="class-r-stone">0</span></div>
-            <div class="res-item txt-troops">Wojsko <span class="class-r-troops">0</span></div>
+<div class="game-layer screen-game">
+    <div class="hud-bar">
+        <div class="resources-container">
+            <div class="resource-item" style="color: var(--color-gold)">Monety <span class="val-gold">0</span></div>
+            <div class="resource-item" style="color: var(--color-wood)">Drewno <span class="val-wood">0</span></div>
+            <div class="resource-item" style="color: var(--color-stone)">Kamien <span class="val-stone">0</span></div>
+            <div class="resource-item" style="color: var(--color-red)">Wojsko <span class="val-troops">0</span></div>
         </div>
-        <div class="txt-muted" style="font-size: 0.9rem;">
-            [LPM] Zaznacz | [LPMx2] Atakuj | [PPM] Buduj
-        </div>
-    </div>
-    <div class="map-container">
-        <canvas class="class-canvas" width="1200" height="700"></canvas>
-    </div>
-</div>
-
-<div class="modal-overlay class-modal-overlay">
-    <div class="modal class-modal-move" style="display:none;">
-        <h2>Wyslij Jednostki</h2>
-        <div class="val-big txt-troops class-move-val">10</div>
-        <input type="range" class="class-move-slider" min="1" max="100" value="10">
-        <div class="flex-between txt-muted">
-            <span>Min: 1</span><span>Max: <b class="class-move-max">100</b></span>
-        </div>
-        <div class="flex-row">
-            <button class="btn btn-red class-btn-cancel-move">Anuluj</button>
-            <button class="btn btn-green class-btn-confirm-move">Rozkaz</button>
+        <div class="hint-text">
+            [1 Klik] Wybierz | [2 Kliki] Atak / Ruch | [PPM] Buduj
         </div>
     </div>
-
-    <div class="modal class-modal-build" style="display:none; width: 450px;">
-        <h2>Rozbudowa Prowincji</h2>
-        <div class="build-list class-build-list"></div>
-        <button class="btn btn-red class-btn-cancel-build" style="margin-top: 15px;">Zamknij</button>
+    <div class="map-area">
+        <canvas class="game-canvas" width="1200" height="700"></canvas>
     </div>
 </div>
 
-<div class="toast-box class-toast-box"></div>
+<div class="modal-layer">
+    
+    <div class="modal-box modal-move" style="display:none;">
+        <h2 class="modal-title">Wyslij Jednostki</h2>
+        <p class="move-desc" style="color: var(--text-muted); text-align: center; margin-bottom: 5px;">Cel Operacji</p>
+        <div class="move-val-big" style="font-size: 3rem; color: var(--color-red); text-align: center; font-weight: 900;">10</div>
+        <input type="range" class="range-input slider-move" min="1" max="100" value="10">
+        <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.9rem;">
+            <span>Min: 1</span><span>Max: <b class="move-max-val">100</b></span>
+        </div>
+        <div class="flex-buttons">
+            <button class="btn btn-red btn-cancel-move" style="padding: 10px; margin:0;">Anuluj</button>
+            <button class="btn btn-green btn-confirm-move" style="padding: 10px; margin:0;">Rozkaz!</button>
+        </div>
+    </div>
+
+    <div class="modal-box modal-build" style="display:none; width: 450px;">
+        <h2 class="modal-title">Rozbudowa Ziem</h2>
+        <div class="build-container"></div>
+        <button class="btn btn-red btn-cancel-build" style="padding: 10px; margin-top: 10px;">Zamknij</button>
+    </div>
+
+</div>
+
+<div class="toast-container"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getDatabase, ref, set, onValue, get, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    import { getDatabase, ref, set, onValue, get, update, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-    const cfg = {
+    const fbConfig = {
         apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
         authDomain: "xchess-79e2d.firebaseapp.com",
         projectId: "xchess-79e2d",
@@ -368,245 +468,168 @@ input[type="range"]::-webkit-slider-thumb:hover {
         appId: "1:382071993193:web:86dbe5211f2151cb5383f8"
     };
 
-    const myApp = initializeApp(cfg);
+    const myApp = initializeApp(fbConfig);
     const myAuth = getAuth(myApp);
     const myDb = getDatabase(myApp);
     const myProv = new GoogleAuthProvider();
 
-    window.API = {
+    window.AppCore = {
         db: myDb,
         uid: null,
+        name: null,
         online: false,
-        room: 'global_room'
+        roomId: null,
+        isHost: false,
+        
+        loginGoogle: function() {
+            signInWithPopup(myAuth, myProv).catch(function(e) { alert(e.message); });
+        },
+        loginAnon: function() {
+            signInAnonymously(myAuth).catch(function(e) { alert(e.message); });
+        },
+        logoutUser: function() {
+            signOut(myAuth);
+        },
+        
+        setRef: function(path, data) { set(ref(myDb, path), data); },
+        updateRef: function(path, data) { update(ref(myDb, path), data); },
+        getRef: function(path, cb) { get(ref(myDb, path)).then(function(s) { cb(s); }); },
+        onValRef: function(path, cb) { onValue(ref(myDb, path), function(s) { cb(s); }); },
+        removeRef: function(path) { remove(ref(myDb, path)); },
+        discRef: function(path) { return onDisconnect(ref(myDb, path)); }
     };
-
-    let btnLogin = document.getElementsByClassName('class-btn-login')[0];
-    let btnAnon = document.getElementsByClassName('class-btn-anon')[0];
-    let btnLogout = document.getElementsByClassName('class-btn-logout')[0];
-    let btnHost = document.getElementsByClassName('class-btn-host')[0];
-    let btnJoin = document.getElementsByClassName('class-btn-join')[0];
-    let txtStatus = document.getElementsByClassName('class-db-status')[0];
-    let txtNick = document.getElementsByClassName('class-player-nick')[0];
-
-    btnLogin.addEventListener('click', function() {
-        signInWithPopup(myAuth, myProv).catch(function(e) {
-            alert(e.message);
-        });
-    });
-
-    btnAnon.addEventListener('click', function() {
-        signInAnonymously(myAuth).catch(function(e) {
-            alert(e.message);
-        });
-    });
-
-    btnLogout.addEventListener('click', function() {
-        signOut(myAuth);
-    });
 
     onAuthStateChanged(myAuth, function(user) {
+        let elNick = document.getElementsByClassName('display-nick')[0];
+        let elStatus = document.getElementsByClassName('display-status')[0];
+        let bLogG = document.getElementsByClassName('btn-login-google')[0];
+        let bLogA = document.getElementsByClassName('btn-login-anon')[0];
+        let bLogO = document.getElementsByClassName('btn-logout')[0];
+        let bHost = document.getElementsByClassName('btn-host-menu')[0];
+        let bJoin = document.getElementsByClassName('btn-join-menu')[0];
+
         if (user) {
-            window.API.uid = user.uid;
-            window.API.online = true;
-            
-            let name = user.displayName;
-            if (!name) {
-                name = "Anonim";
+            window.AppCore.uid = user.uid;
+            window.AppCore.name = user.displayName;
+            if (!window.AppCore.name) {
+                window.AppCore.name = "Gracz_" + Math.floor(Math.random() * 9999);
             }
+            window.AppCore.online = true;
             
-            txtNick.innerText = name;
-            txtNick.style.color = "rgb(16, 185, 129)";
+            elNick.innerText = window.AppCore.name;
+            elNick.style.color = "rgb(16, 185, 129)";
+            elStatus.innerText = "Polaczono z siecia.";
+            elStatus.style.color = "rgb(16, 185, 129)";
             
-            txtStatus.innerText = "Polaczono z serwerem";
-            txtStatus.style.color = "rgb(16, 185, 129)";
-            
-            btnLogin.style.display = "none";
-            btnAnon.style.display = "none";
-            btnLogout.style.display = "block";
-            
-            btnHost.disabled = false;
-            btnJoin.disabled = false;
+            bLogG.style.display = "none";
+            bLogA.style.display = "none";
+            bLogO.style.display = "block";
+            bHost.disabled = false;
+            bJoin.disabled = false;
         } else {
-            window.API.uid = null;
-            window.API.online = false;
+            window.AppCore.uid = null;
+            window.AppCore.name = null;
+            window.AppCore.online = false;
             
-            txtNick.innerText = "Gosc";
-            txtNick.style.color = "rgb(245, 158, 11)";
+            elNick.innerText = "Gosc";
+            elNick.style.color = "rgb(245, 158, 11)";
+            elStatus.innerText = "Zaloguj sie aby uzyskac dostep.";
+            elStatus.style.color = "rgb(148, 163, 184)";
             
-            txtStatus.innerText = "Zaloguj sie aby grac";
-            txtStatus.style.color = "rgb(148, 163, 184)";
-            
-            btnLogin.style.display = "block";
-            btnAnon.style.display = "block";
-            btnLogout.style.display = "none";
-            
-            btnHost.disabled = true;
-            btnJoin.disabled = true;
+            bLogG.style.display = "block";
+            bLogA.style.display = "block";
+            bLogO.style.display = "none";
+            bHost.disabled = true;
+            bJoin.disabled = true;
         }
     });
 
-    window.FirebaseHelpers = {
-        setRef: function(path, data) {
-            set(ref(myDb, path), data);
-        },
-        updateRef: function(path, data) {
-            update(ref(myDb, path), data);
-        },
-        getRef: function(path, cb) {
-            get(ref(myDb, path)).then(function(snap) {
-                cb(snap);
-            });
-        },
-        onValRef: function(path, cb) {
-            onValue(ref(myDb, path), function(snap) {
-                cb(snap);
-            });
-        },
-        onDiscRef: function(path) {
-            return onDisconnect(ref(myDb, path));
-        }
-    };
 </script>
 
 <script>
-    let B_DB = {
-        mine: {
-            id: 'mine',
-            n: 'Kopalnia',
-            g: 50,
-            w: 0,
-            s: 0,
-            i: 'M',
-            d: 'Zloto'
-        },
-        wood: {
-            id: 'wood',
-            n: 'Drwal',
-            g: 30,
-            w: 0,
-            s: 0,
-            i: 'D',
-            d: 'Drewno'
-        },
-        quarry: {
-            id: 'quarry',
-            n: 'Kamieniolom',
-            g: 80,
-            w: 20,
-            s: 0,
-            i: 'K',
-            d: 'Kamien'
-        },
-        barracks: {
-            id: 'barracks',
-            n: 'Koszary',
-            g: 150,
-            w: 100,
-            s: 0,
-            i: 'B',
-            d: 'Wojsko'
-        },
-        fort: {
-            id: 'fort',
-            n: 'Twierdza',
-            g: 0,
-            w: 100,
-            s: 100,
-            i: 'T',
-            d: 'Obrona'
-        }
+    let B_DATA = {
+        mine: { n: 'Kopalnia Zlota', c: { g: 50 }, i: 'MZ', d: '+5 Zlota na sekunde' },
+        wood: { n: 'Chata Drwala', c: { g: 30 }, i: 'CD', d: '+5 Drewna na sekunde' },
+        quarry: { n: 'Kamieniolom', c: { g: 80, w: 20 }, i: 'KK', d: '+3 Kamienia na sekunde' },
+        farm: { n: 'Farma', c: { w: 50, s: 20 }, i: 'FP', d: '+10 Zlota na sekunde' },
+        barracks: { n: 'Koszary', c: { g: 150, w: 100 }, i: 'KW', d: 'Szybszy pobor wojsk (+5)' },
+        fort: { n: 'Twierdza', c: { s: 150, w: 100 }, i: 'TW', d: 'Podwaja sile obrony' },
+        castle: { n: 'Zamek', c: { g: 300, s: 200 }, i: 'ZM', d: 'Potraja sile obrony' }
     };
 
+    let ColorPallete = [
+        'rgb(59, 130, 246)',
+        'rgb(239, 68, 68)',
+        'rgb(16, 185, 129)',
+        'rgb(245, 158, 11)',
+        'rgb(139, 92, 246)',
+        'rgb(236, 72, 153)',
+        'rgb(20, 184, 166)',
+        'rgb(244, 63, 94)'
+    ];
+
     let UI = {
-        show: function(className) {
-            let screens = document.getElementsByClassName('screen');
-            for (let i = 0; i < screens.length; i++) {
-                screens[i].classList.remove('active');
+        switchScreen: function(scrClass) {
+            let scrs = document.getElementsByClassName('screen');
+            for (let i = 0; i < scrs.length; i++) {
+                scrs[i].classList.remove('screen-active');
             }
-            document.getElementsByClassName(className)[0].classList.add('active');
+            document.getElementsByClassName(scrClass)[0].classList.add('screen-active');
         },
-        toast: function(msg, isErr) {
-            let box = document.getElementsByClassName('class-toast-box')[0];
+        popToast: function(msg, isErr) {
+            let cont = document.getElementsByClassName('toast-container')[0];
             let t = document.createElement('div');
-            t.className = 'toast';
+            t.className = 'toast-message';
             t.innerText = msg;
             if (isErr) {
                 t.style.borderColor = 'rgb(239, 68, 68)';
             } else {
                 t.style.borderColor = 'rgb(16, 185, 129)';
             }
-            box.appendChild(t);
+            cont.appendChild(t);
             setTimeout(function() {
                 if (t.parentNode) {
                     t.remove();
                 }
             }, 3000);
         },
-        updateRes: function(g, w, s, t) {
-            document.getElementsByClassName('class-r-gold')[0].innerText = Math.floor(g);
-            document.getElementsByClassName('class-r-wood')[0].innerText = Math.floor(w);
-            document.getElementsByClassName('class-r-stone')[0].innerText = Math.floor(s);
-            document.getElementsByClassName('class-r-troops')[0].innerText = Math.floor(t);
+        updHUD: function(g, w, s, t) {
+            document.getElementsByClassName('val-gold')[0].innerText = Math.floor(g);
+            document.getElementsByClassName('val-wood')[0].innerText = Math.floor(w);
+            document.getElementsByClassName('val-stone')[0].innerText = Math.floor(s);
+            document.getElementsByClassName('val-troops')[0].innerText = Math.floor(t);
         },
-        closeModals: function() {
-            document.getElementsByClassName('class-modal-overlay')[0].style.display = 'none';
-            document.getElementsByClassName('class-modal-move')[0].style.display = 'none';
-            document.getElementsByClassName('class-modal-build')[0].style.display = 'none';
-            Engine.tgt = null;
+        hideModals: function() {
+            document.getElementsByClassName('modal-layer')[0].style.display = 'none';
+            let mds = document.getElementsByClassName('modal-box');
+            for (let i = 0; i < mds.length; i++) {
+                mds[i].style.display = 'none';
+            }
+            GameCore.tgt = null;
         }
     };
 
-    class Particles {
+    class ParticleSys {
         constructor() {
             this.arr = [];
         }
-        addLaser(sx, sy, tx, ty, col) {
-            let obj = {
-                type: 'L',
-                sx: sx,
-                sy: sy,
-                tx: tx,
-                ty: ty,
-                p: 0,
-                l: 1,
-                c: col
-            };
-            this.arr.push(obj);
+        addBeam(sx, sy, tx, ty, col) {
+            this.arr.push({ t: 'B', sx: sx, sy: sy, tx: tx, ty: ty, p: 0, l: 1, c: col });
         }
-        addExp(x, y, col) {
-            for (let i = 0; i < 20; i++) {
+        addBoom(x, y, col) {
+            for (let i = 0; i < 25; i++) {
                 let a = Math.random() * Math.PI * 2;
-                let s = Math.random() * 5 + 1;
-                let obj = {
-                    type: 'S',
-                    x: x,
-                    y: y,
-                    vx: Math.cos(a) * s,
-                    vy: Math.sin(a) * s,
-                    l: 1,
-                    d: Math.random() * 0.05 + 0.02,
-                    c: col,
-                    sz: Math.random() * 4 + 2
-                };
-                this.arr.push(obj);
+                let s = Math.random() * 6 + 1;
+                this.arr.push({ t: 'S', x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, l: 1, d: Math.random() * 0.06 + 0.02, c: col, sz: Math.random() * 5 + 2 });
             }
         }
-        addTxt(x, y, txt, col) {
-            let obj = {
-                type: 'T',
-                x: x + (Math.random() * 20 - 10),
-                y: y + (Math.random() * 10 - 5),
-                txt: txt,
-                l: 1,
-                c: col,
-                vy: -1.5
-            };
-            this.arr.push(obj);
+        addFloatTxt(x, y, txt, col) {
+            this.arr.push({ t: 'T', x: x + (Math.random() * 20 - 10), y: y + (Math.random() * 10 - 5), txt: txt, l: 1, c: col, vy: -1.8 });
         }
-        render(ctx) {
+        step(ctx) {
             for (let i = this.arr.length - 1; i >= 0; i--) {
                 let pt = this.arr[i];
-                if (pt.type === 'L') {
+                if (pt.t === 'B') {
                     ctx.beginPath();
                     ctx.moveTo(pt.sx, pt.sy);
                     let cx = pt.sx + (pt.tx - pt.sx) * pt.p;
@@ -619,10 +642,10 @@ input[type="range"]::-webkit-slider-thumb:hover {
                     pt.p += 0.15;
                     pt.l -= 0.04;
                     if (pt.p >= 1) {
-                        this.addExp(pt.tx, pt.ty, pt.c);
+                        this.addBoom(pt.tx, pt.ty, pt.c);
                         this.arr.splice(i, 1);
                     }
-                } else if (pt.type === 'S') {
+                } else if (pt.t === 'S') {
                     ctx.globalAlpha = pt.l;
                     ctx.fillStyle = pt.c;
                     ctx.beginPath();
@@ -635,7 +658,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
                     if (pt.l <= 0) {
                         this.arr.splice(i, 1);
                     }
-                } else if (pt.type === 'T') {
+                } else if (pt.t === 'T') {
                     ctx.globalAlpha = pt.l;
                     ctx.fillStyle = pt.c;
                     ctx.font = "900 24px sans-serif";
@@ -655,460 +678,560 @@ input[type="range"]::-webkit-slider-thumb:hover {
         }
     }
 
-    let Engine = {
-        cvs: document.getElementsByClassName('class-canvas')[0],
+    let LobbyManager = {
+        maxP: 4,
+        bCount: 2,
+        pList: {},
+        initHost: function() {
+            window.AppCore.isHost = true;
+            window.AppCore.roomId = "room_" + Math.floor(Math.random() * 100000);
+            
+            let myDat = {};
+            myDat[window.AppCore.uid] = { name: window.AppCore.name, r: true };
+            
+            let obj = {
+                status: 'waiting',
+                host: window.AppCore.uid,
+                max: this.maxP,
+                bots: this.bCount,
+                players: myDat
+            };
+            
+            window.AppCore.setRef('rooms/' + window.AppCore.roomId, obj);
+            window.AppCore.discRef('rooms/' + window.AppCore.roomId).remove();
+            
+            document.getElementsByClassName('lobby-status-text')[0].innerText = "Pokoj: " + window.AppCore.roomId;
+            document.getElementsByClassName('lobby-settings-area')[0].style.display = "block";
+            document.getElementsByClassName('lobby-spinner')[0].style.display = "none";
+            
+            this.bindHostSettings();
+            this.listenRoom();
+        },
+        initJoin: function() {
+            window.AppCore.isHost = false;
+            document.getElementsByClassName('lobby-status-text')[0].innerText = "Szukanie pokoju...";
+            document.getElementsByClassName('lobby-settings-area')[0].style.display = "none";
+            document.getElementsByClassName('lobby-spinner')[0].style.display = "block";
+            
+            window.AppCore.getRef('rooms', function(snap) {
+                let rms = snap.val();
+                let fRoom = null;
+                if (rms) {
+                    for (let k in rms) {
+                        if (rms[k].status === 'waiting') {
+                            let pCnt = Object.keys(rms[k].players || {}).length;
+                            if (pCnt < rms[k].max) {
+                                fRoom = k;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (fRoom) {
+                    window.AppCore.roomId = fRoom;
+                    let uObj = {};
+                    uObj[window.AppCore.uid] = { name: window.AppCore.name, r: false };
+                    window.AppCore.updateRef('rooms/' + fRoom + '/players', uObj);
+                    window.AppCore.discRef('rooms/' + fRoom + '/players/' + window.AppCore.uid).remove();
+                    document.getElementsByClassName('lobby-status-text')[0].innerText = "Dolaczono! Czekam na hosta...";
+                    LobbyManager.listenRoom();
+                } else {
+                    UI.popToast("Brak wolnych pokoi!", true);
+                    UI.switchScreen('screen-main');
+                }
+            });
+        },
+        bindHostSettings: function() {
+            let sMax = document.getElementsByClassName('slider-max-players')[0];
+            let vMax = document.getElementsByClassName('val-max-players')[0];
+            let sBot = document.getElementsByClassName('slider-bot-count')[0];
+            let vBot = document.getElementsByClassName('val-bot-count')[0];
+            
+            sMax.addEventListener('input', function() {
+                vMax.innerText = this.value;
+                LobbyManager.maxP = parseInt(this.value);
+                window.AppCore.updateRef('rooms/' + window.AppCore.roomId, { max: LobbyManager.maxP });
+            });
+            sBot.addEventListener('input', function() {
+                vBot.innerText = this.value;
+                LobbyManager.bCount = parseInt(this.value);
+                window.AppCore.updateRef('rooms/' + window.AppCore.roomId, { bots: LobbyManager.bCount });
+            });
+        },
+        listenRoom: function() {
+            window.AppCore.onValRef('rooms/' + window.AppCore.roomId, function(snap) {
+                let d = snap.val();
+                if (!d) {
+                    UI.popToast("Pokoj zostal zamkniety.", true);
+                    UI.switchScreen('screen-main');
+                    return;
+                }
+                
+                LobbyManager.pList = d.players || {};
+                LobbyManager.renderList();
+                
+                if (!window.AppCore.isHost) {
+                    if (d.status === 'playing') {
+                        GameCore.initClient();
+                    }
+                }
+            });
+        },
+        renderList: function() {
+            let lst = document.getElementsByClassName('lobby-player-list')[0];
+            lst.innerHTML = '';
+            
+            let i = 0;
+            for (let k in this.pList) {
+                let pD = this.pList[k];
+                let col = ColorPallete[i % ColorPallete.length];
+                
+                let div = document.createElement('div');
+                div.className = 'lobby-player-item';
+                div.innerHTML = '<span class="color-dot" style="background:' + col + ';"></span><span>' + pD.name + (pD.r ? ' (Host)' : '') + '</span>';
+                lst.appendChild(div);
+                i++;
+            }
+        },
+        startGame: function() {
+            if (!window.AppCore.isHost) return;
+            GameCore.initHost();
+        }
+    };
+
+    let BotManager = {
+        bArr: [],
+        init: function(cnt) {
+            this.bArr = [];
+            for (let i = 0; i < cnt; i++) {
+                this.bArr.push({
+                    id: 'BOT_' + i,
+                    n: 'Bot ' + (i+1),
+                    g: 200, w: 100, s: 50
+                });
+            }
+        },
+        step: function() {
+            if (!window.AppCore.isHost) return;
+            
+            for (let i = 0; i < this.bArr.length; i++) {
+                let bot = this.bArr[i];
+                let myP = [];
+                for (let y = 0; y < GameCore.rows; y++) {
+                    for (let x = 0; x < GameCore.cols; x++) {
+                        if (GameCore.grid[y][x].own === bot.id) {
+                            myP.push(GameCore.grid[y][x]);
+                        }
+                    }
+                }
+                
+                if (myP.length === 0) continue;
+                
+                let bst = myP[0];
+                for (let j = 1; j < myP.length; j++) {
+                    if (myP[j].t > bst.t) bst = myP[j];
+                }
+                
+                if (bst.t > 30) {
+                    let nbs = [];
+                    for (let dy = -1; dy <= 1; dy++) {
+                        for (let dx = -1; dx <= 1; dx++) {
+                            let nx = bst.x + dx;
+                            let ny = bst.y + dy;
+                            if (nx >= 0 && nx < GameCore.cols && ny >= 0 && ny < GameCore.rows) {
+                                let cd = GameCore.grid[ny][nx];
+                                if (!cd.w && cd.own !== bot.id) {
+                                    nbs.push(cd);
+                                }
+                            }
+                        }
+                    }
+                    if (nbs.length > 0) {
+                        let tObj = nbs[Math.floor(Math.random() * nbs.length)];
+                        GameCore.simAtk(bst, tObj, Math.floor(bst.t * 0.8), bot.id);
+                    }
+                }
+                
+                if (bot.g > 150 && bot.w > 100) {
+                    let ep = [];
+                    for (let j = 0; j < myP.length; j++) {
+                        if (!myP[j].b) ep.push(myP[j]);
+                    }
+                    if (ep.length > 0) {
+                        let tP = ep[Math.floor(Math.random() * ep.length)];
+                        tP.b = 'barracks';
+                        bot.g -= 150;
+                        bot.w -= 100;
+                        let uO = {};
+                        uO['rooms/' + window.AppCore.roomId + '/map/' + tP.x + '_' + tP.y + '/b'] = 'barracks';
+                        window.FirebaseHelpers.updateRef('/', uO);
+                    }
+                }
+            }
+        },
+        eco: function() {
+            for (let i = 0; i < this.bArr.length; i++) {
+                let bot = this.bArr[i];
+                bot.g += 5;
+                bot.w += 2;
+            }
+        }
+    };
+
+    let GameCore = {
+        cvs: document.getElementsByClassName('game-canvas')[0],
         ctx: null,
         cols: 30,
         rows: 17,
         sz: 40,
         grid: [],
-        uid: null,
-        res: {
-            g: 200,
-            w: 100,
-            s: 0
-        },
+        res: { g: 300, w: 150, s: 50 },
         run: false,
-        pt: new Particles(),
+        pt: new ParticleSys(),
         hov: null,
         src: null,
         tgt: null,
-        lastClk: 0,
-        isHost: false,
-        pal: [
-            'rgb(59, 130, 246)',
-            'rgb(239, 68, 68)',
-            'rgb(16, 185, 129)',
-            'rgb(245, 158, 11)',
-            'rgb(139, 92, 246)',
-            'rgb(236, 72, 153)'
-        ],
-
-        start: function(hostFlag) {
+        lClk: 0,
+        
+        initHost: function() {
             this.ctx = this.cvs.getContext('2d');
-            this.uid = window.API.uid;
-            this.isHost = hostFlag;
-            UI.show('class-screen-lobby');
-
-            let pathStatus = 'rooms/' + window.API.room + '/status';
-            let pathMap = 'rooms/' + window.API.room + '/map';
-
-            if (hostFlag) {
-                this.genMap();
-                let flat = {};
-                for (let y = 0; y < this.rows; y++) {
-                    for (let x = 0; x < this.cols; x++) {
-                        let k = x + '_' + y;
-                        flat[k] = this.grid[y][x];
-                    }
-                }
-                
-                let obj = {
-                    status: 'waiting',
-                    map: flat
-                };
-                
-                window.FirebaseHelpers.setRef('rooms/' + window.API.room, obj);
-                window.FirebaseHelpers.onDiscRef('rooms/' + window.API.room).remove();
-                
-                document.getElementsByClassName('class-lobby-status')[0].innerText = "Oczekuje na gracza...";
-                
-                window.FirebaseHelpers.onValRef(pathStatus, function(snap) {
-                    if (snap.val() === 'playing') {
-                        Engine.beginGame();
-                    }
-                });
-            } else {
-                document.getElementsByClassName('class-lobby-status')[0].innerText = "Szukam serwera...";
-                
-                window.FirebaseHelpers.getRef(pathStatus, function(snap) {
-                    if (snap.exists() && snap.val() === 'waiting') {
-                        let uObj = {};
-                        uObj[pathStatus] = 'playing';
-                        window.FirebaseHelpers.updateRef('/', uObj);
-                        Engine.beginGame();
-                    } else {
-                        UI.toast("Brak pokoju!", true);
-                        UI.show('class-screen-main');
-                    }
-                });
-            }
-        },
-
-        beginGame: function() {
-            document.getElementsByClassName('class-game-ui')[0].style.display = 'flex';
-            UI.show('class-game-ui');
-            
-            let pathMap = 'rooms/' + window.API.room + '/map';
-            
-            window.FirebaseHelpers.getRef(pathMap, function(snap) {
-                let data = snap.val();
-                Engine.grid = [];
-                for (let y = 0; y < Engine.rows; y++) {
-                    let rArr = [];
-                    for (let x = 0; x < Engine.cols; x++) {
-                        let k = x + '_' + y;
-                        rArr.push(data[k]);
-                    }
-                    Engine.grid.push(rArr);
-                }
-                
-                Engine.spawn();
-                Engine.bindInput();
-                
-                window.FirebaseHelpers.onValRef(pathMap, function(nSnap) {
-                    let nData = nSnap.val();
-                    if (nData) {
-                        for (let y = 0; y < Engine.rows; y++) {
-                            for (let x = 0; x < Engine.cols; x++) {
-                                let k = x + '_' + y;
-                                let cell = nData[k];
-                                Engine.grid[y][x].own = cell.own;
-                                Engine.grid[y][x].t = cell.t;
-                                Engine.grid[y][x].b = cell.b;
-                            }
-                        }
-                    }
-                });
-                
-                setInterval(function() {
-                    Engine.ecoTick();
-                }, 1000);
-                
-                Engine.run = true;
-                Engine.loop();
-                UI.toast("Zaczynamy!", false);
-            });
-        },
-
-        genMap: function() {
             this.grid = [];
             for (let y = 0; y < this.rows; y++) {
                 let rArr = [];
                 for (let x = 0; x < this.cols; x++) {
-                    let wFlag = false;
-                    if (x === 0 || y === 0 || x === this.cols - 1 || y === this.rows - 1) {
-                        wFlag = true;
-                    } else if (Math.random() < 0.15) {
-                        wFlag = true;
+                    let iw = false;
+                    if (x === 0 || y === 0 || x === this.cols - 1 || y === this.rows - 1 || Math.random() < 0.15) {
+                        iw = true;
                     }
-                    
-                    let tr = 0;
-                    if (!wFlag) {
-                        tr = Math.floor(Math.random() * 4);
-                    }
-                    
-                    let obj = {
-                        x: x,
-                        y: y,
-                        own: 0,
-                        t: tr,
-                        w: wFlag,
-                        b: null
-                    };
-                    rArr.push(obj);
+                    rArr.push({ x: x, y: y, own: 0, t: iw ? 0 : Math.floor(Math.random() * 5), w: iw, b: null });
                 }
                 this.grid.push(rArr);
             }
-        },
-
-        spawn: function() {
-            let arr = [];
+            
+            let emps = [];
             for (let y = 0; y < this.rows; y++) {
                 for (let x = 0; x < this.cols; x++) {
-                    let cell = this.grid[y][x];
-                    if (!cell.w && cell.own === 0) {
-                        arr.push(cell);
+                    if (!this.grid[y][x].w) {
+                        emps.push(this.grid[y][x]);
                     }
                 }
             }
-            if (arr.length > 0) {
-                let rIdx = Math.floor(Math.random() * arr.length);
-                let sc = arr[rIdx];
-                sc.own = this.uid;
-                sc.t = 100;
-                
-                let p = 'rooms/' + window.API.room + '/map/' + sc.x + '_' + sc.y;
-                let obj = {
-                    own: this.uid,
-                    t: 100
-                };
-                window.FirebaseHelpers.updateRef(p, obj);
+            
+            let pIds = Object.keys(LobbyManager.pList);
+            for (let i = 0; i < pIds.length; i++) {
+                if (emps.length > 0) {
+                    let rI = Math.floor(Math.random() * emps.length);
+                    let cl = emps[rI];
+                    cl.own = pIds[i];
+                    cl.t = 150;
+                    cl.b = 'castle';
+                    emps.splice(rI, 1);
+                }
             }
+            
+            BotManager.init(LobbyManager.bCount);
+            for (let i = 0; i < BotManager.bArr.length; i++) {
+                if (emps.length > 0) {
+                    let rI = Math.floor(Math.random() * emps.length);
+                    let cl = emps[rI];
+                    cl.own = BotManager.bArr[i].id;
+                    cl.t = 150;
+                    cl.b = 'fort';
+                    emps.splice(rI, 1);
+                }
+            }
+            
+            let flatMap = {};
+            for (let y = 0; y < this.rows; y++) {
+                for (let x = 0; x < this.cols; x++) {
+                    flatMap[x + '_' + y] = this.grid[y][x];
+                }
+            }
+            
+            let uObj = {};
+            uObj['rooms/' + window.AppCore.roomId + '/map'] = flatMap;
+            uObj['rooms/' + window.AppCore.roomId + '/status'] = 'playing';
+            
+            window.FirebaseHelpers.updateRef('/', uObj);
+            
+            this.prepareClient();
         },
 
-        ecoTick: function() {
-            let tot = 0;
-            let alive = false;
+        initClient: function() {
+            this.ctx = this.cvs.getContext('2d');
+            
+            window.FirebaseHelpers.getRef('rooms/' + window.AppCore.roomId + '/map', function(snap) {
+                let md = snap.val();
+                GameCore.grid = [];
+                for (let y = 0; y < GameCore.rows; y++) {
+                    let ra = [];
+                    for (let x = 0; x < GameCore.cols; x++) {
+                        ra.push(md[x + '_' + y]);
+                    }
+                    GameCore.grid.push(ra);
+                }
+                GameCore.prepareClient();
+            });
+        },
+
+        prepareClient: function() {
+            UI.switchScreen('game-layer');
+            this.bindMs();
+            
+            window.FirebaseHelpers.onValRef('rooms/' + window.AppCore.roomId + '/map', function(snap) {
+                let nd = snap.val();
+                if (nd) {
+                    for (let y = 0; y < GameCore.rows; y++) {
+                        for (let x = 0; x < GameCore.cols; x++) {
+                            let cDat = nd[x + '_' + y];
+                            GameCore.grid[y][x].own = cDat.own;
+                            GameCore.grid[y][x].t = cDat.t;
+                            GameCore.grid[y][x].b = cDat.b;
+                        }
+                    }
+                }
+            });
+            
+            setInterval(function() {
+                GameCore.tickEco();
+            }, 1000);
+            
+            if (window.AppCore.isHost) {
+                setInterval(function() {
+                    BotManager.step();
+                }, 3000);
+                setInterval(function() {
+                    BotManager.eco();
+                }, 1000);
+            }
+            
+            this.run = true;
+            this.frame();
+            UI.popToast("Rozgrywka rozpoczeta!", false);
+        },
+
+        tickEco: function() {
+            let tCnt = 0;
+            let aFlg = false;
             
             for (let y = 0; y < this.rows; y++) {
                 for (let x = 0; x < this.cols; x++) {
-                    let cell = this.grid[y][x];
-                    if (cell.own === this.uid) {
-                        alive = true;
+                    let cl = this.grid[y][x];
+                    if (cl.own === window.AppCore.uid) {
+                        aFlg = true;
                         
-                        let inc = 1;
-                        if (cell.b === 'barracks') {
-                            inc = 5;
-                        }
+                        let tin = 1;
+                        if (cl.b === 'barracks') tin = 6;
                         
-                        cell.t += inc;
-                        tot += cell.t;
+                        cl.t += tin;
+                        tCnt += cl.t;
                         
                         this.res.g += 1;
-                        if (cell.b === 'mine') {
-                            this.res.g += 5;
-                        }
-                        if (cell.b === 'wood') {
-                            this.res.w += 5;
-                        }
-                        if (cell.b === 'quarry') {
-                            this.res.s += 3;
-                        }
+                        if (cl.b === 'mine') this.res.g += 5;
+                        if (cl.b === 'farm') this.res.g += 10;
+                        if (cl.b === 'wood') this.res.w += 5;
+                        if (cl.b === 'quarry') this.res.s += 3;
                         
-                        let p = 'rooms/' + window.API.room + '/map/' + x + '_' + y;
-                        let obj = {
-                            t: cell.t
-                        };
-                        window.FirebaseHelpers.updateRef(p, obj);
+                        let uO = {};
+                        uO['rooms/' + window.AppCore.roomId + '/map/' + x + '_' + y + '/t'] = cl.t;
+                        window.FirebaseHelpers.updateRef('/', uO);
                     }
                 }
             }
             
-            if (!alive) {
-                UI.toast("Porażka!", true);
+            if (!aFlg) {
+                UI.popToast("Zostales pokonany!", true);
             }
             
-            UI.updateRes(this.res.g, this.res.w, this.res.s, tot);
+            UI.updHUD(this.res.g, this.res.w, this.res.s, tCnt);
         },
 
-        bindInput: function() {
+        bindMs: function() {
             this.cvs.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
             });
             
             this.cvs.addEventListener('mousemove', function(e) {
-                let r = Engine.cvs.getBoundingClientRect();
-                let sx = Engine.cvs.width / r.width;
-                let sy = Engine.cvs.height / r.height;
+                let r = GameCore.cvs.getBoundingClientRect();
+                let sx = GameCore.cvs.width / r.width;
+                let sy = GameCore.cvs.height / r.height;
                 
-                let x = Math.floor(((e.clientX - r.left) * sx) / Engine.sz);
-                let y = Math.floor(((e.clientY - r.top) * sy) / Engine.sz);
+                let x = Math.floor(((e.clientX - r.left) * sx) / GameCore.sz);
+                let y = Math.floor(((e.clientY - r.top) * sy) / GameCore.sz);
                 
-                if (x >= 0 && x < Engine.cols && y >= 0 && y < Engine.rows) {
-                    Engine.hov = Engine.grid[y][x];
+                if (x >= 0 && x < GameCore.cols && y >= 0 && y < GameCore.rows) {
+                    GameCore.hov = GameCore.grid[y][x];
                 }
             });
 
             this.cvs.addEventListener('mousedown', function(e) {
-                if (!Engine.hov || Engine.hov.w) {
-                    Engine.src = null;
+                if (!GameCore.hov || GameCore.hov.w) {
+                    GameCore.src = null;
                     return;
                 }
                 
                 if (e.button === 2) {
-                    if (Engine.hov.own === Engine.uid) {
-                        if (!Engine.hov.b) {
-                            let list = document.getElementsByClassName('class-build-list')[0];
-                            list.innerHTML = '';
+                    if (GameCore.hov.own === window.AppCore.uid) {
+                        if (!GameCore.hov.b) {
+                            let lst = document.getElementsByClassName('build-container')[0];
+                            lst.innerHTML = '';
                             
-                            for (let key in B_DB) {
-                                let bData = B_DB[key];
-                                let okFlag = true;
-                                let strC = '';
+                            for (let k in B_DATA) {
+                                let bObj = B_DATA[k];
+                                let cOk = true;
+                                let str = '';
                                 
-                                if (bData.g > 0) {
-                                    strC += ' M:' + bData.g;
-                                    if (Engine.res.g < bData.g) {
-                                        okFlag = false;
-                                    }
+                                if (bObj.c.g) {
+                                    str += 'M:' + bObj.c.g + ' ';
+                                    if (GameCore.res.g < bObj.c.g) cOk = false;
                                 }
-                                if (bData.w > 0) {
-                                    strC += ' D:' + bData.w;
-                                    if (Engine.res.w < bData.w) {
-                                        okFlag = false;
-                                    }
+                                if (bObj.c.w) {
+                                    str += 'D:' + bObj.c.w + ' ';
+                                    if (GameCore.res.w < bObj.c.w) cOk = false;
                                 }
-                                if (bData.s > 0) {
-                                    strC += ' K:' + bData.s;
-                                    if (Engine.res.s < bData.s) {
-                                        okFlag = false;
-                                    }
+                                if (bObj.c.s) {
+                                    str += 'K:' + bObj.c.s + ' ';
+                                    if (GameCore.res.s < bObj.c.s) cOk = false;
                                 }
                                 
-                                let d = document.createElement('div');
-                                d.className = 'build-item';
+                                let div = document.createElement('div');
+                                div.className = 'build-card';
                                 
-                                let htm = '<div><div style="font-weight:900;color:rgb(59,130,246);font-size:1.1rem;">';
-                                htm += bData.i + ' ' + bData.n;
-                                htm += '</div><div style="color:rgb(148,163,184);font-size:0.8rem;margin:3px 0;">';
-                                htm += bData.d;
-                                htm += '</div><div style="color:rgb(245,158,11);font-size:0.85rem;font-weight:bold;">';
-                                htm += strC;
-                                htm += '</div></div><button class="btn ';
+                                let hStr = '<div style="text-align:left;">';
+                                hStr += '<div style="color:rgb(59,130,246);font-weight:900;font-size:1.1rem;">' + bObj.i + ' ' + bObj.n + '</div>';
+                                hStr += '<div style="color:rgb(148,163,184);font-size:0.8rem;margin:3px 0;">' + bObj.d + '</div>';
+                                hStr += '<div style="color:rgb(245,158,11);font-weight:bold;font-size:0.9rem;">' + str + '</div>';
+                                hStr += '</div>';
                                 
-                                if (okFlag) {
-                                    htm += 'btn-green';
-                                } else {
-                                    htm += 'btn-red';
-                                }
+                                let bClass = cOk ? 'btn-green' : 'btn-red';
+                                hStr += '<button class="btn ' + bClass + '" style="width:auto;margin:0;padding:10px 20px;" ' + (cOk ? '' : 'disabled') + '>Kup</button>';
                                 
-                                htm += '" style="width:auto;padding:10px 20px;margin:0;" ';
+                                div.innerHTML = hStr;
                                 
-                                if (!okFlag) {
-                                    htm += 'disabled';
-                                }
-                                
-                                htm += '>Zbuduj</button>';
-                                d.innerHTML = htm;
-                                
-                                let btn = d.getElementsByTagName('button')[0];
-                                btn.addEventListener('click', function() {
-                                    if (bData.g > 0) Engine.res.g -= bData.g;
-                                    if (bData.w > 0) Engine.res.w -= bData.w;
-                                    if (bData.s > 0) Engine.res.s -= bData.s;
+                                let bBtn = div.getElementsByTagName('button')[0];
+                                bBtn.addEventListener('click', function() {
+                                    if (bObj.c.g) GameCore.res.g -= bObj.c.g;
+                                    if (bObj.c.w) GameCore.res.w -= bObj.c.w;
+                                    if (bObj.c.s) GameCore.res.s -= bObj.c.s;
                                     
-                                    Engine.hov.b = key;
+                                    GameCore.hov.b = k;
                                     
-                                    let p = 'rooms/' + window.API.room + '/map/' + Engine.hov.x + '_' + Engine.hov.y;
-                                    let obj = {
-                                        b: key
-                                    };
-                                    window.FirebaseHelpers.updateRef(p, obj);
+                                    let pth = 'rooms/' + window.AppCore.roomId + '/map/' + GameCore.hov.x + '_' + GameCore.hov.y + '/b';
+                                    let uo = {};
+                                    uo[pth] = k;
+                                    window.FirebaseHelpers.updateRef('/', uo);
                                     
-                                    UI.closeModals();
-                                    UI.toast("Zbudowano!", false);
+                                    UI.hideModals();
+                                    UI.popToast("Wzniesiono budowle!", false);
                                 });
                                 
-                                list.appendChild(d);
+                                lst.appendChild(div);
                             }
                             
-                            document.getElementsByClassName('class-modal-overlay')[0].style.display = 'block';
-                            document.getElementsByClassName('class-modal-build')[0].style.display = 'flex';
+                            document.getElementsByClassName('modal-layer')[0].style.display = 'block';
+                            document.getElementsByClassName('modal-build')[0].style.display = 'flex';
                         } else {
-                            UI.toast("Miejsce zajete!", true);
+                            UI.popToast("Zajete pole!", true);
                         }
                     }
                     return;
                 }
 
                 if (e.button === 0) {
-                    let nTime = Date.now();
-                    let diff = nTime - Engine.lastClk;
-                    
-                    if (diff < 400 && Engine.src) {
-                        let dX = Math.abs(Engine.src.x - Engine.hov.x);
-                        let dY = Math.abs(Engine.src.y - Engine.hov.y);
-                        let mDist = Math.max(dX, dY);
-                        
-                        if (mDist === 1) {
-                            if (Engine.src.t > 1) {
-                                Engine.tgt = Engine.hov;
+                    let nowT = Date.now();
+                    if (nowT - GameCore.lClk < 400 && GameCore.src) {
+                        let mDst = Math.max(Math.abs(GameCore.src.x - GameCore.hov.x), Math.abs(GameCore.src.y - GameCore.hov.y));
+                        if (mDst === 1) {
+                            if (GameCore.src.t > 1) {
+                                GameCore.tgt = GameCore.hov;
                                 
-                                let sObj = document.getElementsByClassName('class-move-slider')[0];
-                                let mxV = Math.max(1, Engine.src.t - 1);
+                                let rInp = document.getElementsByClassName('slider-move')[0];
+                                let maxV = Math.max(1, GameCore.src.t - 1);
                                 
-                                sObj.min = 1;
-                                sObj.max = mxV;
-                                sObj.value = Math.floor(mxV / 2);
+                                rInp.min = 1;
+                                rInp.max = maxV;
+                                rInp.value = Math.floor(maxV / 2);
                                 
-                                document.getElementsByClassName('class-move-val')[0].innerText = sObj.value;
-                                document.getElementsByClassName('class-move-max')[0].innerText = mxV;
+                                document.getElementsByClassName('move-val-big')[0].innerText = rInp.value;
+                                document.getElementsByClassName('move-max-val')[0].innerText = maxV;
+                                document.getElementsByClassName('move-desc')[0].innerText = 'Z ' + GameCore.src.x + ',' + GameCore.src.y + ' do ' + GameCore.tgt.x + ',' + GameCore.tgt.y;
                                 
-                                document.getElementsByClassName('class-modal-overlay')[0].style.display = 'block';
-                                document.getElementsByClassName('class-modal-move')[0].style.display = 'flex';
+                                document.getElementsByClassName('modal-layer')[0].style.display = 'block';
+                                document.getElementsByClassName('modal-move')[0].style.display = 'flex';
                             } else {
-                                UI.toast("Za malo jednostek!", true);
+                                UI.popToast("Za malo armii!", true);
                             }
                         } else if (mDist > 1) {
-                            UI.toast("Za daleko!", true);
+                            UI.popToast("Zbyt duzy dystans!", true);
                         }
                     } else {
-                        if (Engine.hov.own === Engine.uid) {
-                            Engine.src = Engine.hov;
+                        if (GameCore.hov.own === window.AppCore.uid) {
+                            GameCore.src = GameCore.hov;
                         } else {
-                            Engine.src = null;
+                            GameCore.src = null;
                         }
                     }
-                    Engine.lastClk = nTime;
+                    GameCore.lClk = nowT;
                 }
             });
         },
 
-        executeMove: function() {
-            if (!this.src || !this.tgt) {
-                return;
-            }
+        simAtk: function(sObj, tObj, val, atkId) {
+            sObj.t -= val;
+            let pSx = sObj.x * this.sz + this.sz / 2;
+            let pSy = sObj.y * this.sz + this.sz / 2;
+            let pTx = tObj.x * this.sz + this.sz / 2;
+            let pTy = tObj.y * this.sz + this.sz / 2;
             
-            let sObj = document.getElementsByClassName('class-move-slider')[0];
-            let v = parseInt(sObj.value);
+            let cS = 0;
+            let asStr = String(atkId);
+            for (let i = 0; i < asStr.length; i++) cS += asStr.charCodeAt(i);
+            let fCol = ColorPallete[cS % ColorPallete.length];
             
-            if (this.src.t <= v) {
-                return;
-            }
-            
-            this.src.t -= v;
-            
-            let pSx = this.src.x * this.sz + this.sz / 2;
-            let pSy = this.src.y * this.sz + this.sz / 2;
-            
-            let pTx = this.tgt.x * this.sz + this.sz / 2;
-            let pTy = this.tgt.y * this.sz + this.sz / 2;
-            
-            let cSum = 0;
-            let strU = String(this.uid);
-            for (let i = 0; i < strU.length; i++) {
-                cSum += strU.charCodeAt(i);
-            }
-            let cCol = this.pal[cSum % this.pal.length];
-            
-            this.pt.addLaser(pSx, pSy, pTx, pTy, cCol);
+            this.pt.addBeam(pSx, pSy, pTx, pTy, fCol);
             
             setTimeout(function() {
-                if (Engine.tgt.own === Engine.uid) {
-                    Engine.tgt.t += v;
-                    Engine.pt.addTxt(pTx, pTy, '+' + v, 'rgb(16, 185, 129)');
+                if (tObj.own === atkId) {
+                    tObj.t += val;
                 } else {
-                    let dMult = 1;
-                    if (Engine.tgt.b === 'fort') {
-                        dMult = 2;
-                    }
+                    let dM = 1;
+                    if (tObj.b === 'fort') dM = 2;
+                    if (tObj.b === 'castle') dM = 3;
                     
-                    let eDef = Engine.tgt.t * dMult;
-                    
-                    if (v > eDef) {
-                        Engine.tgt.own = Engine.uid;
-                        Engine.tgt.t = Math.floor(v - eDef);
-                        Engine.tgt.b = null;
-                        
-                        UI.toast("Zwyciestwo!", false);
-                        Engine.pt.addTxt(pTx, pTy, "WIN", cCol);
+                    let eDef = tObj.t * dM;
+                    if (val > eDef) {
+                        tObj.own = atkId;
+                        tObj.t = Math.floor(val - eDef);
+                        tObj.b = null;
                     } else {
-                        Engine.tgt.t = Math.floor((eDef - v) / dMult);
-                        
-                        UI.toast("Obrona odparla atak.", true);
-                        Engine.pt.addTxt(pTx, pTy, '-' + v, 'rgb(239, 68, 68)');
+                        tObj.t = Math.floor((eDef - val) / dM);
                     }
                 }
                 
-                let uObj = {};
-                let pS = Engine.src.x + '_' + Engine.src.y;
-                let pT = Engine.tgt.x + '_' + Engine.tgt.y;
-                
-                uObj[pS + '/t'] = Engine.src.t;
-                uObj[pT + '/own'] = Engine.tgt.own;
-                uObj[pT + '/t'] = Engine.tgt.t;
-                uObj[pT + '/b'] = Engine.tgt.b;
-                
-                window.FirebaseHelpers.updateRef('rooms/' + window.API.room + '/map', uObj);
+                let updO = {};
+                updO['rooms/' + window.AppCore.roomId + '/map/' + sObj.x + '_' + sObj.y + '/t'] = sObj.t;
+                updO['rooms/' + window.AppCore.roomId + '/map/' + tObj.x + '_' + tObj.y + '/own'] = tObj.own;
+                updO['rooms/' + window.AppCore.roomId + '/map/' + tObj.x + '_' + tObj.y + '/t'] = tObj.t;
+                updO['rooms/' + window.AppCore.roomId + '/map/' + tObj.x + '_' + tObj.y + '/b'] = tObj.t;
+                window.FirebaseHelpers.updateRef('/', updO);
                 
             }, 400);
+        },
 
-            UI.closeModals();
+        doOp: function() {
+            if (!this.src || !this.tgt) return;
+            
+            let val = parseInt(document.getElementsByClassName('slider-move')[0].value);
+            if (this.src.t <= val) return;
+            
+            this.simAtk(this.src, this.tgt, val, window.AppCore.uid);
+            
+            UI.hideModals();
             this.src = null;
         },
 
-        render: function() {
+        drawF: function() {
             this.ctx.fillStyle = 'rgb(2, 6, 23)';
             this.ctx.fillRect(0, 0, this.cvs.width, this.cvs.height);
             
@@ -1124,26 +1247,23 @@ input[type="range"]::-webkit-slider-thumb:hover {
                         if (cell.own === 0) {
                             this.ctx.fillStyle = 'rgb(30, 41, 59)';
                         } else {
-                            let cSum = 0;
                             let strU = String(cell.own);
-                            for (let i = 0; i < strU.length; i++) {
-                                cSum += strU.charCodeAt(i);
-                            }
-                            this.ctx.fillStyle = this.pal[cSum % this.pal.length];
+                            let cS = 0;
+                            for (let i = 0; i < strU.length; i++) cS += strU.charCodeAt(i);
+                            this.ctx.fillStyle = ColorPallete[cS % ColorPallete.length];
                         }
                     }
                     
                     this.ctx.fillRect(px, py, this.sz, this.sz);
-                    
-                    this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+                    this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
                     this.ctx.lineWidth = 1;
                     this.ctx.strokeRect(px, py, this.sz, this.sz);
                     
-                    if (cell.b && B_DB[cell.b]) {
+                    if (cell.b && B_DATA[cell.b]) {
                         this.ctx.fillStyle = "rgb(255, 255, 255)";
                         this.ctx.font = "20px sans-serif";
                         this.ctx.textAlign = "center";
-                        this.ctx.fillText(B_DB[cell.b].i, px + this.sz / 2, py + 24);
+                        this.ctx.fillText(B_DATA[cell.b].i, px + this.sz / 2, py + 24);
                     }
                     
                     if (!cell.w && (cell.t > 0 || cell.own !== 0)) {
@@ -1171,50 +1291,55 @@ input[type="range"]::-webkit-slider-thumb:hover {
                 }
             }
             
-            this.pt.render(this.ctx);
+            this.pt.step(this.ctx);
         },
 
-        loop: function() {
+        frame: function() {
             if (this.run) {
-                this.render();
-                let refSelf = this;
+                this.drawF();
+                let sRef = this;
                 requestAnimationFrame(function() {
-                    refSelf.loop();
+                    sRef.frame();
                 });
             }
         }
     };
 
-    document.getElementsByClassName('class-btn-host')[0].addEventListener('click', function() {
-        Engine.start(true);
+    document.getElementsByClassName('btn-host-menu')[0].addEventListener('click', function() {
+        LobbyManager.initHost();
+        UI.switchScreen('screen-lobby');
     });
 
-    document.getElementsByClassName('class-btn-join')[0].addEventListener('click', function() {
-        Engine.start(false);
+    document.getElementsByClassName('btn-join-menu')[0].addEventListener('click', function() {
+        LobbyManager.initJoin();
+        UI.switchScreen('screen-lobby');
     });
 
-    document.getElementsByClassName('class-btn-cancel-lobby')[0].addEventListener('click', function() {
-        UI.show('class-screen-main');
-        if (Engine.isHost) {
-            window.FirebaseHelpers.setRef('rooms/' + window.API.room, null);
+    document.getElementsByClassName('btn-cancel-lobby')[0].addEventListener('click', function() {
+        UI.switchScreen('screen-main');
+        if (window.AppCore.isHost) {
+            window.FirebaseHelpers.setRef('rooms/' + window.AppCore.roomId, null);
         }
     });
 
-    document.getElementsByClassName('class-move-slider')[0].addEventListener('input', function() {
-        document.getElementsByClassName('class-move-val')[0].innerText = this.value;
+    document.getElementsByClassName('btn-start-game')[0].addEventListener('click', function() {
+        LobbyManager.startGame();
     });
 
-    document.getElementsByClassName('class-btn-cancel-move')[0].addEventListener('click', function() {
-        UI.closeModals();
-        Engine.tgt = null;
+    document.getElementsByClassName('slider-move')[0].addEventListener('input', function() {
+        document.getElementsByClassName('move-val-big')[0].innerText = this.value;
     });
 
-    document.getElementsByClassName('class-btn-cancel-build')[0].addEventListener('click', function() {
-        UI.closeModals();
+    document.getElementsByClassName('btn-cancel-move')[0].addEventListener('click', function() {
+        UI.hideModals();
     });
 
-    document.getElementsByClassName('class-btn-confirm-move')[0].addEventListener('click', function() {
-        Engine.executeMove();
+    document.getElementsByClassName('btn-cancel-build')[0].addEventListener('click', function() {
+        UI.hideModals();
+    });
+
+    document.getElementsByClassName('btn-confirm-move')[0].addEventListener('click', function() {
+        GameCore.doOp();
     });
 
 </script>

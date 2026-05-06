@@ -2,1031 +2,546 @@
 <html lang="pl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Territorial Clone</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Territorial.io Clone</title>
 <style>
-    :root {
-        --color-bg-main: rgb(15, 15, 25);
-        --color-bg-lobby: rgb(20, 20, 35);
-        --color-text-main: rgb(255, 255, 255);
-        --color-text-dim: rgb(180, 180, 180);
-        --color-green: rgb(34, 139, 34);
-        --color-dark-green: rgb(20, 100, 20);
-        --color-red: rgb(200, 50, 50);
-        --color-blue: rgb(50, 100, 200);
-        --color-gold: rgb(218, 165, 32);
-        --color-border: rgb(60, 60, 80);
-        --color-chat-bg: rgb(30, 30, 45);
-        --color-water: rgb(24, 76, 116);
-        --color-land: rgb(65, 125, 45);
-    }
+:root {
+    --c-bg: rgb(15, 20, 30);
+    --c-water: rgb(24, 76, 116);
+    --c-land: rgb(65, 125, 45);
+    --c-panel: rgba(10, 15, 25, 0.85);
+    --c-border: rgb(60, 70, 90);
+    --c-text: rgb(255, 255, 255);
+    --c-text-dim: rgb(150, 160, 180);
+    --c-btn-green: rgb(34, 139, 34);
+    --c-btn-blue: rgb(30, 90, 150);
+    --c-btn-red: rgb(180, 40, 40);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: var(--c-bg); color: var(--c-text); overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; }
 
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        user-select: none;
-        font-family: Arial, sans-serif;
-    }
+.screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; flex-direction: column; z-index: 10; }
+.active { display: flex; }
 
-    body {
-        background-color: var(--color-bg-main);
-        color: var(--color-text-main);
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        width: 100vw;
-        height: 100vh;
-    }
+.bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: var(--c-water); }
+.bg-canvas { width: 100%; height: 100%; image-rendering: pixelated; }
 
-    .view-layer {
-        display: none;
-        width: 100%;
-        height: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-        flex-direction: column;
-    }
+/* === MAIN MENU === */
+.menu-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; z-index: 15; background: rgba(0,0,0,0.5); }
+.logo-container { display: flex; align-items: center; gap: 15px; margin-bottom: 40px; }
+.flag { width: 30px; height: 20px; background: linear-gradient(to right, blue 33%, white 33%, white 66%, red 66%); border: 1px solid white; }
+.logo-text { font-size: 4.5rem; font-weight: 900; text-transform: uppercase; text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; letter-spacing: 2px; }
 
-    .view-active {
-        display: flex;
-    }
+.player-setup { display: flex; gap: 5px; margin-bottom: 10px; width: 350px; }
+.name-input { flex: 1; background: var(--c-panel); border: 1px solid white; color: white; padding: 12px; font-size: 1.2rem; text-align: center; outline: none; }
+.color-picker { width: 50px; border: 1px solid white; cursor: pointer; }
 
-    .btn-base {
-        border: 1px solid var(--color-text-main);
-        color: var(--color-text-main);
-        background: rgb(50, 50, 50);
-        padding: 10px 20px;
-        cursor: pointer;
-        text-align: center;
-        font-weight: bold;
-        transition: 0.2s;
-    }
+.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; width: 350px; }
+.btn { background: var(--c-panel); border: 1px solid white; color: white; padding: 15px 10px; font-size: 1rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: 0.2s; font-weight: bold; }
+.btn:hover { filter: brightness(1.2); }
+.btn-multi { background: var(--c-btn-green); }
+.btn-custom { background: var(--c-btn-blue); }
+.btn-account { background: rgb(90, 60, 30); }
+.btn-settings { background: rgb(80, 80, 80); }
+.btn-icon { font-size: 1.5rem; }
 
-    .btn-base:hover {
-        filter: brightness(1.2);
-    }
+/* === LOBBY === */
+.lobby-header { display: flex; justify-content: space-between; align-items: center; background: rgb(10,10,15); padding: 5px 15px; border-bottom: 1px solid white; z-index: 15; }
+.lobby-stats { font-size: 0.8rem; color: var(--c-text-dim); }
+.lobby-title { font-size: 2rem; font-weight: bold; }
+.lobby-close { font-size: 1.5rem; cursor: pointer; color: var(--c-btn-red); font-weight: bold; }
 
-    .btn-success { background-color: var(--color-green); }
-    .btn-danger { background-color: var(--color-red); }
+.lobby-columns { display: flex; flex: 1; z-index: 15; background: rgba(0,0,0,0.8); }
+.lobby-games { flex: 2; border-right: 1px solid var(--c-border); display: flex; flex-direction: column; }
+.lobby-row { display: flex; border-bottom: 1px solid var(--c-border); }
+.game-card { flex: 1; padding: 10px; border-right: 1px solid var(--c-border); cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; height: 90px; background: rgb(20,20,25); }
+.game-card:hover { background: rgb(30,30,40); }
+.game-card.active { background: var(--c-btn-green); }
+.gc-top { display: flex; justify-content: space-between; font-size: 0.8rem; }
+.gc-mid { text-align: center; font-size: 1.2rem; font-weight: bold; }
+.gc-bot { font-size: 0.8rem; color: var(--c-text-dim); }
 
-    .lobby-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 20px;
-        background-color: rgb(10, 10, 15);
-        border-bottom: 2px solid var(--color-border);
-    }
+.lobby-players { flex: 1; display: flex; flex-direction: column; background: rgb(15,15,20); }
+.lp-header { text-align: center; padding: 5px; border-bottom: 1px solid var(--c-border); background: var(--c-btn-green); font-weight: bold; }
+.lp-list { flex: 1; padding: 10px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; align-content: start; }
+.p-item { display: flex; align-items: center; gap: 5px; font-size: 0.9rem; }
+.p-color { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #000; }
 
-    .lobby-stats {
-        font-size: 0.8rem;
-        color: var(--color-text-dim);
-    }
+.lobby-footer { display: flex; height: 50px; z-index: 15; }
+.footer-btn { flex: 1; background: rgb(20,20,25); border: 1px solid var(--c-border); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; cursor: pointer; }
+.footer-btn:hover { background: rgb(40,40,50); }
+.btn-play-offline { color: var(--c-btn-green); }
 
-    .lobby-title {
-        font-size: 2rem;
-        font-weight: bold;
-    }
+/* === GAME UI === */
+.game-layer { z-index: 20; pointer-events: none; justify-content: space-between; }
+.top-bar { background: rgba(0,0,0,0.5); padding: 5px 15px; display: flex; justify-content: space-between; align-items: center; pointer-events: auto; }
+.game-info { font-weight: bold; font-size: 1.2rem; }
+.btn-surrender { background: var(--c-btn-red); color: white; border: 1px solid white; padding: 5px 15px; cursor: pointer; font-weight: bold; }
 
-    .lobby-players-count {
-        font-size: 1.5rem;
-        font-weight: bold;
-        background: rgb(0, 0, 0);
-        padding: 5px 15px;
-        border: 1px solid var(--color-text-main);
-    }
+.leaderboard { position: absolute; top: 40px; right: 10px; width: 220px; background: rgba(0,0,0,0.6); border: 1px solid var(--c-border); padding: 5px; pointer-events: auto; }
+.lb-title { text-align: center; font-weight: bold; border-bottom: 1px solid var(--c-border); padding-bottom: 5px; margin-bottom: 5px; font-size: 0.9rem; }
+.lb-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 2px 0; }
 
-    .lobby-games-row {
-        display: flex;
-        border-bottom: 1px solid var(--color-border);
-        height: 80px;
-    }
+.bottom-bar { background: rgba(0,0,0,0.8); border-top: 1px solid white; display: flex; justify-content: center; align-items: center; gap: 30px; padding: 15px; pointer-events: auto; }
+.slider-wrap { display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.1); padding: 5px 20px; border-radius: 20px; border: 1px solid white; }
+.atk-val { font-size: 1.5rem; font-weight: bold; width: 60px; text-align: center; }
+input[type="range"] { -webkit-appearance: none; width: 250px; height: 10px; background: rgb(50,50,50); outline: none; border-radius: 5px; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 25px; height: 25px; border-radius: 50%; background: white; cursor: pointer; }
+.stats-box { display: flex; flex-direction: column; font-weight: bold; font-size: 1.2rem; }
+.income-val { color: rgb(100, 255, 100); }
 
-    .game-card {
-        flex: 1;
-        border-right: 1px solid var(--color-border);
-        padding: 5px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        background-color: rgb(25, 25, 35);
-        cursor: pointer;
-    }
-
-    .game-card:hover {
-        background-color: rgb(35, 35, 50);
-    }
-
-    .game-card-active {
-        background-color: var(--color-dark-green);
-    }
-
-    .game-card-top {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.8rem;
-    }
-
-    .game-card-center {
-        text-align: center;
-        font-size: 1.2rem;
-        font-weight: bold;
-    }
-
-    .game-card-bottom {
-        font-size: 0.8rem;
-        color: var(--color-text-dim);
-    }
-
-    .lobby-sub-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 5px 20px;
-        background-color: rgb(40, 40, 50);
-        border-bottom: 1px solid var(--color-border);
-        font-size: 0.9rem;
-    }
-
-    .lobby-main-area {
-        display: flex;
-        flex: 1;
-        overflow: hidden;
-    }
-
-    .lobby-chat-section {
-        flex: 1;
-        border-right: 1px solid var(--color-border);
-        display: flex;
-        flex-direction: column;
-        background-color: var(--color-bg-lobby);
-    }
-
-    .lobby-players-section {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        background-color: var(--color-bg-lobby);
-    }
-
-    .section-header {
-        text-align: center;
-        padding: 10px;
-        font-size: 1.2rem;
-        border-bottom: 1px solid var(--color-border);
-        background-color: rgb(30, 30, 40);
-    }
-
-    .chat-messages {
-        flex: 1;
-        padding: 10px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    .chat-input-area {
-        display: flex;
-        padding: 10px;
-        background-color: var(--color-chat-bg);
-    }
-
-    .input-field {
-        flex: 1;
-        background-color: rgb(10, 10, 15);
-        border: 1px solid var(--color-border);
-        color: var(--color-text-main);
-        padding: 8px;
-        outline: none;
-    }
-
-    .players-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        padding: 10px;
-        overflow-y: auto;
-        flex: 1;
-    }
-
-    .player-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.9rem;
-    }
-
-    .color-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 1px solid rgb(0,0,0);
-    }
-
-    .lobby-footer {
-        display: flex;
-        height: 60px;
-        border-top: 2px solid var(--color-border);
-    }
-
-    .footer-btn {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1.5rem;
-        cursor: pointer;
-        background-color: rgb(20, 20, 30);
-        border-right: 1px solid var(--color-border);
-        transition: 0.2s;
-    }
-
-    .footer-btn:hover {
-        background-color: rgb(40, 40, 50);
-    }
-
-    .game-ui-layer {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        z-index: 20;
-    }
-
-    .game-top-bar {
-        background: rgba(0, 0, 0, 0.6);
-        padding: 10px;
-        display: flex;
-        justify-content: space-between;
-        pointer-events: auto;
-    }
-
-    .leaderboard-box {
-        position: absolute;
-        top: 50px;
-        right: 10px;
-        background: rgba(0, 0, 0, 0.5);
-        border: 1px solid rgb(100, 100, 100);
-        width: 250px;
-        padding: 10px;
-        pointer-events: auto;
-    }
-
-    .game-bottom-bar {
-        background: rgba(0, 0, 0, 0.7);
-        padding: 15px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 30px;
-        pointer-events: auto;
-    }
-
-    .troop-slider-wrap {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        background: rgb(20, 20, 20);
-        padding: 10px 20px;
-        border: 2px solid rgb(255, 255, 255);
-        border-radius: 20px;
-    }
-
-    .game-canvas-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 5;
-        background-color: var(--color-water);
-        overflow: hidden;
-    }
-
-    .world-canvas {
-        cursor: crosshair;
-    }
-
-    .clan-tag {
-        color: rgb(150, 200, 255);
-        font-weight: bold;
-    }
-
-    .toast-container {
-        position: absolute;
-        bottom: 100px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        z-index: 100;
-    }
-
-    .toast-msg {
-        background: rgba(0,0,0,0.8);
-        padding: 10px 20px;
-        border: 1px solid rgb(255,255,255);
-        animation: fadeOut 3s forwards;
-    }
-
-    @keyframes fadeOut {
-        0% { opacity: 1; }
-        70% { opacity: 1; }
-        100% { opacity: 0; }
-    }
-
-    .modal-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.8);
-        z-index: 50;
-        display: none;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .setup-box {
-        background: var(--color-bg-main);
-        border: 2px solid var(--color-text-main);
-        padding: 30px;
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        width: 400px;
-    }
-
+/* MISC */
+.toast-area { position: absolute; top: 50px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 5px; z-index: 100; pointer-events: none; }
+.toast { background: rgba(0,0,0,0.8); padding: 10px 20px; border: 1px solid white; font-weight: bold; animation: fade 2s forwards; }
+@keyframes fade { 0%{opacity:1;} 70%{opacity:1;} 100%{opacity:0;} }
 </style>
 </head>
 <body>
 
-<div class="view-layer view-active class-screen-login">
-    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
-        <h1 style="font-size: 5rem; margin-bottom: 20px; text-shadow: 2px 2px 0 rgb(0,0,0);">TERRITORIAL CLONE</h1>
-        <div class="setup-box">
-            <h3>Wybierz nazwe i klan</h3>
-            <input type="text" class="input-field class-input-nick" placeholder="Nazwa Gracza" value="Player 123">
-            <input type="text" class="input-field class-input-clan" placeholder="TAG Klanu (Opcjonalnie)" maxlength="4">
-            
-            <button class="btn-base btn-success class-btn-login-anon">Graj jako Gosc</button>
-            <button class="btn-base class-btn-login-google" style="background-color: rgb(200, 50, 50);">Zaloguj przez Google</button>
+<div class="bg-layer">
+    <canvas id="worldCanvas" class="bg-canvas"></canvas>
+</div>
+
+<div id="screen-menu" class="screen active">
+    <div class="menu-wrapper">
+        <div class="logo-container">
+            <div class="flag"></div>
+            <div class="logo-text">Territorial</div>
+            <div class="flag"></div>
+        </div>
+        
+        <div class="player-setup">
+            <input type="text" id="playerName" class="name-input" value="Player 1" maxlength="15">
+            <div id="colorPicker" class="color-picker" style="background: rgb(59, 130, 246);"></div>
+        </div>
+        
+        <div class="menu-grid">
+            <button class="btn btn-multi" onclick="App.showLobby()">
+                <span class="btn-icon">⚔️</span> Wieloosobowa
+            </button>
+            <button class="btn btn-custom" onclick="App.toast('Scenariusze wkrótce!')">
+                <span class="btn-icon">🗡️</span> Scenariusz
+            </button>
+            <button class="btn btn-account" onclick="App.toast('Opcja wbudowana offline')">
+                <span class="btn-icon">🔑</span> Moje konto
+            </button>
+            <button class="btn btn-settings" onclick="App.toast('Menu ustawien')">
+                <span class="btn-icon">≡</span> Menu gry
+            </button>
         </div>
     </div>
 </div>
 
-<div class="view-layer class-screen-lobby">
+<div id="screen-lobby" class="screen">
     <div class="lobby-header">
-        <div class="lobby-stats">
-            Liczba graczy<br>
-            MP: 1227 SP: 158 Lobby: 187
-        </div>
+        <div class="lobby-stats">Liczba graczy<br>MP: 1227 SP: 158 Lobby: 1</div>
         <div class="lobby-title">Lobby</div>
-        <div class="lobby-players-count class-lobby-counter">0</div>
-    </div>
-
-    <div class="lobby-games-row">
-        <div class="game-card game-card-active class-game-card" data-room="room_australia">
-            <div class="game-card-top">
-                <span class="class-timer-aus">05:55</span>
-                <span class="class-players-aus">0</span>
-            </div>
-            <div class="game-card-center">Zespol</div>
-            <div class="game-card-bottom">Australia</div>
-        </div>
-        
-        <div class="game-card class-game-card" data-room="room_world">
-            <div class="game-card-top">
-                <span class="class-timer-wrd">00:55</span>
-                <span class="class-players-wrd">0</span>
-            </div>
-            <div class="game-card-center" style="color: rgb(255,200,0);">Bitwa Krolewska</div>
-            <div class="game-card-bottom">Mare Nostrum</div>
-        </div>
-        
-        <div class="game-card class-game-card" data-room="room_1v1">
-            <div class="game-card-top">
-                <span class="class-timer-1v1">02:55</span>
-                <span class="class-players-1v1">0</span>
-            </div>
-            <div class="game-card-center">1 na 1</div>
-            <div class="game-card-bottom">Mountains 1</div>
-        </div>
-        
-        <div class="game-card class-game-card" data-room="room_zombies">
-            <div class="game-card-top">
-                <span class="class-timer-zmb">07:55</span>
-                <span class="class-players-zmb">0</span>
-            </div>
-            <div class="game-card-center">Balwan</div>
-            <div class="game-card-bottom">Halo</div>
-        </div>
-    </div>
-
-    <div class="lobby-sub-row">
-        <span>Wybrana: <strong class="class-selected-mode">Australia 4 Teams</strong></span>
-        <span>Nastepna gra: Caucasia 4 Teams</span>
-    </div>
-
-    <div class="lobby-main-area">
-        <div class="lobby-chat-section">
-            <div class="section-header">Pogawedzic</div>
-            <div class="chat-messages class-chat-box"></div>
-            <div class="chat-input-area">
-                <input type="text" class="input-field class-chat-input" placeholder="Napisz...">
-                <button class="btn-base class-btn-send">Wyslij</button>
-            </div>
-        </div>
-        
-        <div class="lobby-players-section">
-            <div class="section-header" style="color: rgb(50, 200, 50);">Gracze</div>
-            <div class="players-grid class-players-grid"></div>
-        </div>
-    </div>
-
-    <div class="lobby-footer">
-        <div class="footer-btn class-btn-leave" style="color: rgb(200, 100, 100);">Zamknij</div>
-        <div class="footer-btn class-btn-ready" style="color: rgb(100, 200, 100);">Gotowy</div>
-    </div>
-</div>
-
-<div class="view-layer class-screen-game">
-    <div class="game-canvas-container">
-        <canvas class="world-canvas class-game-canvas"></canvas>
+        <div class="lobby-close" onclick="App.showMenu()">X</div>
     </div>
     
-    <div class="game-ui-layer">
-        <div class="game-top-bar">
-            <div style="color: rgb(255,255,255); font-weight: bold; font-size: 1.2rem;" class="class-game-info">Terytorium Ziemi</div>
-            <button class="btn-base btn-danger class-btn-surrender">Poddaj sie</button>
-        </div>
-        
-        <div class="leaderboard-box">
-            <div style="text-align:center; border-bottom:1px solid rgb(100,100,100); padding-bottom:5px; margin-bottom:5px; color:rgb(255,255,255);">Ranking</div>
-            <div class="class-lb-list"></div>
-        </div>
-        
-        <div class="game-bottom-bar">
-            <div class="troop-slider-wrap">
-                <span style="color:rgb(255,255,255);">MOC ATAKU:</span>
-                <span class="class-attack-percent" style="color:rgb(255,255,255); font-weight:bold; font-size:1.5rem; width:60px;">50%</span>
-                <input type="range" class="class-attack-slider" min="1" max="100" value="50" style="width: 200px;">
+    <div class="lobby-columns">
+        <div class="lobby-games">
+            <div class="lobby-row">
+                <div class="game-card active">
+                    <div class="gc-top"><span>05:55</span><span>1</span></div>
+                    <div class="gc-mid">Gra z Botami</div>
+                    <div class="gc-bot">Australia 4 Teams</div>
+                </div>
+                <div class="game-card">
+                    <div class="gc-top"><span>00:55</span><span>0</span></div>
+                    <div class="gc-mid" style="color:var(--c-gold)">Bitwa Królewska</div>
+                    <div class="gc-bot">Mare Nostrum</div>
+                </div>
             </div>
-            
-            <div style="display:flex; flex-direction:column; color:rgb(255,255,255);">
-                <div style="font-size:1.5rem; font-weight:bold;">Zasoby: <span class="class-my-balance">0</span></div>
-                <div style="color:rgb(100,200,100);">Przyrost: +<span class="class-my-income">0</span></div>
+            <div style="padding: 10px; color: var(--c-text-dim); font-size: 0.9rem; background: rgb(30,30,40); border-bottom: 1px solid var(--c-border);">
+                Wybrana: <span style="color:white; font-weight:bold;">Gra z Botami (Offline)</span>
             </div>
+            <div style="flex:1; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+                <h3 style="color: white;">Ustawienia Gry Offline</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>Liczba Botów:</span>
+                    <input type="range" id="botCountSlider" min="1" max="100" value="30" style="width:200px;">
+                    <span id="botCountVal" style="font-weight:bold; width: 30px; text-align:right;">30</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>Trudność:</span>
+                    <select id="diffSelect" style="background: var(--c-panel); color: white; padding: 5px; border: 1px solid white;">
+                        <option value="1">Łatwy</option>
+                        <option value="2" selected>Normalny</option>
+                        <option value="3">Trudny</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="lobby-players">
+            <div class="lp-header">Gracze w pokoju</div>
+            <div class="lp-list" id="lobbyPlayersList">
+                </div>
+        </div>
+    </div>
+    
+    <div class="lobby-footer">
+        <div class="footer-btn" onclick="App.showMenu()">Zamknij</div>
+        <div class="footer-btn btn-play-offline" onclick="Engine.startGame()">Gotowy (Start)</div>
+    </div>
+</div>
+
+<div id="screen-game" class="screen game-layer">
+    <div class="top-bar">
+        <div class="game-info">Territorial Clone - Gra Trwa</div>
+        <button class="btn-surrender" onclick="Engine.surrender()">Poddaj się</button>
+    </div>
+    
+    <div class="leaderboard">
+        <div class="lb-title">Ranking (Terytorium)</div>
+        <div id="lb-content"></div>
+    </div>
+    
+    <div class="bottom-bar">
+        <div class="slider-wrap">
+            <span>Moc:</span>
+            <span class="atk-val" id="atkVal">50%</span>
+            <input type="range" id="atkSlider" min="1" max="100" value="50">
+        </div>
+        <div class="stats-box">
+            <div>Stan: <span id="myBalance">100</span></div>
+            <div class="income-val">Przyrost: +<span id="myIncome">0</span></div>
         </div>
     </div>
 </div>
 
-<div class="toast-container class-toast-container"></div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getDatabase, ref, set, onValue, get, update, onDisconnect, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
-
-    const cfg = {
-        apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
-        authDomain: "xchess-79e2d.firebaseapp.com",
-        projectId: "xchess-79e2d",
-        storageBucket: "xchess-79e2d.firebasestorage.app",
-        messagingSenderId: "382071993193",
-        appId: "1:382071993193:web:86dbe5211f2151cb5383f8"
-    };
-
-    const fbApp = initializeApp(cfg);
-    const fbAuth = getAuth(fbApp);
-    const fbDb = getDatabase(fbApp);
-    const fbProv = new GoogleAuthProvider();
-
-    window.API = {
-        db: fbDb,
-        uid: null,
-        nick: "Player",
-        clan: "",
-        room: "room_world",
-        color: "rgb(255,255,255)",
-        
-        loginAnon: function(n, c) {
-            this.nick = n || "Anon";
-            this.clan = c;
-            signInAnonymously(fbAuth).catch(function(e){ alert(e.message); });
-        },
-        
-        loginGoogle: function(n, c) {
-            this.nick = n || "Gracz";
-            this.clan = c;
-            signInWithPopup(fbAuth, fbProv).catch(function(e){ alert(e.message); });
-        },
-        
-        logout: function() {
-            signOut(fbAuth);
-        },
-        
-        set: function(path, data) { set(ref(fbDb, path), data); },
-        upd: function(path, data) { update(ref(fbDb, path), data); },
-        get: function(path, cb) { get(ref(fbDb, path)).then(function(s){ cb(s); }); },
-        onV: function(path, cb) { onValue(ref(fbDb, path), function(s){ cb(s); }); },
-        onA: function(path, cb) { onChildAdded(ref(fbDb, path), function(s){ cb(s); }); },
-        rem: function(path) { remove(ref(fbDb, path)); },
-        disc: function(path) { return onDisconnect(ref(fbDb, path)); }
-    };
-
-    onAuthStateChanged(fbAuth, function(user) {
-        if(user) {
-            window.API.uid = user.uid;
-            let cList = ['rgb(59,130,246)','rgb(239,68,68)','rgb(16,185,129)','rgb(245,158,11)','rgb(139,92,246)','rgb(236,72,153)'];
-            let cIdx = 0;
-            for(let i=0; i<user.uid.length; i++) cIdx += user.uid.charCodeAt(i);
-            window.API.color = cList[cIdx % cList.length];
-            
-            window.Manager.joinLobby();
-        } else {
-            window.API.uid = null;
-            window.Manager.showScreen('class-screen-login');
-        }
-    });
-</script>
+<div class="toast-area" id="toastArea"></div>
 
 <script>
-    let worldMapData = [
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000001111110000000000000000000111111110000000000000000000000111111100000000000000000000000000000",
-        "0000000111111111000000000000000111111111111111000000000000000111111111111000000000000000000000000000",
-        "0000011111111111111100000000111111111111111111111100000000111111111111111111100000000000000000000000",
-        "0001111111111111111111100001111111111111111111111111111111111111111111111111111100000000000000000000",
-        "0011111111111111111111110011111111111111111111111111111111111111111111111111111110000000000000000000",
-        "0111111111111111111111110001111111111111111111111111111111111111111111111111111110000000000000000000",
-        "0111111111111111111111000000111111111111111111111111111111111111111111111111111100000000000000000000",
-        "0011111111111111111110000000011111111111111111111111111111111111111111111111111000000000000000000000",
-        "0011111111111111111100000000001111111111111111111111111111111111111111111111100000000000000000000000",
-        "0001111111111111110000000000000111111111111111111111111111111111111111111111000000000000000000000000",
-        "0000111111111111000000000000000011111111111111111111111111111111111111111110000000000000000000000000",
-        "0000011111111110000000000000000001111111111111111111111111111111111111110000000000000000000000000000",
-        "0000001111111100000000000000000001111111111111111111111111111111111111000000000000000000000000000000",
-        "0000000111111000000000000000000000111111111111111111111111111111111110000000000000000000000000000000",
-        "0000000011110000000000000000000000111111111111111111111111111111110000000000000000000000000000000000",
-        "0000000001100000000000000000000000011111111111111111111111111111100000000000000000000000000000000000",
-        "0000000000000000000000000000000000001111111111111111111111111111000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000111111111111111111111111100000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000001111111111111111111111000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000111111111111111111000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000001111111111111000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000011111110000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000001111100000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000111000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000001111111000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000001111111111110000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000111111111111111000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000001111111111111111100000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000001111111111111111100000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000001111111111111111000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000111111111111110000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000011111111110000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000111110000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-    ];
+const COLORS = [
+    'rgb(59,130,246)', 'rgb(239,68,68)', 'rgb(16,185,129)', 'rgb(245,158,11)', 
+    'rgb(139,92,246)', 'rgb(236,72,153)', 'rgb(20,184,166)', 'rgb(244,63,94)',
+    'rgb(255,255,0)', 'rgb(0,255,255)', 'rgb(255,0,255)', 'rgb(255,128,0)'
+];
 
-    window.Manager = {
-        showScreen: function(s) {
-            let scrs = document.getElementsByClassName('screen');
-            for(let i=0; i<scrs.length; i++) scrs[i].classList.remove('screen-active');
-            if(s) document.getElementsByClassName(s)[0].classList.add('screen-active');
-        },
+const App = {
+    showMenu() {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-menu').classList.add('active');
+        document.querySelector('.bg-layer').style.zIndex = 1;
+        Engine.stop();
+        Engine.genMenuMap();
+    },
+    showLobby() {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-lobby').classList.add('active');
+        this.updateLobbyPlayers();
+    },
+    showGame() {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-game').classList.add('active');
+        document.querySelector('.bg-layer').style.zIndex = 10;
+    },
+    toast(msg, err=false) {
+        let t = document.createElement('div');
+        t.className = 'toast'; t.innerText = msg;
+        t.style.borderColor = err ? 'red' : 'white';
+        document.getElementById('toastArea').appendChild(t);
+        setTimeout(() => { if(t.parentNode) t.remove(); }, 2000);
+    },
+    updateLobbyPlayers() {
+        let list = document.getElementById('lobbyPlayersList');
+        list.innerHTML = '';
+        let myName = document.getElementById('playerName').value || 'Player';
+        let myCol = document.getElementById('colorPicker').style.backgroundColor;
         
-        toast: function(m, e) {
-            let c = document.getElementsByClassName('class-toast-container')[0];
-            let d = document.createElement('div');
-            d.className = 'toast-msg';
-            d.innerText = m;
-            d.style.borderColor = e ? 'rgb(255,50,50)' : 'rgb(50,255,50)';
-            c.appendChild(d);
-            setTimeout(function(){ if(d.parentNode) d.remove(); }, 3000);
-        },
-
-        joinLobby: function() {
-            this.showScreen('class-screen-lobby');
-            let n = window.API.nick;
-            let cl = window.API.clan;
-            let dNick = cl ? '['+cl+'] '+n : n;
-            
-            let obj = {};
-            obj[window.API.uid] = {
-                nick: dNick,
-                col: window.API.color
-            };
-            
-            window.API.upd('lobby/' + window.API.room + '/players', obj);
-            window.API.disc('lobby/' + window.API.room + '/players/' + window.API.uid).remove();
-            
-            this.listenLobby();
-        },
-
-        listenLobby: function() {
-            window.API.onV('lobby/' + window.API.room + '/players', function(s) {
-                let p = s.val() || {};
-                let grid = document.getElementsByClassName('class-players-grid')[0];
-                grid.innerHTML = '';
-                
-                let c = 0;
-                for(let k in p) {
-                    c++;
-                    let d = document.createElement('div');
-                    d.className = 'player-item';
-                    d.innerHTML = '<div class="color-dot" style="background:'+p[k].col+';"></div><span>'+p[k].nick+'</span>';
-                    grid.appendChild(d);
-                }
-                document.getElementsByClassName('class-lobby-counter')[0].innerText = c;
-            });
-
-            window.API.onA('lobby/' + window.API.room + '/chat', function(s) {
-                let m = s.val();
-                let b = document.getElementsByClassName('class-chat-box')[0];
-                let d = document.createElement('div');
-                d.style.marginBottom = "5px";
-                d.innerHTML = '<span style="color:rgb(200,200,200); font-size:0.8rem;">'+m.n+':</span> <span style="color:rgb(255,255,255); font-size:0.9rem;">'+m.msg+'</span>';
-                b.appendChild(d);
-                b.scrollTop = b.scrollHeight;
-            });
-            
-            window.API.onV('lobby/' + window.API.room + '/status', function(s) {
-                if(s.val() === 'playing') {
-                    window.Game.startClient();
-                }
-            });
-        },
-        
-        sendChat: function() {
-            let i = document.getElementsByClassName('class-chat-input')[0];
-            let v = i.value.trim();
-            if(v.length > 0) {
-                let n = window.API.clan ? '['+window.API.clan+'] '+window.API.nick : window.API.nick;
-                push(ref(window.API.db, 'lobby/' + window.API.room + '/chat'), {
-                    n: n,
-                    msg: v
-                });
-                i.value = '';
-            }
-        },
-        
-        hostGame: function() {
-            window.API.upd('lobby/' + window.API.room, { status: 'playing' });
-            window.Game.startHost();
+        list.innerHTML += `<div class="p-item"><div class="p-color" style="background:${myCol}"></div><b>${myName}</b></div>`;
+        let bCnt = parseInt(document.getElementById('botCountSlider').value);
+        for(let i=0; i<bCnt; i++) {
+            let bc = COLORS[i % COLORS.length];
+            list.innerHTML += `<div class="p-item"><div class="p-color" style="background:${bc}"></div>Bot ${i+1}</div>`;
         }
-    };
+    }
+};
 
-    window.Game = {
-        cvs: document.getElementsByClassName('class-game-canvas')[0],
-        ctx: null,
-        sz: 15,
-        cols: 100,
-        rows: 50,
-        grid: [],
-        run: false,
-        atk: 50,
-        myBal: 100,
-        myInc: 1,
-        players: {},
+document.getElementById('colorPicker').onclick = function() {
+    this.style.backgroundColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+};
+document.getElementById('botCountSlider').oninput = function() {
+    document.getElementById('botCountVal').innerText = this.value;
+    App.updateLobbyPlayers();
+};
+
+const Engine = {
+    cvs: document.getElementById('worldCanvas'),
+    ctx: null, w: 0, h: 0, sz: 6, cols: 0, rows: 0,
+    grid: [], players: [],
+    run: false, isGame: false, myId: 1, atkPerc: 0.5,
+    tickInt: null, botInt: null, drawInt: null,
+    
+    init() {
+        this.ctx = this.cvs.getContext('2d', {alpha: false});
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this.genMenuMap();
+        this.bindInput();
+    },
+    
+    resize() {
+        this.w = window.innerWidth; this.h = window.innerHeight;
+        this.cvs.width = this.w; this.cvs.height = this.h;
+        this.cols = Math.floor(this.w / this.sz);
+        this.rows = Math.floor(this.h / this.sz);
+    },
+    
+    genMenuMap() {
+        this.grid = new Uint8Array(this.cols * this.rows);
+        for(let y=0; y<this.rows; y++) {
+            for(let x=0; x<this.cols; x++) {
+                let isL = Math.random() < 0.45 ? 1 : 0;
+                if(x<5 || y<5 || x>this.cols-6 || y>this.rows-6) isL = 0;
+                this.grid[y * this.cols + x] = isL;
+            }
+        }
+        for(let i=0; i<4; i++) {
+            let ng = new Uint8Array(this.cols * this.rows);
+            for(let y=0; y<this.rows; y++) {
+                for(let x=0; x<this.cols; x++) {
+                    let n = 0;
+                    for(let dy=-1; dy<=1; dy++) {
+                        for(let dx=-1; dx<=1; dx++) {
+                            let nx=x+dx, ny=y+dy;
+                            if(nx>=0 && nx<this.cols && ny>=0 && ny<this.rows) {
+                                n += this.grid[ny * this.cols + nx] > 0 ? 1 : 0;
+                            }
+                        }
+                    }
+                    if(this.grid[y * this.cols + x] > 0) ng[y * this.cols + x] = n >= 4 ? 1 : 0;
+                    else ng[y * this.cols + x] = n >= 5 ? 1 : 0;
+                }
+            }
+            this.grid = ng;
+        }
+        this.isGame = false;
+        this.draw();
+    },
+    
+    startGame() {
+        App.showGame();
+        this.genMenuMap();
         
-        initCvs: function() {
-            this.ctx = this.cvs.getContext('2d');
-            let w = window.innerWidth;
-            let h = window.innerHeight - 150;
-            this.cvs.width = w;
-            this.cvs.height = h;
-            this.cols = Math.floor(w / this.sz);
-            this.rows = Math.floor(h / this.sz);
-            
-            if(this.cols > 100) this.cols = 100;
-            if(this.rows > 50) this.rows = 50;
-            
-            this.grid = [];
-            for(let y=0; y<this.rows; y++) {
-                let r = [];
-                for(let x=0; x<this.cols; x++) {
-                    let wM = worldMapData[y] ? worldMapData[y][x] : '0';
-                    let t = wM === '1' ? 1 : 0;
-                    r.push({ t: t, o: null, v: 0 });
-                }
-                this.grid.push(r);
+        let pName = document.getElementById('playerName').value || 'Player';
+        let pCol = document.getElementById('colorPicker').style.backgroundColor;
+        let bCnt = parseInt(document.getElementById('botCountSlider').value);
+        let diff = parseInt(document.getElementById('diffSelect').value);
+        
+        this.players = [];
+        this.players[0] = null;
+        this.players[1] = { id: 1, n: pName, c: pCol, bal: 150, inc: 0, cells: 0, dead: false, bot: false, diff: 1 };
+        
+        for(let i=0; i<bCnt; i++) {
+            this.players[i+2] = { id: i+2, n: "Bot "+(i+1), c: COLORS[i%COLORS.length], bal: 150, inc: 0, cells: 0, dead: false, bot: true, diff: diff };
+        }
+        
+        let lands = [];
+        for(let i=0; i<this.grid.length; i++) if(this.grid[i] === 1) lands.push(i);
+        
+        for(let i=1; i<this.players.length; i++) {
+            if(lands.length > 0) {
+                let ri = Math.floor(Math.random()*lands.length);
+                this.grid[lands[ri]] = i + 10;
+                this.players[i].cells = 1;
+                lands.splice(ri, 1);
             }
-        },
-
-        startHost: function() {
-            this.initCvs();
+        }
+        
+        this.isGame = true; this.run = true;
+        
+        clearInterval(this.tickInt); clearInterval(this.botInt); cancelAnimationFrame(this.drawInt);
+        this.tickInt = setInterval(() => this.logicTick(), 250);
+        this.botInt = setInterval(() => this.botLogic(), 500);
+        this.loop();
+        App.toast("Gra rozpoczęta!");
+    },
+    
+    stop() {
+        this.run = false; this.isGame = false;
+        clearInterval(this.tickInt); clearInterval(this.botInt); cancelAnimationFrame(this.drawInt);
+    },
+    
+    surrender() {
+        if(this.players[1] && !this.players[1].dead) {
+            this.players[1].dead = true;
+            for(let i=0; i<this.grid.length; i++) {
+                if(this.grid[i] === 11) this.grid[i] = 1;
+            }
+        }
+        App.showMenu();
+    },
+    
+    logicTick() {
+        if(!this.run) return;
+        
+        for(let i=1; i<this.players.length; i++) {
+            let p = this.players[i];
+            if(p.dead) continue;
             
-            window.API.get('lobby/' + window.API.room + '/players', function(s) {
-                let pls = s.val() || {};
-                let emps = [];
-                for(let y=0; y<window.Game.rows; y++) {
-                    for(let x=0; x<window.Game.cols; x++) {
-                        if(window.Game.grid[y][x].t === 1) emps.push({x:x, y:y});
-                    }
-                }
-                
-                let bCount = parseInt(document.getElementsByClassName('class-bot-slider')[0].value);
-                for(let i=0; i<bCount; i++) {
-                    let bid = "BOT_" + i;
-                    let cList = ['rgb(255,0,0)','rgb(0,255,0)','rgb(0,0,255)','rgb(255,255,0)'];
-                    pls[bid] = { nick: "Bot "+(i+1), col: cList[i%cList.length], isB: true };
-                }
-                
-                window.Game.players = pls;
-                
-                for(let k in pls) {
-                    if(emps.length > 0) {
-                        let ri = Math.floor(Math.random() * emps.length);
-                        let p = emps[ri];
-                        window.Game.grid[p.y][p.x].o = k;
-                        window.Game.grid[p.y][p.x].v = 100;
-                        emps.splice(ri, 1);
-                    }
-                }
-                
-                let fMap = {};
-                for(let y=0; y<window.Game.rows; y++) {
-                    for(let x=0; x<window.Game.cols; x++) {
-                        fMap[x+'_'+y] = window.Game.grid[y][x];
-                    }
-                }
-                
-                window.API.upd('game/' + window.API.room, { map: fMap, pl: pls });
-                window.Game.runClient();
-            });
-        },
-
-        startClient: function() {
-            this.initCvs();
-            window.API.get('game/' + window.API.room, function(s) {
-                let d = s.val();
-                if(d) {
-                    window.Game.players = d.pl;
-                    for(let y=0; y<window.Game.rows; y++) {
-                        for(let x=0; x<window.Game.cols; x++) {
-                            let c = d.map[x+'_'+y];
-                            window.Game.grid[y][x] = c;
-                        }
-                    }
-                    window.Game.runClient();
-                }
-            });
-        },
-
-        runClient: function() {
-            window.Manager.showScreen('class-game-ui');
-            document.getElementsByClassName('class-game-status')[0].innerText = "W Grze";
+            p.cells = 0;
+        }
+        
+        for(let i=0; i<this.grid.length; i++) {
+            let v = this.grid[i];
+            if(v > 10) {
+                let pid = v - 10;
+                if(this.players[pid] && !this.players[pid].dead) this.players[pid].cells++;
+            }
+        }
+        
+        let lb = [];
+        for(let i=1; i<this.players.length; i++) {
+            let p = this.players[i];
+            if(p.dead) continue;
             
-            this.bindEvents();
-            
-            window.API.onV('game/' + window.API.room + '/map', function(s) {
-                let d = s.val();
-                if(d) {
-                    for(let y=0; y<window.Game.rows; y++) {
-                        for(let x=0; x<window.Game.cols; x++) {
-                            window.Game.grid[y][x] = d[x+'_'+y];
-                        }
-                    }
-                }
-            });
-            
-            this.run = true;
-            this.loop();
-            setInterval(function(){ window.Game.tick(); }, 1000);
-            setInterval(function(){ window.Game.botTick(); }, 500);
-        },
-
-        bindEvents: function() {
-            let self = this;
-            this.cvs.addEventListener('mousedown', function(e) {
-                let r = self.cvs.getBoundingClientRect();
-                let x = Math.floor((e.clientX - r.left) / self.sz);
-                let y = Math.floor((e.clientY - r.top) / self.sz);
-                self.click(x, y);
-            });
-            
-            let s = document.getElementsByClassName('class-attack-slider')[0];
-            s.addEventListener('input', function() {
-                self.atk = parseInt(this.value);
-                document.getElementsByClassName('class-attack-percent')[0].innerText = self.atk + "%";
-            });
-            
-            document.getElementsByClassName('class-btn-surrender')[0].addEventListener('click', function() {
-                self.run = false;
-                window.Manager.showScreen('class-screen-main');
-            });
-        },
-
-        click: function(x, y) {
-            if(x<0 || x>=this.cols || y<0 || y>=this.rows) return;
-            let c = this.grid[y][x];
-            if(c.t === 0) return;
-            
-            let isAdj = false;
-            for(let dy=-1; dy<=1; dy++) {
-                for(let dx=-1; dx<=1; dx++) {
-                    let nx = x+dx, ny = y+dy;
-                    if(nx>=0 && nx<this.cols && ny>=0 && ny<this.rows) {
-                        if(this.grid[ny][nx].o === window.API.uid) isAdj = true;
-                    }
-                }
+            if(p.cells === 0) {
+                p.dead = true;
+                if(p.id === 1) App.toast("Zostałeś zniszczony!", true);
+                continue;
             }
             
-            if(!isAdj && c.o !== window.API.uid) return;
+            let cap = p.cells * 100;
+            p.inc = Math.max(1, Math.floor(p.cells * 0.05 + p.bal * 0.01));
+            p.bal += p.inc;
+            if(p.bal > cap) p.bal = cap;
             
-            let cost = 10;
-            if(c.o && c.o !== window.API.uid) cost = 25;
-            
-            let aForce = this.myBal * (this.atk / 100);
-            if(aForce >= cost) {
-                this.myBal -= aForce;
-                c.o = window.API.uid;
-                
-                let u = {};
-                u['game/' + window.API.room + '/map/' + x + '_' + y] = c;
-                window.API.upd('/', u);
-            }
-        },
-
-        tick: function() {
-            if(!this.run) return;
-            
-            let cells = 0;
-            for(let y=0; y<this.rows; y++) {
-                for(let x=0; x<this.cols; x++) {
-                    if(this.grid[y][x].o === window.API.uid) cells++;
-                }
-            }
-            
-            if(cells === 0 && this.myBal > 0) {
-                this.myBal = 0;
-                window.UI.toast("Zostales wyeliminowany!", true);
-            }
-            
-            this.myInc = Math.max(1, Math.floor(cells / 5));
-            if(cells > 0) this.myBal += this.myInc;
-            
-            document.getElementsByClassName('class-my-balance')[0].innerText = Math.floor(this.myBal);
-            document.getElementsByClassName('class-my-income')[0].innerText = this.myInc;
-            
-            this.updLb();
-        },
-
-        botTick: function() {
-            if(!this.run || !window.API.uid) return;
-            let uo = {};
-            let upd = false;
-            
-            for(let k in this.players) {
-                let p = this.players[k];
-                if(!p.isB) continue;
-                
-                let e = [];
-                for(let y=0; y<this.rows; y++) {
-                    for(let x=0; x<this.cols; x++) {
-                        if(this.grid[y][x].o === k) {
-                            for(let dy=-1; dy<=1; dy++) {
-                                for(let dx=-1; dx<=1; dx++) {
-                                    let nx = x+dx, ny = y+dy;
-                                    if(nx>=0 && nx<this.cols && ny>=0 && ny<this.rows) {
-                                        if(this.grid[ny][nx].t === 1 && this.grid[ny][nx].o !== k) {
-                                            e.push({x:nx, y:ny});
-                                        }
-                                    }
+            lb.push(p);
+        }
+        
+        lb.sort((a,b) => b.cells - a.cells);
+        let lbH = '';
+        for(let i=0; i<Math.min(10, lb.length); i++) {
+            let bld = lb[i].id === 1 ? 'font-weight:900;color:white;' : 'color:rgb(200,200,200);';
+            lbH += `<div class="lb-row" style="${bld}"><span>${i+1}. ${lb[i].n}</span><span>${lb[i].cells}</span></div>`;
+        }
+        document.getElementById('lb-content').innerHTML = lbH;
+        
+        if(!this.players[1].dead) {
+            document.getElementById('myBalance').innerText = Math.floor(this.players[1].bal);
+            document.getElementById('myIncome').innerText = this.players[1].inc;
+        }
+    },
+    
+    expandPlayer(pid, ratio) {
+        let p = this.players[pid];
+        if(!p || p.dead || p.bal < 10) return;
+        
+        let force = p.bal * ratio;
+        p.bal -= force;
+        
+        let border = [];
+        for(let y=0; y<this.rows; y++) {
+            for(let x=0; x<this.cols; x++) {
+                let idx = y * this.cols + x;
+                if(this.grid[idx] === pid + 10) {
+                    for(let dy=-1; dy<=1; dy++) {
+                        for(let dx=-1; dx<=1; dx++) {
+                            let nx=x+dx, ny=y+dy;
+                            if(nx>=0 && nx<this.cols && ny>=0 && ny<this.rows) {
+                                let nidx = ny * this.cols + nx;
+                                if(this.grid[nidx] > 0 && this.grid[nidx] !== pid + 10) {
+                                    border.push(nidx);
                                 }
                             }
                         }
                     }
                 }
-                
-                if(e.length > 0 && Math.random() < 0.2) {
-                    let t = e[Math.floor(Math.random() * e.length)];
-                    this.grid[t.y][t.x].o = k;
-                    uo['game/' + window.API.room + '/map/' + t.x + '_' + t.y] = this.grid[t.y][t.x];
-                    upd = true;
-                }
             }
+        }
+        
+        if(border.length === 0) { p.bal += force; return; }
+        
+        let powerPerCell = force / border.length;
+        if(powerPerCell < 1) powerPerCell = 1;
+        
+        let expanded = 0;
+        for(let i=0; i<border.length; i++) {
+            if(force <= 0) break;
+            let tidx = border[i];
+            let tval = this.grid[tidx];
             
-            if(upd) window.API.upd('/', uo);
-        },
-
-        updLb: function() {
-            let arr = [];
-            for(let k in this.players) {
-                let c = 0;
-                for(let y=0; y<this.rows; y++) {
-                    for(let x=0; x<this.cols; x++) {
-                        if(this.grid[y][x].o === k) c++;
-                    }
-                }
-                arr.push({n: this.players[k].nick, c: c});
-            }
-            arr.sort(function(a,b){ return b.c - a.c; });
-            
-            let h = '';
-            for(let i=0; i<Math.min(10, arr.length); i++) {
-                h += '<div class="lb-row"><span>'+(i+1)+'. '+arr[i].n+'</span><span>'+arr[i].c+'</span></div>';
-            }
-            document.getElementsByClassName('class-lb-content')[0].innerHTML = h;
-        },
-
-        draw: function() {
-            this.ctx.fillStyle = 'rgb(24, 76, 116)';
-            this.ctx.fillRect(0, 0, this.cvs.width, this.cvs.height);
-            
-            for(let y=0; y<this.rows; y++) {
-                for(let x=0; x<this.cols; x++) {
-                    let c = this.grid[y][x];
-                    if(c.t === 1) {
-                        if(c.o) {
-                            let p = this.players[c.o];
-                            this.ctx.fillStyle = p ? p.col : 'rgb(255,255,255)';
-                        } else {
-                            this.ctx.fillStyle = 'rgb(65, 125, 45)';
-                        }
-                        this.ctx.fillRect(x*this.sz, y*this.sz, this.sz, this.sz);
+            if(tval === 1) {
+                if(force >= 2) { this.grid[tidx] = pid + 10; force -= 2; expanded++; }
+            } else if(tval > 10) {
+                let ep = this.players[tval - 10];
+                if(ep && !ep.dead) {
+                    let cost = Math.max(5, ep.bal * 0.05);
+                    if(force >= cost) {
+                        force -= cost;
+                        ep.bal -= cost * 0.8;
+                        if(ep.bal < 0) ep.bal = 0;
+                        this.grid[tidx] = pid + 10;
+                        expanded++;
                     }
                 }
             }
-        },
-
-        loop: function() {
-            if(this.run) {
-                this.draw();
-                let sr = this;
-                requestAnimationFrame(function(){ sr.loop(); });
+        }
+        
+        if(expanded === 0) p.bal += force;
+    },
+    
+    botLogic() {
+        if(!this.run || !this.isGame) return;
+        for(let i=2; i<this.players.length; i++) {
+            let p = this.players[i];
+            if(!p || p.dead) continue;
+            
+            let threshold = 50;
+            if(p.diff === 2) threshold = 100;
+            if(p.diff === 3) threshold = 200;
+            
+            if(p.bal > threshold && Math.random() < 0.6) {
+                this.expandPlayer(p.id, Math.random() * 0.4 + 0.1);
             }
         }
-    };
-
-    document.getElementsByClassName('class-btn-login-anon')[0].addEventListener('click', function() {
-        let n = document.getElementsByClassName('class-input-nick')[0].value;
-        let c = document.getElementsByClassName('class-input-clan')[0].value;
-        window.API.loginAnon(n, c);
-    });
-
-    document.getElementsByClassName('class-btn-login-google')[0].addEventListener('click', function() {
-        let n = document.getElementsByClassName('class-input-nick')[0].value;
-        let c = document.getElementsByClassName('class-input-clan')[0].value;
-        window.API.loginGoogle(n, c);
-    });
-
-    document.getElementsByClassName('class-btn-send')[0].addEventListener('click', function() {
-        let i = document.getElementsByClassName('class-chat-input')[0];
-        if(i.value.trim().length > 0) {
-            let n = window.API.clan ? '['+window.API.clan+'] '+window.API.nick : window.API.nick;
-            push(ref(window.API.db, 'lobby/' + window.API.room + '/chat'), { n: n, msg: i.value });
-            i.value = '';
+    },
+    
+    bindInput() {
+        let self = this;
+        document.getElementById('atkSlider').oninput = function() {
+            self.atkPerc = parseInt(this.value) / 100;
+            document.getElementById('atkVal').innerText = this.value + "%";
+        };
+        
+        this.cvs.onmousedown = function(e) {
+            if(!self.isGame || self.players[1].dead) return;
+            self.expandPlayer(1, self.atkPerc);
+        };
+    },
+    
+    draw() {
+        this.ctx.fillStyle = 'rgb(24, 76, 116)';
+        this.ctx.fillRect(0, 0, this.w, this.h);
+        
+        for(let y=0; y<this.rows; y++) {
+            for(let x=0; x<this.cols; x++) {
+                let v = this.grid[y * this.cols + x];
+                if(v > 0) {
+                    if(v === 1) {
+                        this.ctx.fillStyle = 'rgb(65, 125, 45)';
+                    } else {
+                        let p = this.players[v - 10];
+                        if(p) this.ctx.fillStyle = p.c;
+                        else this.ctx.fillStyle = '#fff';
+                    }
+                    this.ctx.fillRect(x*this.sz, y*this.sz, this.sz, this.sz);
+                }
+            }
         }
-    });
-
-    document.getElementsByClassName('class-game-card')[0].addEventListener('click', function() {
-        window.API.room = this.getAttribute('data-room');
-        document.getElementsByClassName('class-selected-mode')[0].innerText = "Australia";
-    });
-
-    let crds = document.getElementsByClassName('class-game-card');
-    for(let i=0; i<crds.length; i++) {
-        crds[i].addEventListener('click', function() {
-            for(let j=0; j<crds.length; j++) crds[j].classList.remove('game-card-active');
-            this.classList.add('game-card-active');
-            window.API.room = this.getAttribute('data-room');
-        });
+    },
+    
+    loop() {
+        if(this.run || !this.isGame) {
+            this.draw();
+            this.drawInt = requestAnimationFrame(() => this.loop());
+        }
     }
+};
 
-    document.getElementsByClassName('class-btn-ready')[0].addEventListener('click', function() {
-        window.Manager.hostGame();
-    });
-
-    document.getElementsByClassName('class-btn-leave')[0].addEventListener('click', function() {
-        window.API.logout();
-    });
+window.onload = () => { Engine.init(); };
 
 </script>
 </body>

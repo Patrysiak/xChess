@@ -1,368 +1,383 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Age of Territorial - Giga MMO</title>
+<title>Age of Territorial: Ultimate Editon</title>
 <style>
-    :root {
-        --bg-dark: rgb(2, 6, 23);
-        --bg-panel: rgba(15, 23, 42, 0.9);
-        --border-color: rgba(51, 65, 85, 0.9);
-        --color-blue: rgb(59, 130, 246);
-        --color-red: rgb(239, 68, 68);
-        --color-green: rgb(16, 185, 129);
-        --color-gold: rgb(245, 158, 11);
-        --color-wood: rgb(180, 83, 9);
-        --color-stone: rgb(100, 116, 139);
-        --text-light: rgb(248, 250, 252);
-        --text-muted: rgb(148, 163, 184);
-    }
+:root {
+    --bg-dark: rgb(2, 6, 23);
+    --bg-panel: rgba(15, 23, 42, 0.9);
+    --border-color: rgba(51, 65, 85, 0.9);
+    --color-blue: rgb(59, 130, 246);
+    --color-red: rgb(239, 68, 68);
+    --color-green: rgb(16, 185, 129);
+    --color-gold: rgb(245, 158, 11);
+    --color-wood: rgb(180, 83, 9);
+    --color-stone: rgb(100, 116, 139);
+    --text-light: rgb(248, 250, 252);
+    --text-muted: rgb(148, 163, 184);
+}
 
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        user-select: none;
-        font-family: 'Segoe UI', Tahoma, sans-serif;
-    }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+}
 
-    body {
-        background-color: var(--bg-dark);
-        color: var(--text-light);
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        width: 100vw;
-        height: 100vh;
-    }
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+}
 
-    .screen {
-        display: none;
-        width: 100%;
-        height: 100%;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        position: absolute;
-        top: 0;
-        left: 0;
-        background: radial-gradient(circle at top, rgb(15, 23, 42), rgb(2, 6, 23));
-        z-index: 10;
-        backdrop-filter: blur(5px);
-    }
+.screen {
+    display: none;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: radial-gradient(circle at top, rgb(15, 23, 42), rgb(2, 6, 23));
+    z-index: 10;
+    backdrop-filter: blur(5px);
+}
 
-    .screen-active {
-        display: flex;
-    }
+.screen-active {
+    display: flex;
+}
 
-    .panel-box {
-        background: var(--bg-panel);
-        padding: 40px;
-        border-radius: 20px;
-        border: 1px solid var(--border-color);
-        text-align: center;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.7);
-        backdrop-filter: blur(15px);
-        width: 500px;
-        max-width: 90%;
-    }
+.panel-box {
+    background: var(--bg-panel);
+    padding: 40px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+    backdrop-filter: blur(15px);
+    width: 600px;
+    max-width: 90%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
 
-    .main-title {
-        font-size: 3.5rem;
-        color: var(--text-light);
-        margin-bottom: 20px;
-        font-weight: 900;
-        text-transform: uppercase;
-    }
+.main-title {
+    font-size: 3.5rem;
+    color: var(--text-light);
+    margin-bottom: 20px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
 
-    .main-title-accent {
-        color: var(--color-blue);
-    }
+.main-title-accent {
+    color: var(--color-blue);
+}
 
-    .btn {
-        background: rgba(0,0,0,0.6);
-        border: 1px solid var(--border-color);
-        color: rgb(255, 255, 255);
-        padding: 15px;
-        margin: 8px 0;
-        font-size: 1.1rem;
-        cursor: pointer;
-        border-radius: 10px;
-        width: 100%;
-        transition: 0.3s;
-        font-weight: bold;
-    }
+.btn {
+    background: rgba(0,0,0,0.6);
+    border: 1px solid var(--border-color);
+    color: rgb(255, 255, 255);
+    padding: 15px;
+    margin: 8px 0;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border-radius: 10px;
+    width: 100%;
+    transition: 0.3s;
+    font-weight: bold;
+}
 
-    .btn:hover {
-        border-color: var(--color-blue);
-        background: rgba(59, 130, 246, 0.15);
-        transform: translateY(-2px);
-    }
+.btn:hover {
+    border-color: var(--color-blue);
+    background: rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+}
 
-    .btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-        border-color: rgb(50, 50, 50);
-        background: rgba(0,0,0,0.4);
-    }
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    border-color: rgb(50, 50, 50);
+    background: rgba(0,0,0,0.4);
+}
 
-    .btn-green {
-        border-color: var(--color-green);
-        color: var(--color-green);
-    }
+.btn-green {
+    border-color: var(--color-green);
+    color: var(--color-green);
+}
 
-    .btn-green:hover {
-        background: var(--color-green);
-        color: rgb(0, 0, 0);
-    }
+.btn-green:hover {
+    background: var(--color-green);
+    color: rgb(0, 0, 0);
+}
 
-    .btn-red {
-        border-color: var(--color-red);
-        color: var(--color-red);
-    }
+.btn-red {
+    border-color: var(--color-red);
+    color: var(--color-red);
+}
 
-    .btn-red:hover {
-        background: var(--color-red);
-        color: rgb(255, 255, 255);
-    }
+.btn-red:hover {
+    background: var(--color-red);
+    color: rgb(255, 255, 255);
+}
 
-    .spinner {
-        border: 4px solid rgba(255,255,255,0.1);
-        border-top: 4px solid var(--color-blue);
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-        margin: 15px auto;
-    }
+.spinner {
+    border: 4px solid rgba(255,255,255,0.1);
+    border-top: 4px solid var(--color-blue);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 15px auto;
+}
 
-    @keyframes spin {
-        100% { transform: rotate(360deg); }
-    }
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
 
-    .game-layer {
-        z-index: 5;
-        background: rgb(0, 0, 0);
-        display: none;
-        flex-direction: column;
-        height: 100%;
-        width: 100%;
-    }
+.game-layer {
+    z-index: 5;
+    background: rgb(0, 0, 0);
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
 
-    .hud-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: var(--bg-panel);
-        padding: 10px 25px;
-        border-bottom: 1px solid var(--border-color);
-        z-index: 20;
-    }
+.hud-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-panel);
+    padding: 10px 25px;
+    border-bottom: 1px solid var(--border-color);
+    z-index: 20;
+}
 
-    .resources-container {
-        display: flex;
-        gap: 15px;
-        font-weight: bold;
-        font-size: 1.1rem;
-    }
+.resources-container {
+    display: flex;
+    gap: 15px;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
 
-    .resource-item {
-        background: rgba(0,0,0,0.7);
-        padding: 5px 12px;
-        border-radius: 8px;
-        border: 1px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
+.resource-item {
+    background: rgba(0,0,0,0.7);
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
 
-    .hint-text {
-        color: var(--text-muted);
-        font-size: 0.9rem;
-    }
+.hint-text {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
 
-    .map-area {
-        flex-grow: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: var(--bg-dark);
-        position: relative;
-    }
+.map-area {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg-dark);
+    position: relative;
+}
 
-    canvas {
-        border: 2px solid var(--border-color);
-        cursor: crosshair;
-    }
+canvas {
+    border: 2px solid var(--border-color);
+    cursor: crosshair;
+}
 
-    .modal-layer {
-        display: none;
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0,0,0,0.7);
-        z-index: 99;
-        backdrop-filter: blur(4px);
-    }
+.modal-layer {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.7);
+    z-index: 99;
+    backdrop-filter: blur(4px);
+}
 
-    .modal-box {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: var(--bg-panel);
-        border: 2px solid var(--color-blue);
-        padding: 25px;
-        border-radius: 15px;
-        flex-direction: column;
-        width: 420px;
-    }
+.modal-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg-panel);
+    border: 2px solid var(--color-blue);
+    padding: 25px;
+    border-radius: 15px;
+    flex-direction: column;
+    width: 420px;
+}
 
-    .modal-title {
-        text-align: center;
-        color: var(--text-light);
-        margin-bottom: 15px;
-        font-weight: 800;
-    }
+.modal-title {
+    text-align: center;
+    color: var(--text-light);
+    margin-bottom: 15px;
+    font-weight: 800;
+}
 
-    .range-input {
-        -webkit-appearance: none;
-        width: 100%;
-        height: 8px;
-        border-radius: 4px;
-        background: rgb(30, 41, 59);
-        outline: none;
-        margin: 20px 0;
-        cursor: pointer;
-    }
+.range-input {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: rgb(30, 41, 59);
+    outline: none;
+    margin: 20px 0;
+    cursor: pointer;
+}
 
-    .range-input::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: var(--color-blue);
-        transition: 0.2s;
-    }
+.range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--color-blue);
+    transition: 0.2s;
+}
 
-    .range-input::-webkit-slider-thumb:hover {
-        transform: scale(1.2);
-    }
+.range-input::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
 
-    .build-container {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        max-height: 350px;
-        overflow-y: auto;
-    }
+.build-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 350px;
+    overflow-y: auto;
+}
 
-    .build-card {
-        background: rgba(0,0,0,0.6);
-        padding: 12px;
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: 0.2s;
-        cursor: pointer;
-    }
+.build-card {
+    background: rgba(0,0,0,0.6);
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.2s;
+    cursor: pointer;
+}
 
-    .build-card:hover {
-        border-color: var(--color-gold);
-        background: rgba(245, 158, 11, 0.15);
-    }
+.build-card:hover {
+    border-color: var(--color-gold);
+    background: rgba(245, 158, 11, 0.15);
+}
 
-    .flex-buttons {
-        display: flex;
-        gap: 10px;
-        margin-top: 15px;
-    }
+.flex-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
 
-    .toast-container {
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        pointer-events: none;
-        z-index: 200;
-    }
+.toast-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 200;
+}
 
-    .toast-message {
-        background: rgba(15,23,42,0.95);
-        padding: 12px 25px;
-        border-radius: 30px;
-        border: 1px solid var(--border-color);
-        font-weight: bold;
-        color: rgb(255, 255, 255);
-        animation: slideUpToast 0.3s ease-out, fadeOutToast 0.5s ease-in 2.5s forwards;
-    }
+.toast-message {
+    background: rgba(15,23,42,0.95);
+    padding: 12px 25px;
+    border-radius: 30px;
+    border: 1px solid var(--border-color);
+    font-weight: bold;
+    color: rgb(255, 255, 255);
+    animation: slideUpToast 0.3s ease-out, fadeOutToast 0.5s ease-in 2.5s forwards;
+}
 
-    @keyframes slideUpToast {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+@keyframes slideUpToast {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-    @keyframes fadeOutToast {
-        from { opacity: 1; }
-        to { opacity: 0; }
-    }
+@keyframes fadeOutToast {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
 
-    .lobby-player-list {
-        background: rgba(0,0,0,0.5);
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
-        min-height: 100px;
-        margin: 15px 0;
-        padding: 10px;
-        text-align: left;
-        max-height: 200px;
-        overflow-y: auto;
-    }
+.room-list {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    min-height: 200px;
+    margin: 15px 0;
+    padding: 10px;
+    text-align: left;
+    max-height: 300px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
 
-    .lobby-player-item {
-        color: var(--text-light);
-        padding: 5px;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
+.room-item {
+    color: var(--text-light);
+    padding: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.2s;
+    border-radius: 5px;
+}
 
-    .color-dot {
-        width: 15px;
-        height: 15px;
-        border-radius: 50%;
-        display: inline-block;
-    }
+.room-item:hover {
+    background: rgba(59, 130, 246, 0.2);
+}
 
-    .settings-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 10px 0;
-        color: var(--text-muted);
-    }
+.room-item-title {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--color-gold);
+}
 
-    .settings-val {
-        color: var(--color-gold);
-        font-weight: bold;
-        font-size: 1.2rem;
-    }
+.room-item-info {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
 
-    .slider-small {
-        width: 150px;
-        margin: 0;
-    }
+.settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+    color: var(--text-muted);
+}
+
+.settings-val {
+    color: var(--color-gold);
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.slider-small {
+    width: 150px;
+    margin: 0;
+}
 </style>
 </head>
 <body>
@@ -371,42 +386,62 @@
     <div class="panel-box">
         <h1 class="main-title">Age of <span class="main-title-accent">War</span></h1>
         
-        <p style="margin-bottom: 5px;">Zalogowano jako: <strong class="display-nick" style="color: var(--color-gold);">Gosc</strong></p>
-        <p class="display-status" style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.9rem;">Oczekiwanie na Firebase...</p>
+        <p style="margin-bottom: 5px;">Zalogowano: <strong class="display-nick" style="color: rgb(245, 158, 11);">Gosc</strong></p>
+        <p class="display-status" style="color: rgb(148, 163, 184); margin-bottom: 20px; font-size: 0.9rem;">Oczekiwanie na system...</p>
         
         <button class="btn btn-login-google" style="border-color: rgb(219, 68, 55); color: rgb(219, 68, 55);">Zaloguj przez Google</button>
-        <button class="btn btn-login-anon" style="border-color: var(--text-muted); color: var(--text-muted);">Graj jako Gosc (Anonim)</button>
+        <button class="btn btn-login-anon" style="border-color: rgb(148, 163, 184); color: rgb(148, 163, 184);">Graj jako Gosc</button>
         <button class="btn btn-logout btn-red" style="display:none;">Wyloguj</button>
         
         <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;">
         
-        <button class="btn btn-green btn-host-menu" disabled>Stworz Pokoj (Host)</button>
-        <button class="btn btn-join-menu" disabled>Znajdz Pokoj (Dolacz)</button>
+        <button class="btn btn-green btn-host-menu" disabled>Stworz Pokoj (Multiplayer)</button>
+        <button class="btn btn-join-menu" disabled>Przegladarka Pokoi</button>
+        <button class="btn btn-offline-menu" style="border-color: rgb(16, 185, 129); color: rgb(16, 185, 129);">Zagraj z Botami (Offline)</button>
+    </div>
+</div>
+
+<div class="screen screen-rooms">
+    <div class="panel-box" style="width: 700px; height: 80vh;">
+        <h2 style="color: rgb(245, 158, 11); margin-bottom: 10px; font-size: 2.2rem;">Aktywne Pokoje</h2>
+        <div class="room-list"></div>
+        <button class="btn btn-red btn-cancel-rooms" style="margin-top: 15px;">Powrot do Menu</button>
+    </div>
+</div>
+
+<div class="screen screen-host">
+    <div class="panel-box">
+        <h2 style="color: rgb(245, 158, 11); margin-bottom: 10px; font-size: 2.2rem;">Ustawienia Gry</h2>
+        
+        <div class="settings-row">
+            <span>Szerokosc Mapy:</span>
+            <span class="settings-val val-map-w">30</span>
+            <input type="range" class="range-input slider-small slider-map-w" min="20" max="60" value="30">
+        </div>
+        
+        <div class="settings-row">
+            <span>Wysokosc Mapy:</span>
+            <span class="settings-val val-map-h">17</span>
+            <input type="range" class="range-input slider-small slider-map-h" min="15" max="40" value="17">
+        </div>
+
+        <div class="settings-row">
+            <span>Liczba Botow:</span>
+            <span class="settings-val val-bot-count">3</span>
+            <input type="range" class="range-input slider-small slider-bot-count" min="0" max="10" value="3">
+        </div>
+
+        <button class="btn btn-green btn-start-host" style="margin-top: 20px;">Uruchom Pokoj</button>
+        <button class="btn btn-red btn-cancel-host" style="margin-top: 10px;">Anuluj</button>
     </div>
 </div>
 
 <div class="screen screen-lobby">
     <div class="panel-box">
-        <h2 style="color: var(--color-gold); margin-bottom: 10px; font-size: 2.2rem;">Poczekalnia</h2>
-        <p class="lobby-status-text" style="color: var(--text-muted); font-size: 1.1rem;">Przygotowanie...</p>
-        
-        <div class="lobby-player-list"></div>
-        
-        <div class="lobby-settings-area" style="display: none;">
-            <div class="settings-row">
-                <span>Max Graczy:</span>
-                <span class="settings-val val-max-players">4</span>
-                <input type="range" class="range-input slider-small slider-max-players" min="2" max="8" value="4">
-            </div>
-            <div class="settings-row">
-                <span>Liczba Botow:</span>
-                <span class="settings-val val-bot-count">2</span>
-                <input type="range" class="range-input slider-small slider-bot-count" min="0" max="7" value="2">
-            </div>
-            <button class="btn btn-green btn-start-game">Rozpocznij Gre</button>
-        </div>
-        
+        <h2 style="color: rgb(245, 158, 11); margin-bottom: 10px; font-size: 2.2rem;">Poczekalnia</h2>
+        <p class="lobby-status-text" style="color: rgb(148, 163, 184); font-size: 1.1rem;">Oczekiwanie...</p>
         <div class="loader lobby-spinner"></div>
+        <button class="btn btn-green btn-start-game-host" style="display: none; margin-top: 20px;">Zacznij Gre</button>
         <button class="btn btn-red btn-cancel-lobby" style="margin-top: 15px;">Wyjdz z Pokoju</button>
     </div>
 </div>
@@ -414,42 +449,40 @@
 <div class="game-layer screen-game">
     <div class="hud-bar">
         <div class="resources-container">
-            <div class="resource-item" style="color: var(--color-gold)">Monety <span class="val-gold">0</span></div>
-            <div class="resource-item" style="color: var(--color-wood)">Drewno <span class="val-wood">0</span></div>
-            <div class="resource-item" style="color: var(--color-stone)">Kamien <span class="val-stone">0</span></div>
-            <div class="resource-item" style="color: var(--color-red)">Wojsko <span class="val-troops">0</span></div>
+            <div class="resource-item" style="color: rgb(245, 158, 11)">Zloto <span class="val-gold">0</span></div>
+            <div class="resource-item" style="color: rgb(180, 83, 9)">Drewno <span class="val-wood">0</span></div>
+            <div class="resource-item" style="color: rgb(100, 116, 139)">Kamien <span class="val-stone">0</span></div>
+            <div class="resource-item" style="color: rgb(239, 68, 68)">Armia <span class="val-troops">0</span></div>
         </div>
         <div class="hint-text">
-            [1 Klik] Wybierz | [2 Kliki] Atak / Ruch | [PPM] Buduj
+            [1 Klik] Wybierz | [2 Kliki] Cel | [PPM] Buduj
         </div>
     </div>
     <div class="map-area">
-        <canvas class="game-canvas" width="1200" height="700"></canvas>
+        <canvas class="game-canvas"></canvas>
     </div>
 </div>
 
 <div class="modal-layer">
-    
     <div class="modal-box modal-move" style="display:none;">
-        <h2 class="modal-title">Wyslij Jednostki</h2>
-        <p class="move-desc" style="color: var(--text-muted); text-align: center; margin-bottom: 5px;">Cel Operacji</p>
-        <div class="move-val-big" style="font-size: 3rem; color: var(--color-red); text-align: center; font-weight: 900;">10</div>
+        <h2 class="modal-title">Wymarsz Wojsk</h2>
+        <p class="move-desc" style="color: rgb(148, 163, 184); text-align: center; margin-bottom: 5px;">Kierunek Operacji</p>
+        <div class="move-val-big" style="font-size: 3rem; color: rgb(239, 68, 68); text-align: center; font-weight: 900;">10</div>
         <input type="range" class="range-input slider-move" min="1" max="100" value="10">
-        <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.9rem;">
+        <div style="display:flex; justify-content:space-between; color:rgb(148, 163, 184); font-size:0.9rem;">
             <span>Min: 1</span><span>Max: <b class="move-max-val">100</b></span>
         </div>
         <div class="flex-buttons">
             <button class="btn btn-red btn-cancel-move" style="padding: 10px; margin:0;">Anuluj</button>
-            <button class="btn btn-green btn-confirm-move" style="padding: 10px; margin:0;">Rozkaz!</button>
+            <button class="btn btn-green btn-confirm-move" style="padding: 10px; margin:0;">Wyslij!</button>
         </div>
     </div>
 
     <div class="modal-box modal-build" style="display:none; width: 450px;">
-        <h2 class="modal-title">Rozbudowa Ziem</h2>
+        <h2 class="modal-title">Konstrukcja</h2>
         <div class="build-container"></div>
-        <button class="btn btn-red btn-cancel-build" style="padding: 10px; margin-top: 10px;">Zamknij</button>
+        <button class="btn btn-red btn-cancel-build" style="padding: 10px; margin-top: 10px;">Zamknij Panel</button>
     </div>
-
 </div>
 
 <div class="toast-container"></div>
@@ -480,6 +513,7 @@
         online: false,
         roomId: null,
         isHost: false,
+        isOffline: false,
         
         loginGoogle: function() {
             signInWithPopup(myAuth, myProv).catch(function(e) { alert(e.message); });
@@ -518,7 +552,7 @@
             
             elNick.innerText = window.AppCore.name;
             elNick.style.color = "rgb(16, 185, 129)";
-            elStatus.innerText = "Polaczono z siecia.";
+            elStatus.innerText = "System zsynchronizowany.";
             elStatus.style.color = "rgb(16, 185, 129)";
             
             bLogG.style.display = "none";
@@ -527,13 +561,13 @@
             bHost.disabled = false;
             bJoin.disabled = false;
         } else {
-            window.AppCore.uid = null;
-            window.AppCore.name = null;
+            window.AppCore.uid = "OFFLINE_USER";
+            window.AppCore.name = "Gosc";
             window.AppCore.online = false;
             
             elNick.innerText = "Gosc";
             elNick.style.color = "rgb(245, 158, 11)";
-            elStatus.innerText = "Zaloguj sie aby uzyskac dostep.";
+            elStatus.innerText = "Zaloguj aby grac z innymi.";
             elStatus.style.color = "rgb(148, 163, 184)";
             
             bLogG.style.display = "block";
@@ -548,13 +582,13 @@
 
 <script>
     let B_DATA = {
-        mine: { n: 'Kopalnia Zlota', c: { g: 50 }, i: 'MZ', d: '+5 Zlota na sekunde' },
-        wood: { n: 'Chata Drwala', c: { g: 30 }, i: 'CD', d: '+5 Drewna na sekunde' },
-        quarry: { n: 'Kamieniolom', c: { g: 80, w: 20 }, i: 'KK', d: '+3 Kamienia na sekunde' },
-        farm: { n: 'Farma', c: { w: 50, s: 20 }, i: 'FP', d: '+10 Zlota na sekunde' },
-        barracks: { n: 'Koszary', c: { g: 150, w: 100 }, i: 'KW', d: 'Szybszy pobor wojsk (+5)' },
-        fort: { n: 'Twierdza', c: { s: 150, w: 100 }, i: 'TW', d: 'Podwaja sile obrony' },
-        castle: { n: 'Zamek', c: { g: 300, s: 200 }, i: 'ZM', d: 'Potraja sile obrony' }
+        mine: { n: 'Kopalnia Zlota', c: { g: 50 }, i: 'KZ', d: '+5 Zlota / s' },
+        wood: { n: 'Chata Drwala', c: { g: 30 }, i: 'CD', d: '+5 Drewna / s' },
+        quarry: { n: 'Kamieniolom', c: { g: 80, w: 20 }, i: 'KK', d: '+3 Kamienia / s' },
+        farm: { n: 'Farma', c: { w: 50, s: 20 }, i: 'FA', d: '+10 Zlota / s' },
+        barracks: { n: 'Koszary', c: { g: 150, w: 100 }, i: 'KO', d: 'Szybszy pobor (+5)' },
+        fort: { n: 'Twierdza', c: { s: 150, w: 100 }, i: 'TW', d: 'Podwaja obrone' },
+        castle: { n: 'Zamek', c: { g: 300, s: 200 }, i: 'ZA', d: 'Potraja obrone' }
     };
 
     let ColorPallete = [
@@ -679,144 +713,140 @@
     }
 
     let LobbyManager = {
-        maxP: 4,
-        bCount: 2,
-        pList: {},
-        initHost: function() {
-            window.AppCore.isHost = true;
-            window.AppCore.roomId = "room_" + Math.floor(Math.random() * 100000);
-            
-            let myDat = {};
-            myDat[window.AppCore.uid] = { name: window.AppCore.name, r: true };
-            
-            let obj = {
-                status: 'waiting',
-                host: window.AppCore.uid,
-                max: this.maxP,
-                bots: this.bCount,
-                players: myDat
-            };
-            
-            window.AppCore.setRef('rooms/' + window.AppCore.roomId, obj);
-            window.AppCore.discRef('rooms/' + window.AppCore.roomId).remove();
-            
-            document.getElementsByClassName('lobby-status-text')[0].innerText = "Pokoj: " + window.AppCore.roomId;
-            document.getElementsByClassName('lobby-settings-area')[0].style.display = "block";
-            document.getElementsByClassName('lobby-spinner')[0].style.display = "none";
-            
-            this.bindHostSettings();
-            this.listenRoom();
-        },
-        initJoin: function() {
-            window.AppCore.isHost = false;
-            document.getElementsByClassName('lobby-status-text')[0].innerText = "Szukanie pokoju...";
-            document.getElementsByClassName('lobby-settings-area')[0].style.display = "none";
-            document.getElementsByClassName('lobby-spinner')[0].style.display = "block";
-            
+        confW: 30,
+        confH: 17,
+        confB: 3,
+        rmList: {},
+
+        loadRooms: function() {
             window.AppCore.getRef('rooms', function(snap) {
-                let rms = snap.val();
-                let fRoom = null;
-                if (rms) {
-                    for (let k in rms) {
-                        if (rms[k].status === 'waiting') {
-                            let pCnt = Object.keys(rms[k].players || {}).length;
-                            if (pCnt < rms[k].max) {
-                                fRoom = k;
-                                break;
-                            }
+                let d = snap.val();
+                let lst = document.getElementsByClassName('room-list')[0];
+                lst.innerHTML = '';
+                
+                if (d) {
+                    for (let k in d) {
+                        let rm = d[k];
+                        if (rm.status === 'waiting') {
+                            let div = document.createElement('div');
+                            div.className = 'room-item';
+                            div.innerHTML = '<div class="room-item-title">' + rm.hostName + '</div><div class="room-item-info">Mapa: ' + rm.w + 'x' + rm.h + ' | Boty: ' + rm.bots + '</div>';
+                            div.addEventListener('click', function() {
+                                LobbyManager.joinRoom(k);
+                            });
+                            lst.appendChild(div);
                         }
                     }
                 }
                 
-                if (fRoom) {
-                    window.AppCore.roomId = fRoom;
-                    let uObj = {};
-                    uObj[window.AppCore.uid] = { name: window.AppCore.name, r: false };
-                    window.AppCore.updateRef('rooms/' + fRoom + '/players', uObj);
-                    window.AppCore.discRef('rooms/' + fRoom + '/players/' + window.AppCore.uid).remove();
-                    document.getElementsByClassName('lobby-status-text')[0].innerText = "Dolaczono! Czekam na hosta...";
-                    LobbyManager.listenRoom();
-                } else {
-                    UI.popToast("Brak wolnych pokoi!", true);
-                    UI.switchScreen('screen-main');
+                if (lst.innerHTML === '') {
+                    lst.innerHTML = '<div style="color:rgb(148,163,184);text-align:center;padding:20px;">Brak dostepnych pokoi.</div>';
                 }
             });
         },
-        bindHostSettings: function() {
-            let sMax = document.getElementsByClassName('slider-max-players')[0];
-            let vMax = document.getElementsByClassName('val-max-players')[0];
-            let sBot = document.getElementsByClassName('slider-bot-count')[0];
-            let vBot = document.getElementsByClassName('val-bot-count')[0];
+
+        joinRoom: function(rId) {
+            window.AppCore.roomId = rId;
+            window.AppCore.isHost = false;
+            window.AppCore.isOffline = false;
+            UI.switchScreen('screen-lobby');
+            document.getElementsByClassName('lobby-status-text')[0].innerText = "Laczenie...";
             
-            sMax.addEventListener('input', function() {
-                vMax.innerText = this.value;
-                LobbyManager.maxP = parseInt(this.value);
-                window.AppCore.updateRef('rooms/' + window.AppCore.roomId, { max: LobbyManager.maxP });
-            });
-            sBot.addEventListener('input', function() {
-                vBot.innerText = this.value;
-                LobbyManager.bCount = parseInt(this.value);
-                window.AppCore.updateRef('rooms/' + window.AppCore.roomId, { bots: LobbyManager.bCount });
-            });
+            window.AppCore.updateRef('rooms/' + rId, { status: 'playing' });
+            GameCore.initClient();
         },
-        listenRoom: function() {
-            window.AppCore.onValRef('rooms/' + window.AppCore.roomId, function(snap) {
-                let d = snap.val();
-                if (!d) {
-                    UI.popToast("Pokoj zostal zamkniety.", true);
-                    UI.switchScreen('screen-main');
-                    return;
-                }
-                
-                LobbyManager.pList = d.players || {};
-                LobbyManager.renderList();
-                
-                if (!window.AppCore.isHost) {
-                    if (d.status === 'playing') {
-                        GameCore.initClient();
-                    }
-                }
-            });
-        },
-        renderList: function() {
-            let lst = document.getElementsByClassName('lobby-player-list')[0];
-            lst.innerHTML = '';
+
+        initHostScreen: function() {
+            UI.switchScreen('screen-host');
             
-            let i = 0;
-            for (let k in this.pList) {
-                let pD = this.pList[k];
-                let col = ColorPallete[i % ColorPallete.length];
-                
-                let div = document.createElement('div');
-                div.className = 'lobby-player-item';
-                div.innerHTML = '<span class="color-dot" style="background:' + col + ';"></span><span>' + pD.name + (pD.r ? ' (Host)' : '') + '</span>';
-                lst.appendChild(div);
-                i++;
+            let sW = document.getElementsByClassName('slider-map-w')[0];
+            let vW = document.getElementsByClassName('val-map-w')[0];
+            let sH = document.getElementsByClassName('slider-map-h')[0];
+            let vH = document.getElementsByClassName('val-map-h')[0];
+            let sB = document.getElementsByClassName('slider-bot-count')[0];
+            let vB = document.getElementsByClassName('val-bot-count')[0];
+            
+            sW.addEventListener('input', function() { vW.innerText = this.value; LobbyManager.confW = parseInt(this.value); });
+            sH.addEventListener('input', function() { vH.innerText = this.value; LobbyManager.confH = parseInt(this.value); });
+            sB.addEventListener('input', function() { vB.innerText = this.value; LobbyManager.confB = parseInt(this.value); });
+        },
+
+        startHostedRoom: function() {
+            window.AppCore.isHost = true;
+            window.AppCore.isOffline = false;
+            window.AppCore.roomId = "room_" + Math.floor(Math.random() * 1000000);
+            
+            UI.switchScreen('screen-lobby');
+            document.getElementsByClassName('lobby-status-text')[0].innerText = "Pokoj: " + window.AppCore.roomId + " (Oczekiwanie...)";
+            document.getElementsByClassName('btn-start-game-host')[0].style.display = "block";
+            
+            GameCore.cols = this.confW;
+            GameCore.rows = this.confH;
+            
+            GameCore.genMap();
+            
+            let flat = {};
+            for (let y = 0; y < GameCore.rows; y++) {
+                for (let x = 0; x < GameCore.cols; x++) {
+                    flat[x + '_' + y] = GameCore.grid[y][x];
+                }
             }
+            
+            let o = {
+                status: 'waiting',
+                host: window.AppCore.uid,
+                hostName: window.AppCore.name,
+                w: GameCore.cols,
+                h: GameCore.rows,
+                bots: this.confB,
+                map: flat
+            };
+            
+            window.AppCore.setRef('rooms/' + window.AppCore.roomId, o);
+            window.AppCore.discRef('rooms/' + window.AppCore.roomId).remove();
+            
+            window.AppCore.onValRef('rooms/' + window.AppCore.roomId + '/status', function(snap) {
+                if (snap.val() === 'playing') {
+                    GameCore.beginHostGame();
+                }
+            });
         },
-        startGame: function() {
-            if (!window.AppCore.isHost) return;
-            GameCore.initHost();
+
+        startOffline: function() {
+            window.AppCore.isHost = true;
+            window.AppCore.isOffline = true;
+            this.confW = 40;
+            this.confH = 25;
+            this.confB = 5;
+            
+            GameCore.cols = this.confW;
+            GameCore.rows = this.confH;
+            GameCore.genMap();
+            GameCore.beginOffline();
         }
     };
 
-    let BotManager = {
-        bArr: [],
+    let BotAI = {
+        arr: [],
         init: function(cnt) {
-            this.bArr = [];
+            this.arr = [];
             for (let i = 0; i < cnt; i++) {
-                this.bArr.push({
+                this.arr.push({
                     id: 'BOT_' + i,
-                    n: 'Bot ' + (i+1),
-                    g: 200, w: 100, s: 50
+                    g: 300, w: 150, s: 50
                 });
             }
         },
+        eco: function() {
+            for (let i = 0; i < this.arr.length; i++) {
+                let b = this.arr[i];
+                b.g += 5;
+                b.w += 2;
+            }
+        },
         step: function() {
-            if (!window.AppCore.isHost) return;
-            
-            for (let i = 0; i < this.bArr.length; i++) {
-                let bot = this.bArr[i];
+            for (let i = 0; i < this.arr.length; i++) {
+                let bot = this.arr[i];
                 let myP = [];
                 for (let y = 0; y < GameCore.rows; y++) {
                     for (let x = 0; x < GameCore.cols; x++) {
@@ -833,7 +863,7 @@
                     if (myP[j].t > bst.t) bst = myP[j];
                 }
                 
-                if (bst.t > 30) {
+                if (bst.t > 20) {
                     let nbs = [];
                     for (let dy = -1; dy <= 1; dy++) {
                         for (let dx = -1; dx <= 1; dx++) {
@@ -849,7 +879,7 @@
                     }
                     if (nbs.length > 0) {
                         let tObj = nbs[Math.floor(Math.random() * nbs.length)];
-                        GameCore.simAtk(bst, tObj, Math.floor(bst.t * 0.8), bot.id);
+                        GameCore.simAtk(bst, tObj, Math.floor(bst.t * 0.7), bot.id);
                     }
                 }
                 
@@ -863,18 +893,13 @@
                         tP.b = 'barracks';
                         bot.g -= 150;
                         bot.w -= 100;
-                        let uO = {};
-                        uO['rooms/' + window.AppCore.roomId + '/map/' + tP.x + '_' + tP.y + '/b'] = 'barracks';
-                        window.FirebaseHelpers.updateRef('/', uO);
+                        if (!window.AppCore.isOffline) {
+                            let uO = {};
+                            uO['rooms/' + window.AppCore.roomId + '/map/' + tP.x + '_' + tP.y + '/b'] = 'barracks';
+                            window.AppCore.updateRef('/', uO);
+                        }
                     }
                 }
-            }
-        },
-        eco: function() {
-            for (let i = 0; i < this.bArr.length; i++) {
-                let bot = this.bArr[i];
-                bot.g += 5;
-                bot.w += 2;
             }
         }
     };
@@ -893,122 +918,179 @@
         src: null,
         tgt: null,
         lClk: 0,
-        
-        initHost: function() {
-            this.ctx = this.cvs.getContext('2d');
+
+        genMap: function() {
             this.grid = [];
             for (let y = 0; y < this.rows; y++) {
                 let rArr = [];
                 for (let x = 0; x < this.cols; x++) {
-                    let iw = false;
+                    let wFlag = false;
                     if (x === 0 || y === 0 || x === this.cols - 1 || y === this.rows - 1 || Math.random() < 0.15) {
-                        iw = true;
+                        wFlag = true;
                     }
-                    rArr.push({ x: x, y: y, own: 0, t: iw ? 0 : Math.floor(Math.random() * 5), w: iw, b: null });
+                    let obj = {
+                        x: x,
+                        y: y,
+                        own: 0,
+                        t: wFlag ? 0 : Math.floor(Math.random() * 5),
+                        w: wFlag,
+                        b: null
+                    };
+                    rArr.push(obj);
                 }
                 this.grid.push(rArr);
             }
+        },
+
+        beginHostGame: function() {
+            this.ctx = this.cvs.getContext('2d');
+            this.cvs.width = this.cols * this.sz;
+            this.cvs.height = this.rows * this.sz;
             
             let emps = [];
             for (let y = 0; y < this.rows; y++) {
                 for (let x = 0; x < this.cols; x++) {
-                    if (!this.grid[y][x].w) {
-                        emps.push(this.grid[y][x]);
+                    if (!this.grid[y][x].w) emps.push(this.grid[y][x]);
+                }
+            }
+            
+            if (emps.length > 0) {
+                let rI = Math.floor(Math.random() * emps.length);
+                let cl = emps[rI];
+                cl.own = window.AppCore.uid;
+                cl.t = 150;
+                cl.b = 'castle';
+                emps.splice(rI, 1);
+            }
+            
+            window.AppCore.getRef('rooms/' + window.AppCore.roomId + '/players', function(snap) {
+                let pData = snap.val() || {};
+                let pIds = Object.keys(pData);
+                
+                for (let i = 0; i < pIds.length; i++) {
+                    if (pIds[i] !== window.AppCore.uid && emps.length > 0) {
+                        let rI = Math.floor(Math.random() * emps.length);
+                        let cl = emps[rI];
+                        cl.own = pIds[i];
+                        cl.t = 150;
+                        cl.b = 'castle';
+                        emps.splice(rI, 1);
                     }
                 }
-            }
+                
+                BotAI.init(LobbyManager.confB);
+                for (let i = 0; i < BotAI.arr.length; i++) {
+                    if (emps.length > 0) {
+                        let rI = Math.floor(Math.random() * emps.length);
+                        let cl = emps[rI];
+                        cl.own = BotAI.arr[i].id;
+                        cl.t = 100;
+                        cl.b = 'fort';
+                        emps.splice(rI, 1);
+                    }
+                }
+                
+                let flatMap = {};
+                for (let y = 0; y < GameCore.rows; y++) {
+                    for (let x = 0; x < GameCore.cols; x++) {
+                        flatMap[x + '_' + y] = GameCore.grid[y][x];
+                    }
+                }
+                
+                window.AppCore.updateRef('rooms/' + window.AppCore.roomId, { map: flatMap });
+                GameCore.startLoop();
+            });
+        },
+
+        beginOffline: function() {
+            this.ctx = this.cvs.getContext('2d');
+            this.cvs.width = this.cols * this.sz;
+            this.cvs.height = this.rows * this.sz;
             
-            let pIds = Object.keys(LobbyManager.pList);
-            for (let i = 0; i < pIds.length; i++) {
-                if (emps.length > 0) {
-                    let rI = Math.floor(Math.random() * emps.length);
-                    let cl = emps[rI];
-                    cl.own = pIds[i];
-                    cl.t = 150;
-                    cl.b = 'castle';
-                    emps.splice(rI, 1);
+            let emps = [];
+            for (let y = 0; y < this.rows; y++) {
+                for (let x = 0; x < this.cols; x++) {
+                    if (!this.grid[y][x].w) emps.push(this.grid[y][x]);
                 }
             }
             
-            BotManager.init(LobbyManager.bCount);
-            for (let i = 0; i < BotManager.bArr.length; i++) {
+            if (emps.length > 0) {
+                let rI = Math.floor(Math.random() * emps.length);
+                let cl = emps[rI];
+                cl.own = window.AppCore.uid;
+                cl.t = 150;
+                cl.b = 'castle';
+                emps.splice(rI, 1);
+            }
+            
+            BotAI.init(LobbyManager.confB);
+            for (let i = 0; i < BotAI.arr.length; i++) {
                 if (emps.length > 0) {
                     let rI = Math.floor(Math.random() * emps.length);
                     let cl = emps[rI];
-                    cl.own = BotManager.bArr[i].id;
-                    cl.t = 150;
+                    cl.own = BotAI.arr[i].id;
+                    cl.t = 100;
                     cl.b = 'fort';
                     emps.splice(rI, 1);
                 }
             }
             
-            let flatMap = {};
-            for (let y = 0; y < this.rows; y++) {
-                for (let x = 0; x < this.cols; x++) {
-                    flatMap[x + '_' + y] = this.grid[y][x];
-                }
-            }
-            
-            let uObj = {};
-            uObj['rooms/' + window.AppCore.roomId + '/map'] = flatMap;
-            uObj['rooms/' + window.AppCore.roomId + '/status'] = 'playing';
-            
-            window.FirebaseHelpers.updateRef('/', uObj);
-            
-            this.prepareClient();
+            this.startLoop();
         },
 
         initClient: function() {
-            this.ctx = this.cvs.getContext('2d');
-            
-            window.FirebaseHelpers.getRef('rooms/' + window.AppCore.roomId + '/map', function(snap) {
-                let md = snap.val();
+            window.AppCore.getRef('rooms/' + window.AppCore.roomId, function(snap) {
+                let d = snap.val();
+                GameCore.cols = d.w;
+                GameCore.rows = d.h;
+                GameCore.cvs.width = GameCore.cols * GameCore.sz;
+                GameCore.cvs.height = GameCore.rows * GameCore.sz;
+                GameCore.ctx = GameCore.cvs.getContext('2d');
+                
                 GameCore.grid = [];
                 for (let y = 0; y < GameCore.rows; y++) {
                     let ra = [];
                     for (let x = 0; x < GameCore.cols; x++) {
-                        ra.push(md[x + '_' + y]);
+                        ra.push(d.map[x + '_' + y]);
                     }
                     GameCore.grid.push(ra);
                 }
-                GameCore.prepareClient();
+                GameCore.startLoop();
             });
         },
 
-        prepareClient: function() {
-            UI.switchScreen('game-layer');
+        startLoop: function() {
+            UI.switchScreen('screen-game');
             this.bindMs();
             
-            window.FirebaseHelpers.onValRef('rooms/' + window.AppCore.roomId + '/map', function(snap) {
-                let nd = snap.val();
-                if (nd) {
-                    for (let y = 0; y < GameCore.rows; y++) {
-                        for (let x = 0; x < GameCore.cols; x++) {
-                            let cDat = nd[x + '_' + y];
-                            GameCore.grid[y][x].own = cDat.own;
-                            GameCore.grid[y][x].t = cDat.t;
-                            GameCore.grid[y][x].b = cDat.b;
+            if (!window.AppCore.isOffline) {
+                window.AppCore.onValRef('rooms/' + window.AppCore.roomId + '/map', function(snap) {
+                    let nd = snap.val();
+                    if (nd) {
+                        for (let y = 0; y < GameCore.rows; y++) {
+                            for (let x = 0; x < GameCore.cols; x++) {
+                                let cDat = nd[x + '_' + y];
+                                GameCore.grid[y][x].own = cDat.own;
+                                GameCore.grid[y][x].t = cDat.t;
+                                GameCore.grid[y][x].b = cDat.b;
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
             
             setInterval(function() {
                 GameCore.tickEco();
             }, 1000);
             
             if (window.AppCore.isHost) {
-                setInterval(function() {
-                    BotManager.step();
-                }, 3000);
-                setInterval(function() {
-                    BotManager.eco();
-                }, 1000);
+                setInterval(function() { BotAI.step(); }, 3000);
+                setInterval(function() { BotAI.eco(); }, 1000);
             }
             
             this.run = true;
             this.frame();
-            UI.popToast("Rozgrywka rozpoczeta!", false);
+            UI.popToast("Do Boju!", false);
         },
 
         tickEco: function() {
@@ -1020,10 +1102,8 @@
                     let cl = this.grid[y][x];
                     if (cl.own === window.AppCore.uid) {
                         aFlg = true;
-                        
                         let tin = 1;
                         if (cl.b === 'barracks') tin = 6;
-                        
                         cl.t += tin;
                         tCnt += cl.t;
                         
@@ -1033,30 +1113,26 @@
                         if (cl.b === 'wood') this.res.w += 5;
                         if (cl.b === 'quarry') this.res.s += 3;
                         
-                        let uO = {};
-                        uO['rooms/' + window.AppCore.roomId + '/map/' + x + '_' + y + '/t'] = cl.t;
-                        window.FirebaseHelpers.updateRef('/', uO);
+                        if (!window.AppCore.isOffline) {
+                            let uO = {};
+                            uO['rooms/' + window.AppCore.roomId + '/map/' + x + '_' + y + '/t'] = cl.t;
+                            window.AppCore.updateRef('/', uO);
+                        }
                     }
                 }
             }
             
-            if (!aFlg) {
-                UI.popToast("Zostales pokonany!", true);
-            }
-            
+            if (!aFlg) UI.popToast("Koniec Gry!", true);
             UI.updHUD(this.res.g, this.res.w, this.res.s, tCnt);
         },
 
         bindMs: function() {
-            this.cvs.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-            });
+            this.cvs.addEventListener('contextmenu', function(e) { e.preventDefault(); });
             
             this.cvs.addEventListener('mousemove', function(e) {
                 let r = GameCore.cvs.getBoundingClientRect();
                 let sx = GameCore.cvs.width / r.width;
                 let sy = GameCore.cvs.height / r.height;
-                
                 let x = Math.floor(((e.clientX - r.left) * sx) / GameCore.sz);
                 let y = Math.floor(((e.clientY - r.top) * sy) / GameCore.sz);
                 
@@ -1077,23 +1153,14 @@
                             let lst = document.getElementsByClassName('build-container')[0];
                             lst.innerHTML = '';
                             
-                            for (let k in B_DATA) {
-                                let bObj = B_DATA[k];
+                            for (let key in B_DATA) {
+                                let bObj = B_DATA[key];
                                 let cOk = true;
                                 let str = '';
                                 
-                                if (bObj.c.g) {
-                                    str += 'M:' + bObj.c.g + ' ';
-                                    if (GameCore.res.g < bObj.c.g) cOk = false;
-                                }
-                                if (bObj.c.w) {
-                                    str += 'D:' + bObj.c.w + ' ';
-                                    if (GameCore.res.w < bObj.c.w) cOk = false;
-                                }
-                                if (bObj.c.s) {
-                                    str += 'K:' + bObj.c.s + ' ';
-                                    if (GameCore.res.s < bObj.c.s) cOk = false;
-                                }
+                                if (bObj.c.g) { str += 'M:' + bObj.c.g + ' '; if (GameCore.res.g < bObj.c.g) cOk = false; }
+                                if (bObj.c.w) { str += 'D:' + bObj.c.w + ' '; if (GameCore.res.w < bObj.c.w) cOk = false; }
+                                if (bObj.c.s) { str += 'K:' + bObj.c.s + ' '; if (GameCore.res.s < bObj.c.s) cOk = false; }
                                 
                                 let div = document.createElement('div');
                                 div.className = 'build-card';
@@ -1101,12 +1168,10 @@
                                 let hStr = '<div style="text-align:left;">';
                                 hStr += '<div style="color:rgb(59,130,246);font-weight:900;font-size:1.1rem;">' + bObj.i + ' ' + bObj.n + '</div>';
                                 hStr += '<div style="color:rgb(148,163,184);font-size:0.8rem;margin:3px 0;">' + bObj.d + '</div>';
-                                hStr += '<div style="color:rgb(245,158,11);font-weight:bold;font-size:0.9rem;">' + str + '</div>';
-                                hStr += '</div>';
+                                hStr += '<div style="color:rgb(245,158,11);font-size:0.85rem;font-weight:bold;">' + str + '</div></div>';
                                 
                                 let bClass = cOk ? 'btn-green' : 'btn-red';
-                                hStr += '<button class="btn ' + bClass + '" style="width:auto;margin:0;padding:10px 20px;" ' + (cOk ? '' : 'disabled') + '>Kup</button>';
-                                
+                                hStr += '<button class="btn ' + bClass + '" style="width:auto;margin:0;padding:10px 20px;" ' + (cOk ? '' : 'disabled') + '>Wznieś</button>';
                                 div.innerHTML = hStr;
                                 
                                 let bBtn = div.getElementsByTagName('button')[0];
@@ -1115,15 +1180,16 @@
                                     if (bObj.c.w) GameCore.res.w -= bObj.c.w;
                                     if (bObj.c.s) GameCore.res.s -= bObj.c.s;
                                     
-                                    GameCore.hov.b = k;
+                                    GameCore.hov.b = key;
                                     
-                                    let pth = 'rooms/' + window.AppCore.roomId + '/map/' + GameCore.hov.x + '_' + GameCore.hov.y + '/b';
-                                    let uo = {};
-                                    uo[pth] = k;
-                                    window.FirebaseHelpers.updateRef('/', uo);
+                                    if (!window.AppCore.isOffline) {
+                                        let uo = {};
+                                        uo['rooms/' + window.AppCore.roomId + '/map/' + GameCore.hov.x + '_' + GameCore.hov.y + '/b'] = key;
+                                        window.FirebaseHelpers.updateRef('/', uo);
+                                    }
                                     
                                     UI.hideModals();
-                                    UI.popToast("Wzniesiono budowle!", false);
+                                    UI.popToast("Zbudowano!", false);
                                 });
                                 
                                 lst.appendChild(div);
@@ -1139,10 +1205,15 @@
                 }
 
                 if (e.button === 0) {
-                    let nowT = Date.now();
-                    if (nowT - GameCore.lClk < 400 && GameCore.src) {
-                        let mDst = Math.max(Math.abs(GameCore.src.x - GameCore.hov.x), Math.abs(GameCore.src.y - GameCore.hov.y));
-                        if (mDst === 1) {
+                    let nTime = Date.now();
+                    let diff = nTime - GameCore.lClk;
+                    
+                    if (diff < 400 && GameCore.src) {
+                        let dX = Math.abs(GameCore.src.x - GameCore.hov.x);
+                        let dY = Math.abs(GameCore.src.y - GameCore.hov.y);
+                        let mDist = Math.max(dX, dY);
+                        
+                        if (mDist === 1) {
                             if (GameCore.src.t > 1) {
                                 GameCore.tgt = GameCore.hov;
                                 
@@ -1155,7 +1226,6 @@
                                 
                                 document.getElementsByClassName('move-val-big')[0].innerText = rInp.value;
                                 document.getElementsByClassName('move-max-val')[0].innerText = maxV;
-                                document.getElementsByClassName('move-desc')[0].innerText = 'Z ' + GameCore.src.x + ',' + GameCore.src.y + ' do ' + GameCore.tgt.x + ',' + GameCore.tgt.y;
                                 
                                 document.getElementsByClassName('modal-layer')[0].style.display = 'block';
                                 document.getElementsByClassName('modal-move')[0].style.display = 'flex';
@@ -1163,7 +1233,7 @@
                                 UI.popToast("Za malo armii!", true);
                             }
                         } else if (mDist > 1) {
-                            UI.popToast("Zbyt duzy dystans!", true);
+                            UI.popToast("Za daleko!", true);
                         }
                     } else {
                         if (GameCore.hov.own === window.AppCore.uid) {
@@ -1172,7 +1242,7 @@
                             GameCore.src = null;
                         }
                     }
-                    GameCore.lClk = nowT;
+                    GameCore.lClk = nTime;
                 }
             });
         },
@@ -1209,12 +1279,14 @@
                     }
                 }
                 
-                let updO = {};
-                updO['rooms/' + window.AppCore.roomId + '/map/' + sObj.x + '_' + sObj.y + '/t'] = sObj.t;
-                updO['rooms/' + window.AppCore.roomId + '/map/' + tObj.x + '_' + tObj.y + '/own'] = tObj.own;
-                updO['rooms/' + window.AppCore.roomId + '/map/' + tObj.x + '_' + tObj.y + '/t'] = tObj.t;
-                updO['rooms/' + window.AppCore.roomId + '/map/' + tObj.x + '_' + tObj.y + '/b'] = tObj.t;
-                window.FirebaseHelpers.updateRef('/', updO);
+                if (!window.AppCore.isOffline) {
+                    let updO = {};
+                    updO['rooms/' + window.AppCore.roomId + '/map/' + sObj.x + '_' + sObj.y + '/t'] = sObj.t;
+                    updO['rooms/' + window.AppCore.roomId + '/map/' + tObj.x + '_' + tObj.y + '/own'] = tObj.own;
+                    updO['rooms/' + window.AppCore.roomId + '/map/' + tObj.x + '_' + tObj.y + '/t'] = tObj.t;
+                    updO['rooms/' + window.AppCore.roomId + '/map/' + tObj.x + '_' + tObj.y + '/b'] = tObj.b;
+                    window.FirebaseHelpers.updateRef('/', updO);
+                }
                 
             }, 400);
         },
@@ -1305,25 +1377,52 @@
         }
     };
 
+    document.getElementsByClassName('btn-login-google')[0].addEventListener('click', function() {
+        window.AppCore.loginGoogle();
+    });
+
+    document.getElementsByClassName('btn-login-anon')[0].addEventListener('click', function() {
+        window.AppCore.loginAnon();
+    });
+
+    document.getElementsByClassName('btn-logout')[0].addEventListener('click', function() {
+        window.AppCore.logoutUser();
+    });
+
     document.getElementsByClassName('btn-host-menu')[0].addEventListener('click', function() {
-        LobbyManager.initHost();
-        UI.switchScreen('screen-lobby');
+        LobbyManager.initHostScreen();
     });
 
     document.getElementsByClassName('btn-join-menu')[0].addEventListener('click', function() {
-        LobbyManager.initJoin();
-        UI.switchScreen('screen-lobby');
+        UI.switchScreen('screen-rooms');
+        LobbyManager.loadRooms();
+    });
+    
+    document.getElementsByClassName('btn-offline-menu')[0].addEventListener('click', function() {
+        LobbyManager.startOffline();
+    });
+
+    document.getElementsByClassName('btn-cancel-rooms')[0].addEventListener('click', function() {
+        UI.switchScreen('screen-main');
+    });
+
+    document.getElementsByClassName('btn-start-host')[0].addEventListener('click', function() {
+        LobbyManager.startHostedRoom();
+    });
+
+    document.getElementsByClassName('btn-cancel-host')[0].addEventListener('click', function() {
+        UI.switchScreen('screen-main');
     });
 
     document.getElementsByClassName('btn-cancel-lobby')[0].addEventListener('click', function() {
         UI.switchScreen('screen-main');
-        if (window.AppCore.isHost) {
-            window.FirebaseHelpers.setRef('rooms/' + window.AppCore.roomId, null);
+        if (window.AppCore.isHost && window.AppCore.roomId) {
+            window.AppCore.removeRef('rooms/' + window.AppCore.roomId);
         }
     });
 
-    document.getElementsByClassName('btn-start-game')[0].addEventListener('click', function() {
-        LobbyManager.startGame();
+    document.getElementsByClassName('btn-start-game-host')[0].addEventListener('click', function() {
+        window.AppCore.updateRef('rooms/' + window.AppCore.roomId, { status: 'playing' });
     });
 
     document.getElementsByClassName('slider-move')[0].addEventListener('input', function() {

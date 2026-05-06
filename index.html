@@ -3,496 +3,434 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Age of Territorial: Ultimate Editon</title>
+<title>Territorial Clone</title>
 <style>
-:root {
-    --bg-dark: rgb(2, 6, 23);
-    --bg-panel: rgba(15, 23, 42, 0.9);
-    --border-color: rgba(51, 65, 85, 0.9);
-    --color-blue: rgb(59, 130, 246);
-    --color-red: rgb(239, 68, 68);
-    --color-green: rgb(16, 185, 129);
-    --color-gold: rgb(245, 158, 11);
-    --color-wood: rgb(180, 83, 9);
-    --color-stone: rgb(100, 116, 139);
-    --text-light: rgb(248, 250, 252);
-    --text-muted: rgb(148, 163, 184);
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    user-select: none;
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-}
-
-body {
-    background-color: var(--bg-dark);
-    color: var(--text-light);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    width: 100vw;
-    height: 100vh;
-}
-
-.screen {
-    display: none;
-    width: 100%;
-    height: 100%;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 0;
-    left: 0;
-    background: radial-gradient(circle at top, rgb(15, 23, 42), rgb(2, 6, 23));
-    z-index: 10;
-    backdrop-filter: blur(5px);
-}
-
-.screen-active {
-    display: flex;
-}
-
-.panel-box {
-    background: var(--bg-panel);
-    padding: 40px;
-    border-radius: 20px;
-    border: 1px solid var(--border-color);
-    text-align: center;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.7);
-    backdrop-filter: blur(15px);
-    width: 600px;
-    max-width: 90%;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.main-title {
-    font-size: 3.5rem;
-    color: var(--text-light);
-    margin-bottom: 20px;
-    font-weight: 900;
-    text-transform: uppercase;
-}
-
-.main-title-accent {
-    color: var(--color-blue);
-}
-
-.btn {
-    background: rgba(0,0,0,0.6);
-    border: 1px solid var(--border-color);
-    color: rgb(255, 255, 255);
-    padding: 15px;
-    margin: 8px 0;
-    font-size: 1.1rem;
-    cursor: pointer;
-    border-radius: 10px;
-    width: 100%;
-    transition: 0.3s;
-    font-weight: bold;
-}
-
-.btn:hover {
-    border-color: var(--color-blue);
-    background: rgba(59, 130, 246, 0.15);
-    transform: translateY(-2px);
-}
-
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-    border-color: rgb(50, 50, 50);
-    background: rgba(0,0,0,0.4);
-}
-
-.btn-green {
-    border-color: var(--color-green);
-    color: var(--color-green);
-}
-
-.btn-green:hover {
-    background: var(--color-green);
-    color: rgb(0, 0, 0);
-}
-
-.btn-red {
-    border-color: var(--color-red);
-    color: var(--color-red);
-}
-
-.btn-red:hover {
-    background: var(--color-red);
-    color: rgb(255, 255, 255);
-}
-
-.spinner {
-    border: 4px solid rgba(255,255,255,0.1);
-    border-top: 4px solid var(--color-blue);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin: 15px auto;
-}
-
-@keyframes spin {
-    100% { transform: rotate(360deg); }
-}
-
-.game-layer {
-    z-index: 5;
-    background: rgb(0, 0, 0);
-    display: none;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-}
-
-.hud-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--bg-panel);
-    padding: 10px 25px;
-    border-bottom: 1px solid var(--border-color);
-    z-index: 20;
-}
-
-.resources-container {
-    display: flex;
-    gap: 15px;
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
-.resource-item {
-    background: rgba(0,0,0,0.7);
-    padding: 5px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.hint-text {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-
-.map-area {
-    flex-grow: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: var(--bg-dark);
-    position: relative;
-}
-
-canvas {
-    border: 2px solid var(--border-color);
-    cursor: crosshair;
-}
-
-.modal-layer {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.7);
-    z-index: 99;
-    backdrop-filter: blur(4px);
-}
-
-.modal-box {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--bg-panel);
-    border: 2px solid var(--color-blue);
-    padding: 25px;
-    border-radius: 15px;
-    flex-direction: column;
-    width: 420px;
-}
-
-.modal-title {
-    text-align: center;
-    color: var(--text-light);
-    margin-bottom: 15px;
-    font-weight: 800;
-}
-
-.range-input {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 8px;
-    border-radius: 4px;
-    background: rgb(30, 41, 59);
-    outline: none;
-    margin: 20px 0;
-    cursor: pointer;
-}
-
-.range-input::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: var(--color-blue);
-    transition: 0.2s;
-}
-
-.range-input::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-}
-
-.build-container {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 350px;
-    overflow-y: auto;
-}
-
-.build-card {
-    background: rgba(0,0,0,0.6);
-    padding: 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: 0.2s;
-    cursor: pointer;
-}
-
-.build-card:hover {
-    border-color: var(--color-gold);
-    background: rgba(245, 158, 11, 0.15);
-}
-
-.flex-buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.toast-container {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    pointer-events: none;
-    z-index: 200;
-}
-
-.toast-message {
-    background: rgba(15,23,42,0.95);
-    padding: 12px 25px;
-    border-radius: 30px;
-    border: 1px solid var(--border-color);
-    font-weight: bold;
-    color: rgb(255, 255, 255);
-    animation: slideUpToast 0.3s ease-out, fadeOutToast 0.5s ease-in 2.5s forwards;
-}
-
-@keyframes slideUpToast {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeOutToast {
-    from { opacity: 1; }
-    to { opacity: 0; }
-}
-
-.room-list {
-    background: rgba(0,0,0,0.5);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    min-height: 200px;
-    margin: 15px 0;
-    padding: 10px;
-    text-align: left;
-    max-height: 300px;
-    overflow-y: auto;
-    flex-grow: 1;
-}
-
-.room-item {
-    color: var(--text-light);
-    padding: 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    transition: 0.2s;
-    border-radius: 5px;
-}
-
-.room-item:hover {
-    background: rgba(59, 130, 246, 0.2);
-}
-
-.room-item-title {
-    font-weight: bold;
-    font-size: 1.1rem;
-    color: var(--color-gold);
-}
-
-.room-item-info {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-}
-
-.settings-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 10px 0;
-    color: var(--text-muted);
-}
-
-.settings-val {
-    color: var(--color-gold);
-    font-weight: bold;
-    font-size: 1.2rem;
-}
-
-.slider-small {
-    width: 150px;
-    margin: 0;
-}
+    :root {
+        --c-water: rgb(24, 76, 116);
+        --c-land: rgb(65, 125, 45);
+        --c-land-dark: rgb(45, 95, 25);
+        --c-border: rgb(0, 0, 0);
+        --c-text: rgb(255, 255, 255);
+        --c-panel: rgb(20, 20, 20);
+        --c-btn-green: rgb(21, 88, 35);
+        --c-btn-blue: rgb(34, 102, 153);
+        --c-btn-red: rgb(153, 34, 34);
+        --c-btn-brown: rgb(90, 50, 20);
+        --c-btn-gray: rgb(70, 70, 70);
+    }
+    
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+    
+    body {
+        background-color: var(--c-water);
+        color: var(--c-text);
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .bg-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+    
+    .screen-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.3);
+    }
+    
+    .screen-active {
+        display: flex;
+    }
+    
+    .main-logo {
+        font-size: 5rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: rgb(255, 255, 255);
+        text-shadow: 2px 2px 0 rgb(0,0,0), -2px -2px 0 rgb(0,0,0), 2px -2px 0 rgb(0,0,0), -2px 2px 0 rgb(0,0,0), 5px 5px 15px rgba(0,0,0,0.8);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .logo-flag {
+        width: 40px;
+        height: 30px;
+        background: linear-gradient(to bottom, rgb(255,0,0) 33%, rgb(0,255,0) 33%, rgb(0,255,0) 66%, rgb(0,0,255) 66%);
+        border: 2px solid rgb(255,255,255);
+    }
+    
+    .menu-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 450px;
+    }
+    
+    .player-setup {
+        display: flex;
+        width: 100%;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .player-name-input {
+        flex-grow: 1;
+        background: var(--c-panel);
+        border: 2px solid rgb(255, 255, 255);
+        color: rgb(255, 255, 255);
+        font-size: 1.5rem;
+        padding: 10px;
+        text-align: center;
+        outline: none;
+    }
+    
+    .player-color-box {
+        width: 60px;
+        background: rgb(100, 150, 255);
+        border: 2px solid rgb(255, 255, 255);
+        cursor: pointer;
+    }
+    
+    .menu-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        width: 100%;
+    }
+    
+    .menu-btn {
+        background: var(--c-panel);
+        border: 2px solid rgb(255, 255, 255);
+        color: rgb(255, 255, 255);
+        padding: 20px 10px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: 0.2s;
+    }
+    
+    .menu-btn:hover {
+        filter: brightness(1.2);
+    }
+    
+    .btn-multi { background: var(--c-btn-green); }
+    .btn-custom { background: var(--c-btn-blue); }
+    .btn-account { background: var(--c-btn-brown); }
+    .btn-menu { background: var(--c-btn-gray); }
+    
+    .bottom-bar {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        display: flex;
+        gap: 10px;
+    }
+    
+    .bottom-box {
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid rgb(255, 255, 255);
+        padding: 10px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 150px;
+    }
+    
+    .box-label {
+        font-size: 0.8rem;
+        color: rgb(200, 200, 200);
+        margin-bottom: 5px;
+    }
+    
+    .box-value {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: rgb(255, 255, 255);
+    }
+    
+    .game-ui-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 20;
+        pointer-events: none;
+        display: none;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .game-top-bar {
+        background: rgba(0, 0, 0, 0.6);
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-between;
+        pointer-events: auto;
+    }
+    
+    .game-bottom-bar {
+        background: rgba(0, 0, 0, 0.6);
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        pointer-events: auto;
+    }
+    
+    .slider-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 10px 20px;
+        border: 2px solid rgb(255, 255, 255);
+        border-radius: 30px;
+    }
+    
+    .slider-val {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: rgb(255, 255, 255);
+        width: 80px;
+        text-align: center;
+    }
+    
+    input[type="range"] {
+        -webkit-appearance: none;
+        width: 300px;
+        height: 15px;
+        background: rgb(50, 50, 50);
+        border-radius: 10px;
+        outline: none;
+    }
+    
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: rgb(255, 255, 255);
+        cursor: pointer;
+    }
+    
+    .status-text {
+        font-size: 1.2rem;
+        color: rgb(255, 255, 255);
+        font-weight: bold;
+    }
+    
+    .modal-box {
+        background: var(--c-panel);
+        border: 2px solid rgb(255, 255, 255);
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        width: 400px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    
+    .generic-btn {
+        background: rgb(50, 50, 50);
+        color: rgb(255, 255, 255);
+        border: 1px solid rgb(255, 255, 255);
+        padding: 10px 20px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 1.1rem;
+    }
+    
+    .generic-btn:hover {
+        background: rgb(80, 80, 80);
+    }
+    
+    .toast-wrap {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 100;
+        pointer-events: none;
+    }
+    
+    .toast-msg {
+        background: rgba(0, 0, 0, 0.8);
+        color: rgb(255, 255, 255);
+        padding: 15px 25px;
+        border: 1px solid rgb(255, 255, 255);
+        font-weight: bold;
+        animation: fade 3s forwards;
+    }
+    
+    @keyframes fade {
+        0% { opacity: 1; }
+        70% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+    
+    .leaderboard {
+        position: absolute;
+        top: 60px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgb(100, 100, 100);
+        padding: 10px;
+        width: 250px;
+        pointer-events: auto;
+    }
+    
+    .lb-title {
+        color: rgb(255, 255, 255);
+        font-weight: bold;
+        text-align: center;
+        border-bottom: 1px solid rgb(100, 100, 100);
+        padding-bottom: 5px;
+        margin-bottom: 5px;
+    }
+    
+    .lb-row {
+        display: flex;
+        justify-content: space-between;
+        color: rgb(200, 200, 200);
+        padding: 3px 0;
+        font-size: 0.9rem;
+    }
 </style>
 </head>
 <body>
 
-<div class="screen screen-main screen-active">
-    <div class="panel-box">
-        <h1 class="main-title">Age of <span class="main-title-accent">War</span></h1>
+<canvas class="bg-canvas class-bg-canvas"></canvas>
+
+<div class="screen-layer screen-active class-screen-main">
+    <div class="main-logo">
+        <div class="logo-flag"></div>
+        TERRITORIAL.IO
+        <div class="logo-flag"></div>
+    </div>
+    
+    <div class="menu-container">
+        <div class="player-setup">
+            <input type="text" class="player-name-input class-player-name" value="Player 373" maxlength="15">
+            <div class="player-color-box class-player-color" style="background: rgb(100, 150, 255);"></div>
+        </div>
         
-        <p style="margin-bottom: 5px;">Zalogowano: <strong class="display-nick" style="color: rgb(245, 158, 11);">Gosc</strong></p>
-        <p class="display-status" style="color: rgb(148, 163, 184); margin-bottom: 20px; font-size: 0.9rem;">Oczekiwanie na system...</p>
-        
-        <button class="btn btn-login-google" style="border-color: rgb(219, 68, 55); color: rgb(219, 68, 55);">Zaloguj przez Google</button>
-        <button class="btn btn-login-anon" style="border-color: rgb(148, 163, 184); color: rgb(148, 163, 184);">Graj jako Gosc</button>
-        <button class="btn btn-logout btn-red" style="display:none;">Wyloguj</button>
-        
-        <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;">
-        
-        <button class="btn btn-green btn-host-menu" disabled>Stworz Pokoj (Multiplayer)</button>
-        <button class="btn btn-join-menu" disabled>Przegladarka Pokoi</button>
-        <button class="btn btn-offline-menu" style="border-color: rgb(16, 185, 129); color: rgb(16, 185, 129);">Zagraj z Botami (Offline)</button>
+        <div class="menu-grid">
+            <button class="menu-btn btn-multi class-btn-multi">
+                <span style="font-size: 1.5rem;">⚔️</span>
+                Wieloosobowa
+            </button>
+            <button class="menu-btn btn-custom class-btn-custom">
+                <span style="font-size: 1.5rem;">🗡️</span>
+                Scenariusz<br>niestandardowy
+            </button>
+            <button class="menu-btn btn-account class-btn-account">
+                <span style="font-size: 1.5rem;">🔑</span>
+                Moje konto
+            </button>
+            <button class="menu-btn btn-menu class-btn-settings">
+                <span style="font-size: 1.5rem;">≡</span>
+                Menu gry
+            </button>
+        </div>
+    </div>
+    
+    <div class="bottom-bar">
+        <div class="bottom-box">
+            <div class="box-label">Najlepszy klan</div>
+            <div class="box-value">[OG]</div>
+        </div>
+        <div class="bottom-box">
+            <div class="box-label">Najlepszy Czlonek</div>
+            <div class="box-value">[OG] mel</div>
+        </div>
     </div>
 </div>
 
-<div class="screen screen-rooms">
-    <div class="panel-box" style="width: 700px; height: 80vh;">
-        <h2 style="color: rgb(245, 158, 11); margin-bottom: 10px; font-size: 2.2rem;">Aktywne Pokoje</h2>
-        <div class="room-list"></div>
-        <button class="btn btn-red btn-cancel-rooms" style="margin-top: 15px;">Powrot do Menu</button>
-    </div>
-</div>
-
-<div class="screen screen-host">
-    <div class="panel-box">
-        <h2 style="color: rgb(245, 158, 11); margin-bottom: 10px; font-size: 2.2rem;">Ustawienia Gry</h2>
+<div class="screen-layer class-screen-lobby">
+    <div class="modal-box">
+        <h2 style="color: rgb(255, 255, 255);">Konfiguracja Gry</h2>
+        <div style="width: 100%; display: flex; justify-content: space-between; color: rgb(255, 255, 255);">
+            <span>Ilosc Botow:</span>
+            <span class="class-bot-val">50</span>
+        </div>
+        <input type="range" class="class-bot-slider" min="0" max="200" value="50">
         
-        <div class="settings-row">
-            <span>Szerokosc Mapy:</span>
-            <span class="settings-val val-map-w">30</span>
-            <input type="range" class="range-input slider-small slider-map-w" min="20" max="60" value="30">
+        <div style="width: 100%; display: flex; justify-content: space-between; color: rgb(255, 255, 255);">
+            <span>Zageszczenie Mapy:</span>
+            <span class="class-map-val">Srednie</span>
         </div>
+        <input type="range" class="class-map-slider" min="1" max="3" value="2">
         
-        <div class="settings-row">
-            <span>Wysokosc Mapy:</span>
-            <span class="settings-val val-map-h">17</span>
-            <input type="range" class="range-input slider-small slider-map-h" min="15" max="40" value="17">
-        </div>
-
-        <div class="settings-row">
-            <span>Liczba Botow:</span>
-            <span class="settings-val val-bot-count">3</span>
-            <input type="range" class="range-input slider-small slider-bot-count" min="0" max="10" value="3">
-        </div>
-
-        <button class="btn btn-green btn-start-host" style="margin-top: 20px;">Uruchom Pokoj</button>
-        <button class="btn btn-red btn-cancel-host" style="margin-top: 10px;">Anuluj</button>
+        <button class="generic-btn class-btn-start-game" style="background: rgb(34, 139, 34); margin-top: 10px;">Rozpocznij Gre</button>
+        <button class="generic-btn class-btn-back-main" style="background: rgb(153, 34, 34);">Wroc</button>
     </div>
 </div>
 
-<div class="screen screen-lobby">
-    <div class="panel-box">
-        <h2 style="color: rgb(245, 158, 11); margin-bottom: 10px; font-size: 2.2rem;">Poczekalnia</h2>
-        <p class="lobby-status-text" style="color: rgb(148, 163, 184); font-size: 1.1rem;">Oczekiwanie...</p>
-        <div class="loader lobby-spinner"></div>
-        <button class="btn btn-green btn-start-game-host" style="display: none; margin-top: 20px;">Zacznij Gre</button>
-        <button class="btn btn-red btn-cancel-lobby" style="margin-top: 15px;">Wyjdz z Pokoju</button>
+<div class="game-ui-layer class-game-ui">
+    <div class="game-top-bar">
+        <div class="status-text class-game-status">Zaczynamy...</div>
+        <button class="generic-btn class-btn-quit" style="width: auto; padding: 5px 15px;">Wyjdz</button>
+    </div>
+    
+    <div class="leaderboard">
+        <div class="lb-title">Ranking (Terytorium)</div>
+        <div class="class-lb-content"></div>
+    </div>
+    
+    <div class="game-bottom-bar">
+        <div class="slider-container">
+            <span style="color: rgb(255,255,255);">Moc:</span>
+            <div class="slider-val class-atk-val">50%</div>
+            <input type="range" class="class-atk-slider" min="1" max="100" value="50">
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: center; color: rgb(255,255,255); font-weight: bold;">
+            <div>Stan: <span class="class-balance-val">100</span></div>
+            <div>Przyrost: +<span class="class-income-val">1</span></div>
+        </div>
     </div>
 </div>
 
-<div class="game-layer screen-game">
-    <div class="hud-bar">
-        <div class="resources-container">
-            <div class="resource-item" style="color: rgb(245, 158, 11)">Zloto <span class="val-gold">0</span></div>
-            <div class="resource-item" style="color: rgb(180, 83, 9)">Drewno <span class="val-wood">0</span></div>
-            <div class="resource-item" style="color: rgb(100, 116, 139)">Kamien <span class="val-stone">0</span></div>
-            <div class="resource-item" style="color: rgb(239, 68, 68)">Armia <span class="val-troops">0</span></div>
-        </div>
-        <div class="hint-text">
-            [1 Klik] Wybierz | [2 Kliki] Cel | [PPM] Buduj
-        </div>
-    </div>
-    <div class="map-area">
-        <canvas class="game-canvas"></canvas>
-    </div>
-</div>
-
-<div class="modal-layer">
-    <div class="modal-box modal-move" style="display:none;">
-        <h2 class="modal-title">Wymarsz Wojsk</h2>
-        <p class="move-desc" style="color: rgb(148, 163, 184); text-align: center; margin-bottom: 5px;">Kierunek Operacji</p>
-        <div class="move-val-big" style="font-size: 3rem; color: rgb(239, 68, 68); text-align: center; font-weight: 900;">10</div>
-        <input type="range" class="range-input slider-move" min="1" max="100" value="10">
-        <div style="display:flex; justify-content:space-between; color:rgb(148, 163, 184); font-size:0.9rem;">
-            <span>Min: 1</span><span>Max: <b class="move-max-val">100</b></span>
-        </div>
-        <div class="flex-buttons">
-            <button class="btn btn-red btn-cancel-move" style="padding: 10px; margin:0;">Anuluj</button>
-            <button class="btn btn-green btn-confirm-move" style="padding: 10px; margin:0;">Wyslij!</button>
-        </div>
-    </div>
-
-    <div class="modal-box modal-build" style="display:none; width: 450px;">
-        <h2 class="modal-title">Konstrukcja</h2>
-        <div class="build-container"></div>
-        <button class="btn btn-red btn-cancel-build" style="padding: 10px; margin-top: 10px;">Zamknij Panel</button>
-    </div>
-</div>
-
-<div class="toast-container"></div>
+<div class="toast-wrap class-toast-wrap"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getDatabase, ref, set, onValue, get, update, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-    const fbConfig = {
+    let fbCfg = {
         apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
         authDomain: "xchess-79e2d.firebaseapp.com",
         projectId: "xchess-79e2d",
@@ -501,945 +439,457 @@ canvas {
         appId: "1:382071993193:web:86dbe5211f2151cb5383f8"
     };
 
-    const myApp = initializeApp(fbConfig);
-    const myAuth = getAuth(myApp);
-    const myDb = getDatabase(myApp);
-    const myProv = new GoogleAuthProvider();
+    let fApp = initializeApp(fbCfg);
+    let fAuth = getAuth(fApp);
+    let fDb = getDatabase(fApp);
+    let fProv = new GoogleAuthProvider();
 
-    window.AppCore = {
-        db: myDb,
+    window.Net = {
+        db: fDb,
         uid: null,
-        name: null,
+        name: "Player 373",
         online: false,
-        roomId: null,
-        isHost: false,
-        isOffline: false,
         
-        loginGoogle: function() {
-            signInWithPopup(myAuth, myProv).catch(function(e) { alert(e.message); });
+        logG: function() {
+            signInWithPopup(fAuth, fProv).catch(function(e){ window.UI.toast(e.message, true); });
         },
-        loginAnon: function() {
-            signInAnonymously(myAuth).catch(function(e) { alert(e.message); });
+        logA: function() {
+            signInAnonymously(fAuth).catch(function(e){ window.UI.toast(e.message, true); });
         },
-        logoutUser: function() {
-            signOut(myAuth);
-        },
-        
-        setRef: function(path, data) { set(ref(myDb, path), data); },
-        updateRef: function(path, data) { update(ref(myDb, path), data); },
-        getRef: function(path, cb) { get(ref(myDb, path)).then(function(s) { cb(s); }); },
-        onValRef: function(path, cb) { onValue(ref(myDb, path), function(s) { cb(s); }); },
-        removeRef: function(path) { remove(ref(myDb, path)); },
-        discRef: function(path) { return onDisconnect(ref(myDb, path)); }
+        out: function() {
+            signOut(fAuth);
+        }
     };
 
-    onAuthStateChanged(myAuth, function(user) {
-        let elNick = document.getElementsByClassName('display-nick')[0];
-        let elStatus = document.getElementsByClassName('display-status')[0];
-        let bLogG = document.getElementsByClassName('btn-login-google')[0];
-        let bLogA = document.getElementsByClassName('btn-login-anon')[0];
-        let bLogO = document.getElementsByClassName('btn-logout')[0];
-        let bHost = document.getElementsByClassName('btn-host-menu')[0];
-        let bJoin = document.getElementsByClassName('btn-join-menu')[0];
-
-        if (user) {
-            window.AppCore.uid = user.uid;
-            window.AppCore.name = user.displayName;
-            if (!window.AppCore.name) {
-                window.AppCore.name = "Gracz_" + Math.floor(Math.random() * 9999);
+    onAuthStateChanged(fAuth, function(usr) {
+        if(usr) {
+            window.Net.uid = usr.uid;
+            window.Net.online = true;
+            if(usr.displayName) {
+                document.getElementsByClassName('class-player-name')[0].value = usr.displayName;
+                window.Net.name = usr.displayName;
             }
-            window.AppCore.online = true;
-            
-            elNick.innerText = window.AppCore.name;
-            elNick.style.color = "rgb(16, 185, 129)";
-            elStatus.innerText = "System zsynchronizowany.";
-            elStatus.style.color = "rgb(16, 185, 129)";
-            
-            bLogG.style.display = "none";
-            bLogA.style.display = "none";
-            bLogO.style.display = "block";
-            bHost.disabled = false;
-            bJoin.disabled = false;
+            window.UI.toast("Zalogowano pomyslnie!", false);
         } else {
-            window.AppCore.uid = "OFFLINE_USER";
-            window.AppCore.name = "Gosc";
-            window.AppCore.online = false;
-            
-            elNick.innerText = "Gosc";
-            elNick.style.color = "rgb(245, 158, 11)";
-            elStatus.innerText = "Zaloguj aby grac z innymi.";
-            elStatus.style.color = "rgb(148, 163, 184)";
-            
-            bLogG.style.display = "block";
-            bLogA.style.display = "block";
-            bLogO.style.display = "none";
-            bHost.disabled = true;
-            bJoin.disabled = true;
+            window.Net.uid = null;
+            window.Net.online = false;
         }
     });
-
 </script>
 
 <script>
-    let B_DATA = {
-        mine: { n: 'Kopalnia Zlota', c: { g: 50 }, i: 'KZ', d: '+5 Zlota / s' },
-        wood: { n: 'Chata Drwala', c: { g: 30 }, i: 'CD', d: '+5 Drewna / s' },
-        quarry: { n: 'Kamieniolom', c: { g: 80, w: 20 }, i: 'KK', d: '+3 Kamienia / s' },
-        farm: { n: 'Farma', c: { w: 50, s: 20 }, i: 'FA', d: '+10 Zlota / s' },
-        barracks: { n: 'Koszary', c: { g: 150, w: 100 }, i: 'KO', d: 'Szybszy pobor (+5)' },
-        fort: { n: 'Twierdza', c: { s: 150, w: 100 }, i: 'TW', d: 'Podwaja obrone' },
-        castle: { n: 'Zamek', c: { g: 300, s: 200 }, i: 'ZA', d: 'Potraja obrone' }
-    };
-
-    let ColorPallete = [
-        'rgb(59, 130, 246)',
-        'rgb(239, 68, 68)',
-        'rgb(16, 185, 129)',
-        'rgb(245, 158, 11)',
-        'rgb(139, 92, 246)',
-        'rgb(236, 72, 153)',
-        'rgb(20, 184, 166)',
-        'rgb(244, 63, 94)'
-    ];
-
-    let UI = {
-        switchScreen: function(scrClass) {
-            let scrs = document.getElementsByClassName('screen');
-            for (let i = 0; i < scrs.length; i++) {
+    window.UI = {
+        show: function(cls) {
+            let scrs = document.getElementsByClassName('screen-layer');
+            for(let i=0; i<scrs.length; i++) {
                 scrs[i].classList.remove('screen-active');
             }
-            document.getElementsByClassName(scrClass)[0].classList.add('screen-active');
-        },
-        popToast: function(msg, isErr) {
-            let cont = document.getElementsByClassName('toast-container')[0];
-            let t = document.createElement('div');
-            t.className = 'toast-message';
-            t.innerText = msg;
-            if (isErr) {
-                t.style.borderColor = 'rgb(239, 68, 68)';
-            } else {
-                t.style.borderColor = 'rgb(16, 185, 129)';
+            if(cls) {
+                document.getElementsByClassName(cls)[0].classList.add('screen-active');
             }
-            cont.appendChild(t);
-            setTimeout(function() {
-                if (t.parentNode) {
-                    t.remove();
-                }
-            }, 3000);
         },
-        updHUD: function(g, w, s, t) {
-            document.getElementsByClassName('val-gold')[0].innerText = Math.floor(g);
-            document.getElementsByClassName('val-wood')[0].innerText = Math.floor(w);
-            document.getElementsByClassName('val-stone')[0].innerText = Math.floor(s);
-            document.getElementsByClassName('val-troops')[0].innerText = Math.floor(t);
-        },
-        hideModals: function() {
-            document.getElementsByClassName('modal-layer')[0].style.display = 'none';
-            let mds = document.getElementsByClassName('modal-box');
-            for (let i = 0; i < mds.length; i++) {
-                mds[i].style.display = 'none';
-            }
-            GameCore.tgt = null;
+        toast: function(msg, isErr) {
+            let w = document.getElementsByClassName('class-toast-wrap')[0];
+            let d = document.createElement('div');
+            d.className = 'toast-msg';
+            d.innerText = msg;
+            if(isErr) d.style.borderColor = 'rgb(255, 0, 0)';
+            else d.style.borderColor = 'rgb(0, 255, 0)';
+            w.appendChild(d);
+            setTimeout(function(){ if(d.parentNode) d.remove(); }, 3000);
         }
     };
 
-    class ParticleSys {
-        constructor() {
-            this.arr = [];
-        }
-        addBeam(sx, sy, tx, ty, col) {
-            this.arr.push({ t: 'B', sx: sx, sy: sy, tx: tx, ty: ty, p: 0, l: 1, c: col });
-        }
-        addBoom(x, y, col) {
-            for (let i = 0; i < 25; i++) {
-                let a = Math.random() * Math.PI * 2;
-                let s = Math.random() * 6 + 1;
-                this.arr.push({ t: 'S', x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, l: 1, d: Math.random() * 0.06 + 0.02, c: col, sz: Math.random() * 5 + 2 });
+    let GamePallete = [
+        'rgb(255, 0, 0)', 'rgb(0, 255, 0)', 'rgb(0, 0, 255)', 
+        'rgb(255, 255, 0)', 'rgb(0, 255, 255)', 'rgb(255, 0, 255)',
+        'rgb(255, 128, 0)', 'rgb(128, 0, 255)', 'rgb(0, 255, 128)',
+        'rgb(128, 255, 0)', 'rgb(255, 0, 128)', 'rgb(0, 128, 255)'
+    ];
+
+    let Engine = {
+        cvs: document.getElementsByClassName('class-bg-canvas')[0],
+        ctx: null,
+        w: 0,
+        h: 0,
+        sz: 15,
+        cols: 0,
+        rows: 0,
+        grid: [],
+        run: true,
+        inGame: false,
+        
+        myId: 1,
+        myColor: 'rgb(100, 150, 255)',
+        atkPerc: 50,
+        
+        players: {},
+        
+        init: function() {
+            this.ctx = this.cvs.getContext('2d');
+            this.resize();
+            window.addEventListener('resize', function() { Engine.resize(); });
+            this.genMap(2);
+            this.loop();
+            this.bindMenu();
+        },
+        
+        resize: function() {
+            this.w = window.innerWidth;
+            this.h = window.innerHeight;
+            this.cvs.width = this.w;
+            this.cvs.height = this.h;
+            this.cols = Math.floor(this.w / this.sz);
+            this.rows = Math.floor(this.h / this.sz);
+        },
+        
+        genMap: function(density) {
+            this.grid = [];
+            let prob = 0.4;
+            if(density === 1) prob = 0.3;
+            if(density === 3) prob = 0.5;
+            
+            for(let y=0; y<this.rows; y++) {
+                let r = [];
+                for(let x=0; x<this.cols; x++) {
+                    let isL = Math.random() < prob ? 1 : 0;
+                    if(x<2 || y<2 || x>this.cols-3 || y>this.rows-3) isL = 0;
+                    r.push(isL);
+                }
+                this.grid.push(r);
             }
-        }
-        addFloatTxt(x, y, txt, col) {
-            this.arr.push({ t: 'T', x: x + (Math.random() * 20 - 10), y: y + (Math.random() * 10 - 5), txt: txt, l: 1, c: col, vy: -1.8 });
-        }
-        step(ctx) {
-            for (let i = this.arr.length - 1; i >= 0; i--) {
-                let pt = this.arr[i];
-                if (pt.t === 'B') {
-                    ctx.beginPath();
-                    ctx.moveTo(pt.sx, pt.sy);
-                    let cx = pt.sx + (pt.tx - pt.sx) * pt.p;
-                    let cy = pt.sy + (pt.ty - pt.sy) * pt.p;
-                    ctx.lineTo(cx, cy);
-                    ctx.strokeStyle = pt.c;
-                    ctx.lineWidth = 6 * pt.l;
-                    ctx.lineCap = "round";
-                    ctx.stroke();
-                    pt.p += 0.15;
-                    pt.l -= 0.04;
-                    if (pt.p >= 1) {
-                        this.addBoom(pt.tx, pt.ty, pt.c);
-                        this.arr.splice(i, 1);
+            
+            for(let i=0; i<4; i++) {
+                let nG = [];
+                for(let y=0; y<this.rows; y++) {
+                    let nR = [];
+                    for(let x=0; x<this.cols; x++) {
+                        let nC = 0;
+                        for(let dy=-1; dy<=1; dy++) {
+                            for(let dx=-1; dx<=1; dx++) {
+                                let nx = x+dx, ny = y+dy;
+                                if(nx>=0 && nx<this.cols && ny>=0 && ny<this.rows) {
+                                    nC += this.grid[ny][nx] > 0 ? 1 : 0;
+                                }
+                            }
+                        }
+                        if(this.grid[y][x] > 0) {
+                            nR.push(nC >= 4 ? 1 : 0);
+                        } else {
+                            nR.push(nC >= 5 ? 1 : 0);
+                        }
                     }
-                } else if (pt.t === 'S') {
-                    ctx.globalAlpha = pt.l;
-                    ctx.fillStyle = pt.c;
-                    ctx.beginPath();
-                    ctx.arc(pt.x, pt.y, pt.sz, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.globalAlpha = 1;
-                    pt.x += pt.vx;
-                    pt.y += pt.vy;
-                    pt.l -= pt.d;
-                    if (pt.l <= 0) {
-                        this.arr.splice(i, 1);
-                    }
-                } else if (pt.t === 'T') {
-                    ctx.globalAlpha = pt.l;
-                    ctx.fillStyle = pt.c;
-                    ctx.font = "900 24px sans-serif";
-                    ctx.textAlign = "center";
-                    ctx.strokeStyle = "rgb(0,0,0)";
-                    ctx.lineWidth = 4;
-                    ctx.strokeText(pt.txt, pt.x, pt.y);
-                    ctx.fillText(pt.txt, pt.x, pt.y);
-                    ctx.globalAlpha = 1;
-                    pt.y += pt.vy;
-                    pt.l -= 0.02;
-                    if (pt.l <= 0) {
-                        this.arr.splice(i, 1);
+                    nG.push(nR);
+                }
+                this.grid = nG;
+            }
+            
+            for(let y=0; y<this.rows; y++) {
+                for(let x=0; x<this.cols; x++) {
+                    if(this.grid[y][x] === 1) {
+                        this.grid[y][x] = { type: 1, own: 0, val: 0 };
+                    } else {
+                        this.grid[y][x] = { type: 0, own: 0, val: 0 };
                     }
                 }
             }
-        }
-    }
-
-    let LobbyManager = {
-        confW: 30,
-        confH: 17,
-        confB: 3,
-        rmList: {},
-
-        loadRooms: function() {
-            window.AppCore.getRef('rooms', function(snap) {
-                let d = snap.val();
-                let lst = document.getElementsByClassName('room-list')[0];
-                lst.innerHTML = '';
+        },
+        
+        bindMenu: function() {
+            let self = this;
+            document.getElementsByClassName('class-btn-multi')[0].addEventListener('click', function() {
+                if(!window.Net.online) {
+                    window.UI.toast("Zaloguj sie najpierw (Konto)", true);
+                    return;
+                }
+                window.UI.show('class-screen-lobby');
+            });
+            
+            document.getElementsByClassName('class-btn-custom')[0].addEventListener('click', function() {
+                window.UI.show('class-screen-lobby');
+            });
+            
+            document.getElementsByClassName('class-btn-account')[0].addEventListener('click', function() {
+                window.Net.logG();
+            });
+            
+            document.getElementsByClassName('class-player-color')[0].addEventListener('click', function() {
+                let c = GamePallete[Math.floor(Math.random()*GamePallete.length)];
+                this.style.background = c;
+                self.myColor = c;
+            });
+            
+            document.getElementsByClassName('class-player-name')[0].addEventListener('input', function() {
+                window.Net.name = this.value;
+            });
+            
+            let sBot = document.getElementsByClassName('class-bot-slider')[0];
+            let vBot = document.getElementsByClassName('class-bot-val')[0];
+            sBot.addEventListener('input', function() { vBot.innerText = this.value; });
+            
+            let sMap = document.getElementsByClassName('class-map-slider')[0];
+            let vMap = document.getElementsByClassName('class-map-val')[0];
+            sMap.addEventListener('input', function() {
+                let val = parseInt(this.value);
+                if(val===1) vMap.innerText = "Mala";
+                if(val===2) vMap.innerText = "Srednia";
+                if(val===3) vMap.innerText = "Duza";
+            });
+            
+            document.getElementsByClassName('class-btn-back-main')[0].addEventListener('click', function() {
+                window.UI.show('class-screen-main');
+            });
+            
+            document.getElementsByClassName('class-btn-start-game')[0].addEventListener('click', function() {
+                self.startGame(parseInt(sBot.value), parseInt(sMap.value));
+            });
+            
+            document.getElementsByClassName('class-atk-slider')[0].addEventListener('input', function() {
+                self.atkPerc = parseInt(this.value);
+                document.getElementsByClassName('class-atk-val')[0].innerText = self.atkPerc + "%";
+            });
+            
+            document.getElementsByClassName('class-btn-quit')[0].addEventListener('click', function() {
+                self.inGame = false;
+                document.getElementsByClassName('class-game-ui')[0].style.display = 'none';
+                window.UI.show('class-screen-main');
+                self.genMap(2);
+            });
+            
+            this.cvs.addEventListener('mousedown', function(e) {
+                if(!self.inGame) return;
+                let x = Math.floor(e.clientX / self.sz);
+                let y = Math.floor(e.clientY / self.sz);
+                self.doClick(x, y);
+            });
+        },
+        
+        startGame: function(bots, den) {
+            window.UI.show(null);
+            document.getElementsByClassName('class-game-ui')[0].style.display = 'flex';
+            this.genMap(den);
+            
+            this.players = {};
+            this.players[this.myId] = { id: this.myId, name: window.Net.name, col: this.myColor, bal: 100, inc: 1, cells: 0, dead: false, isBot: false };
+            
+            for(let i=0; i<bots; i++) {
+                let bid = i+10;
+                let bcol = GamePallete[i % GamePallete.length];
+                this.players[bid] = { id: bid, name: "Bot " + (i+1), col: bcol, bal: 100, inc: 1, cells: 0, dead: false, isBot: true };
+            }
+            
+            let lands = [];
+            for(let y=0; y<this.rows; y++) {
+                for(let x=0; x<this.cols; x++) {
+                    if(this.grid[y][x].type === 1) lands.push({x:x, y:y});
+                }
+            }
+            
+            for(let k in this.players) {
+                if(lands.length > 0) {
+                    let ri = Math.floor(Math.random()*lands.length);
+                    let pos = lands[ri];
+                    this.grid[pos.y][pos.x].own = parseInt(k);
+                    this.grid[pos.y][pos.x].val = 100;
+                    this.players[k].cells = 1;
+                    lands.splice(ri, 1);
+                }
+            }
+            
+            this.inGame = true;
+            this.ecoTimer = setInterval(function(){ Engine.tick(); }, 1000);
+            this.botTimer = setInterval(function(){ Engine.botStep(); }, 500);
+        },
+        
+        tick: function() {
+            if(!this.inGame) {
+                clearInterval(this.ecoTimer);
+                clearInterval(this.botTimer);
+                return;
+            }
+            
+            let lb = [];
+            for(let k in this.players) {
+                let p = this.players[k];
+                if(p.dead) continue;
                 
-                if (d) {
-                    for (let k in d) {
-                        let rm = d[k];
-                        if (rm.status === 'waiting') {
-                            let div = document.createElement('div');
-                            div.className = 'room-item';
-                            div.innerHTML = '<div class="room-item-title">' + rm.hostName + '</div><div class="room-item-info">Mapa: ' + rm.w + 'x' + rm.h + ' | Boty: ' + rm.bots + '</div>';
-                            div.addEventListener('click', function() {
-                                LobbyManager.joinRoom(k);
-                            });
-                            lst.appendChild(div);
+                let cCount = 0;
+                for(let y=0; y<this.rows; y++) {
+                    for(let x=0; x<this.cols; x++) {
+                        if(this.grid[y][x].own === p.id) {
+                            cCount++;
                         }
                     }
                 }
-                
-                if (lst.innerHTML === '') {
-                    lst.innerHTML = '<div style="color:rgb(148,163,184);text-align:center;padding:20px;">Brak dostepnych pokoi.</div>';
-                }
-            });
-        },
-
-        joinRoom: function(rId) {
-            window.AppCore.roomId = rId;
-            window.AppCore.isHost = false;
-            window.AppCore.isOffline = false;
-            UI.switchScreen('screen-lobby');
-            document.getElementsByClassName('lobby-status-text')[0].innerText = "Laczenie...";
-            
-            window.AppCore.updateRef('rooms/' + rId, { status: 'playing' });
-            GameCore.initClient();
-        },
-
-        initHostScreen: function() {
-            UI.switchScreen('screen-host');
-            
-            let sW = document.getElementsByClassName('slider-map-w')[0];
-            let vW = document.getElementsByClassName('val-map-w')[0];
-            let sH = document.getElementsByClassName('slider-map-h')[0];
-            let vH = document.getElementsByClassName('val-map-h')[0];
-            let sB = document.getElementsByClassName('slider-bot-count')[0];
-            let vB = document.getElementsByClassName('val-bot-count')[0];
-            
-            sW.addEventListener('input', function() { vW.innerText = this.value; LobbyManager.confW = parseInt(this.value); });
-            sH.addEventListener('input', function() { vH.innerText = this.value; LobbyManager.confH = parseInt(this.value); });
-            sB.addEventListener('input', function() { vB.innerText = this.value; LobbyManager.confB = parseInt(this.value); });
-        },
-
-        startHostedRoom: function() {
-            window.AppCore.isHost = true;
-            window.AppCore.isOffline = false;
-            window.AppCore.roomId = "room_" + Math.floor(Math.random() * 1000000);
-            
-            UI.switchScreen('screen-lobby');
-            document.getElementsByClassName('lobby-status-text')[0].innerText = "Pokoj: " + window.AppCore.roomId + " (Oczekiwanie...)";
-            document.getElementsByClassName('btn-start-game-host')[0].style.display = "block";
-            
-            GameCore.cols = this.confW;
-            GameCore.rows = this.confH;
-            
-            GameCore.genMap();
-            
-            let flat = {};
-            for (let y = 0; y < GameCore.rows; y++) {
-                for (let x = 0; x < GameCore.cols; x++) {
-                    flat[x + '_' + y] = GameCore.grid[y][x];
-                }
-            }
-            
-            let o = {
-                status: 'waiting',
-                host: window.AppCore.uid,
-                hostName: window.AppCore.name,
-                w: GameCore.cols,
-                h: GameCore.rows,
-                bots: this.confB,
-                map: flat
-            };
-            
-            window.AppCore.setRef('rooms/' + window.AppCore.roomId, o);
-            window.AppCore.discRef('rooms/' + window.AppCore.roomId).remove();
-            
-            window.AppCore.onValRef('rooms/' + window.AppCore.roomId + '/status', function(snap) {
-                if (snap.val() === 'playing') {
-                    GameCore.beginHostGame();
-                }
-            });
-        },
-
-        startOffline: function() {
-            window.AppCore.isHost = true;
-            window.AppCore.isOffline = true;
-            this.confW = 40;
-            this.confH = 25;
-            this.confB = 5;
-            
-            GameCore.cols = this.confW;
-            GameCore.rows = this.confH;
-            GameCore.genMap();
-            GameCore.beginOffline();
-        }
-    };
-
-    let BotAI = {
-        arr: [],
-        init: function(cnt) {
-            this.arr = [];
-            for (let i = 0; i < cnt; i++) {
-                this.arr.push({
-                    id: 'BOT_' + i,
-                    g: 300, w: 150, s: 50
-                });
-            }
-        },
-        eco: function() {
-            for (let i = 0; i < this.arr.length; i++) {
-                let b = this.arr[i];
-                b.g += 5;
-                b.w += 2;
-            }
-        },
-        step: function() {
-            for (let i = 0; i < this.arr.length; i++) {
-                let bot = this.arr[i];
-                let myP = [];
-                for (let y = 0; y < GameCore.rows; y++) {
-                    for (let x = 0; x < GameCore.cols; x++) {
-                        if (GameCore.grid[y][x].own === bot.id) {
-                            myP.push(GameCore.grid[y][x]);
-                        }
+                p.cells = cCount;
+                if(cCount === 0) {
+                    p.dead = true;
+                    if(p.id === this.myId) {
+                        window.UI.toast("Zostales zniszczony!", true);
                     }
+                    continue;
                 }
                 
-                if (myP.length === 0) continue;
+                let inc = Math.max(1, Math.floor(p.cells / 5));
+                p.inc = inc;
+                p.bal += inc;
                 
-                let bst = myP[0];
-                for (let j = 1; j < myP.length; j++) {
-                    if (myP[j].t > bst.t) bst = myP[j];
-                }
+                lb.push(p);
+            }
+            
+            lb.sort(function(a,b){ return b.cells - a.cells; });
+            let lbHtml = '';
+            for(let i=0; i<Math.min(10, lb.length); i++) {
+                let op = lb[i];
+                let bold = op.id === this.myId ? 'font-weight:900;color:rgb(255,255,255);' : '';
+                lbHtml += '<div class="lb-row" style="'+bold+'"><span>'+(i+1)+'. '+op.name+'</span><span>'+op.cells+'</span></div>';
+            }
+            document.getElementsByClassName('class-lb-content')[0].innerHTML = lbHtml;
+            
+            if(!this.players[this.myId].dead) {
+                document.getElementsByClassName('class-balance-val')[0].innerText = Math.floor(this.players[this.myId].bal);
+                document.getElementsByClassName('class-income-val')[0].innerText = this.players[this.myId].inc;
+            }
+        },
+        
+        botStep: function() {
+            if(!this.inGame) return;
+            for(let k in this.players) {
+                let p = this.players[k];
+                if(!p.isBot || p.dead) continue;
                 
-                if (bst.t > 20) {
-                    let nbs = [];
-                    for (let dy = -1; dy <= 1; dy++) {
-                        for (let dx = -1; dx <= 1; dx++) {
-                            let nx = bst.x + dx;
-                            let ny = bst.y + dy;
-                            if (nx >= 0 && nx < GameCore.cols && ny >= 0 && ny < GameCore.rows) {
-                                let cd = GameCore.grid[ny][nx];
-                                if (!cd.w && cd.own !== bot.id) {
-                                    nbs.push(cd);
+                if(p.bal > 50) {
+                    let edge = [];
+                    for(let y=0; y<this.rows; y++) {
+                        for(let x=0; x<this.cols; x++) {
+                            if(this.grid[y][x].own === p.id) {
+                                for(let dy=-1; dy<=1; dy++) {
+                                    for(let dx=-1; dx<=1; dx++) {
+                                        if(dx===0 && dy===0) continue;
+                                        let nx = x+dx, ny = y+dy;
+                                        if(nx>=0 && nx<this.cols && ny>=0 && ny<this.rows) {
+                                            if(this.grid[ny][nx].type === 1 && this.grid[ny][nx].own !== p.id) {
+                                                edge.push({x:nx, y:ny});
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
-                    if (nbs.length > 0) {
-                        let tObj = nbs[Math.floor(Math.random() * nbs.length)];
-                        GameCore.simAtk(bst, tObj, Math.floor(bst.t * 0.7), bot.id);
-                    }
-                }
-                
-                if (bot.g > 150 && bot.w > 100) {
-                    let ep = [];
-                    for (let j = 0; j < myP.length; j++) {
-                        if (!myP[j].b) ep.push(myP[j]);
-                    }
-                    if (ep.length > 0) {
-                        let tP = ep[Math.floor(Math.random() * ep.length)];
-                        tP.b = 'barracks';
-                        bot.g -= 150;
-                        bot.w -= 100;
-                        if (!window.AppCore.isOffline) {
-                            let uO = {};
-                            uO['rooms/' + window.AppCore.roomId + '/map/' + tP.x + '_' + tP.y + '/b'] = 'barracks';
-                            window.AppCore.updateRef('/', uO);
-                        }
-                    }
-                }
-            }
-        }
-    };
-
-    let GameCore = {
-        cvs: document.getElementsByClassName('game-canvas')[0],
-        ctx: null,
-        cols: 30,
-        rows: 17,
-        sz: 40,
-        grid: [],
-        res: { g: 300, w: 150, s: 50 },
-        run: false,
-        pt: new ParticleSys(),
-        hov: null,
-        src: null,
-        tgt: null,
-        lClk: 0,
-
-        genMap: function() {
-            this.grid = [];
-            for (let y = 0; y < this.rows; y++) {
-                let rArr = [];
-                for (let x = 0; x < this.cols; x++) {
-                    let wFlag = false;
-                    if (x === 0 || y === 0 || x === this.cols - 1 || y === this.rows - 1 || Math.random() < 0.15) {
-                        wFlag = true;
-                    }
-                    let obj = {
-                        x: x,
-                        y: y,
-                        own: 0,
-                        t: wFlag ? 0 : Math.floor(Math.random() * 5),
-                        w: wFlag,
-                        b: null
-                    };
-                    rArr.push(obj);
-                }
-                this.grid.push(rArr);
-            }
-        },
-
-        beginHostGame: function() {
-            this.ctx = this.cvs.getContext('2d');
-            this.cvs.width = this.cols * this.sz;
-            this.cvs.height = this.rows * this.sz;
-            
-            let emps = [];
-            for (let y = 0; y < this.rows; y++) {
-                for (let x = 0; x < this.cols; x++) {
-                    if (!this.grid[y][x].w) emps.push(this.grid[y][x]);
-                }
-            }
-            
-            if (emps.length > 0) {
-                let rI = Math.floor(Math.random() * emps.length);
-                let cl = emps[rI];
-                cl.own = window.AppCore.uid;
-                cl.t = 150;
-                cl.b = 'castle';
-                emps.splice(rI, 1);
-            }
-            
-            window.AppCore.getRef('rooms/' + window.AppCore.roomId + '/players', function(snap) {
-                let pData = snap.val() || {};
-                let pIds = Object.keys(pData);
-                
-                for (let i = 0; i < pIds.length; i++) {
-                    if (pIds[i] !== window.AppCore.uid && emps.length > 0) {
-                        let rI = Math.floor(Math.random() * emps.length);
-                        let cl = emps[rI];
-                        cl.own = pIds[i];
-                        cl.t = 150;
-                        cl.b = 'castle';
-                        emps.splice(rI, 1);
-                    }
-                }
-                
-                BotAI.init(LobbyManager.confB);
-                for (let i = 0; i < BotAI.arr.length; i++) {
-                    if (emps.length > 0) {
-                        let rI = Math.floor(Math.random() * emps.length);
-                        let cl = emps[rI];
-                        cl.own = BotAI.arr[i].id;
-                        cl.t = 100;
-                        cl.b = 'fort';
-                        emps.splice(rI, 1);
-                    }
-                }
-                
-                let flatMap = {};
-                for (let y = 0; y < GameCore.rows; y++) {
-                    for (let x = 0; x < GameCore.cols; x++) {
-                        flatMap[x + '_' + y] = GameCore.grid[y][x];
-                    }
-                }
-                
-                window.AppCore.updateRef('rooms/' + window.AppCore.roomId, { map: flatMap });
-                GameCore.startLoop();
-            });
-        },
-
-        beginOffline: function() {
-            this.ctx = this.cvs.getContext('2d');
-            this.cvs.width = this.cols * this.sz;
-            this.cvs.height = this.rows * this.sz;
-            
-            let emps = [];
-            for (let y = 0; y < this.rows; y++) {
-                for (let x = 0; x < this.cols; x++) {
-                    if (!this.grid[y][x].w) emps.push(this.grid[y][x]);
-                }
-            }
-            
-            if (emps.length > 0) {
-                let rI = Math.floor(Math.random() * emps.length);
-                let cl = emps[rI];
-                cl.own = window.AppCore.uid;
-                cl.t = 150;
-                cl.b = 'castle';
-                emps.splice(rI, 1);
-            }
-            
-            BotAI.init(LobbyManager.confB);
-            for (let i = 0; i < BotAI.arr.length; i++) {
-                if (emps.length > 0) {
-                    let rI = Math.floor(Math.random() * emps.length);
-                    let cl = emps[rI];
-                    cl.own = BotAI.arr[i].id;
-                    cl.t = 100;
-                    cl.b = 'fort';
-                    emps.splice(rI, 1);
-                }
-            }
-            
-            this.startLoop();
-        },
-
-        initClient: function() {
-            window.AppCore.getRef('rooms/' + window.AppCore.roomId, function(snap) {
-                let d = snap.val();
-                GameCore.cols = d.w;
-                GameCore.rows = d.h;
-                GameCore.cvs.width = GameCore.cols * GameCore.sz;
-                GameCore.cvs.height = GameCore.rows * GameCore.sz;
-                GameCore.ctx = GameCore.cvs.getContext('2d');
-                
-                GameCore.grid = [];
-                for (let y = 0; y < GameCore.rows; y++) {
-                    let ra = [];
-                    for (let x = 0; x < GameCore.cols; x++) {
-                        ra.push(d.map[x + '_' + y]);
-                    }
-                    GameCore.grid.push(ra);
-                }
-                GameCore.startLoop();
-            });
-        },
-
-        startLoop: function() {
-            UI.switchScreen('screen-game');
-            this.bindMs();
-            
-            if (!window.AppCore.isOffline) {
-                window.AppCore.onValRef('rooms/' + window.AppCore.roomId + '/map', function(snap) {
-                    let nd = snap.val();
-                    if (nd) {
-                        for (let y = 0; y < GameCore.rows; y++) {
-                            for (let x = 0; x < GameCore.cols; x++) {
-                                let cDat = nd[x + '_' + y];
-                                GameCore.grid[y][x].own = cDat.own;
-                                GameCore.grid[y][x].t = cDat.t;
-                                GameCore.grid[y][x].b = cDat.b;
-                            }
-                        }
-                    }
-                });
-            }
-            
-            setInterval(function() {
-                GameCore.tickEco();
-            }, 1000);
-            
-            if (window.AppCore.isHost) {
-                setInterval(function() { BotAI.step(); }, 3000);
-                setInterval(function() { BotAI.eco(); }, 1000);
-            }
-            
-            this.run = true;
-            this.frame();
-            UI.popToast("Do Boju!", false);
-        },
-
-        tickEco: function() {
-            let tCnt = 0;
-            let aFlg = false;
-            
-            for (let y = 0; y < this.rows; y++) {
-                for (let x = 0; x < this.cols; x++) {
-                    let cl = this.grid[y][x];
-                    if (cl.own === window.AppCore.uid) {
-                        aFlg = true;
-                        let tin = 1;
-                        if (cl.b === 'barracks') tin = 6;
-                        cl.t += tin;
-                        tCnt += cl.t;
-                        
-                        this.res.g += 1;
-                        if (cl.b === 'mine') this.res.g += 5;
-                        if (cl.b === 'farm') this.res.g += 10;
-                        if (cl.b === 'wood') this.res.w += 5;
-                        if (cl.b === 'quarry') this.res.s += 3;
-                        
-                        if (!window.AppCore.isOffline) {
-                            let uO = {};
-                            uO['rooms/' + window.AppCore.roomId + '/map/' + x + '_' + y + '/t'] = cl.t;
-                            window.AppCore.updateRef('/', uO);
-                        }
-                    }
-                }
-            }
-            
-            if (!aFlg) UI.popToast("Koniec Gry!", true);
-            UI.updHUD(this.res.g, this.res.w, this.res.s, tCnt);
-        },
-
-        bindMs: function() {
-            this.cvs.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-            
-            this.cvs.addEventListener('mousemove', function(e) {
-                let r = GameCore.cvs.getBoundingClientRect();
-                let sx = GameCore.cvs.width / r.width;
-                let sy = GameCore.cvs.height / r.height;
-                let x = Math.floor(((e.clientX - r.left) * sx) / GameCore.sz);
-                let y = Math.floor(((e.clientY - r.top) * sy) / GameCore.sz);
-                
-                if (x >= 0 && x < GameCore.cols && y >= 0 && y < GameCore.rows) {
-                    GameCore.hov = GameCore.grid[y][x];
-                }
-            });
-
-            this.cvs.addEventListener('mousedown', function(e) {
-                if (!GameCore.hov || GameCore.hov.w) {
-                    GameCore.src = null;
-                    return;
-                }
-                
-                if (e.button === 2) {
-                    if (GameCore.hov.own === window.AppCore.uid) {
-                        if (!GameCore.hov.b) {
-                            let lst = document.getElementsByClassName('build-container')[0];
-                            lst.innerHTML = '';
-                            
-                            for (let key in B_DATA) {
-                                let bObj = B_DATA[key];
-                                let cOk = true;
-                                let str = '';
-                                
-                                if (bObj.c.g) { str += 'M:' + bObj.c.g + ' '; if (GameCore.res.g < bObj.c.g) cOk = false; }
-                                if (bObj.c.w) { str += 'D:' + bObj.c.w + ' '; if (GameCore.res.w < bObj.c.w) cOk = false; }
-                                if (bObj.c.s) { str += 'K:' + bObj.c.s + ' '; if (GameCore.res.s < bObj.c.s) cOk = false; }
-                                
-                                let div = document.createElement('div');
-                                div.className = 'build-card';
-                                
-                                let hStr = '<div style="text-align:left;">';
-                                hStr += '<div style="color:rgb(59,130,246);font-weight:900;font-size:1.1rem;">' + bObj.i + ' ' + bObj.n + '</div>';
-                                hStr += '<div style="color:rgb(148,163,184);font-size:0.8rem;margin:3px 0;">' + bObj.d + '</div>';
-                                hStr += '<div style="color:rgb(245,158,11);font-size:0.85rem;font-weight:bold;">' + str + '</div></div>';
-                                
-                                let bClass = cOk ? 'btn-green' : 'btn-red';
-                                hStr += '<button class="btn ' + bClass + '" style="width:auto;margin:0;padding:10px 20px;" ' + (cOk ? '' : 'disabled') + '>Wznieś</button>';
-                                div.innerHTML = hStr;
-                                
-                                let bBtn = div.getElementsByTagName('button')[0];
-                                bBtn.addEventListener('click', function() {
-                                    if (bObj.c.g) GameCore.res.g -= bObj.c.g;
-                                    if (bObj.c.w) GameCore.res.w -= bObj.c.w;
-                                    if (bObj.c.s) GameCore.res.s -= bObj.c.s;
-                                    
-                                    GameCore.hov.b = key;
-                                    
-                                    if (!window.AppCore.isOffline) {
-                                        let uo = {};
-                                        uo['rooms/' + window.AppCore.roomId + '/map/' + GameCore.hov.x + '_' + GameCore.hov.y + '/b'] = key;
-                                        window.FirebaseHelpers.updateRef('/', uo);
-                                    }
-                                    
-                                    UI.hideModals();
-                                    UI.popToast("Zbudowano!", false);
-                                });
-                                
-                                lst.appendChild(div);
-                            }
-                            
-                            document.getElementsByClassName('modal-layer')[0].style.display = 'block';
-                            document.getElementsByClassName('modal-build')[0].style.display = 'flex';
-                        } else {
-                            UI.popToast("Zajete pole!", true);
-                        }
-                    }
-                    return;
-                }
-
-                if (e.button === 0) {
-                    let nTime = Date.now();
-                    let diff = nTime - GameCore.lClk;
                     
-                    if (diff < 400 && GameCore.src) {
-                        let dX = Math.abs(GameCore.src.x - GameCore.hov.x);
-                        let dY = Math.abs(GameCore.src.y - GameCore.hov.y);
-                        let mDist = Math.max(dX, dY);
-                        
-                        if (mDist === 1) {
-                            if (GameCore.src.t > 1) {
-                                GameCore.tgt = GameCore.hov;
-                                
-                                let rInp = document.getElementsByClassName('slider-move')[0];
-                                let maxV = Math.max(1, GameCore.src.t - 1);
-                                
-                                rInp.min = 1;
-                                rInp.max = maxV;
-                                rInp.value = Math.floor(maxV / 2);
-                                
-                                document.getElementsByClassName('move-val-big')[0].innerText = rInp.value;
-                                document.getElementsByClassName('move-max-val')[0].innerText = maxV;
-                                
-                                document.getElementsByClassName('modal-layer')[0].style.display = 'block';
-                                document.getElementsByClassName('modal-move')[0].style.display = 'flex';
-                            } else {
-                                UI.popToast("Za malo armii!", true);
-                            }
-                        } else if (mDist > 1) {
-                            UI.popToast("Za daleko!", true);
+                    if(edge.length > 0) {
+                        let t = edge[Math.floor(Math.random()*edge.length)];
+                        let c = this.grid[t.y][t.x];
+                        let cost = 10;
+                        if(c.own !== 0) {
+                            let ep = this.players[c.own];
+                            cost = 20; 
+                            if(ep) cost += Math.floor(ep.bal * 0.1); 
                         }
-                    } else {
-                        if (GameCore.hov.own === window.AppCore.uid) {
-                            GameCore.src = GameCore.hov;
-                        } else {
-                            GameCore.src = null;
+                        
+                        let atk = p.bal * 0.5;
+                        if(atk > cost) {
+                            p.bal -= atk;
+                            if(c.own !== 0) {
+                                let ep = this.players[c.own];
+                                if(ep && ep.bal > 0) {
+                                    ep.bal -= atk * 0.5;
+                                    if(ep.bal < 0) ep.bal = 0;
+                                }
+                            }
+                            c.own = p.id;
                         }
                     }
-                    GameCore.lClk = nTime;
                 }
-            });
+            }
         },
-
-        simAtk: function(sObj, tObj, val, atkId) {
-            sObj.t -= val;
-            let pSx = sObj.x * this.sz + this.sz / 2;
-            let pSy = sObj.y * this.sz + this.sz / 2;
-            let pTx = tObj.x * this.sz + this.sz / 2;
-            let pTy = tObj.y * this.sz + this.sz / 2;
+        
+        doClick: function(x, y) {
+            if(x<0 || x>=this.cols || y<0 || y>=this.rows) return;
+            let c = this.grid[y][x];
+            if(c.type === 0) return;
             
-            let cS = 0;
-            let asStr = String(atkId);
-            for (let i = 0; i < asStr.length; i++) cS += asStr.charCodeAt(i);
-            let fCol = ColorPallete[cS % ColorPallete.length];
+            let mp = this.players[this.myId];
+            if(mp.dead) return;
             
-            this.pt.addBeam(pSx, pSy, pTx, pTy, fCol);
+            let isAdj = false;
+            for(let dy=-1; dy<=1; dy++) {
+                for(let dx=-1; dx<=1; dx++) {
+                    let nx = x+dx, ny = y+dy;
+                    if(nx>=0 && nx<this.cols && ny>=0 && ny<this.rows) {
+                        if(this.grid[ny][nx].own === this.myId) isAdj = true;
+                    }
+                }
+            }
             
-            setTimeout(function() {
-                if (tObj.own === atkId) {
-                    tObj.t += val;
+            if(!isAdj && c.own !== this.myId) return;
+            
+            if(c.own !== this.myId) {
+                let cost = 10;
+                if(c.own !== 0) {
+                    let ep = this.players[c.own];
+                    if(ep) cost += Math.floor(ep.bal * 0.1);
+                }
+                
+                let atk = mp.bal * (this.atkPerc / 100);
+                if(atk >= cost) {
+                    mp.bal -= atk;
+                    if(c.own !== 0) {
+                        let ep = this.players[c.own];
+                        if(ep) {
+                            ep.bal -= atk * 0.5;
+                            if(ep.bal < 0) ep.bal = 0;
+                        }
+                    }
+                    c.own = this.myId;
                 } else {
-                    let dM = 1;
-                    if (tObj.b === 'fort') dM = 2;
-                    if (tObj.b === 'castle') dM = 3;
-                    
-                    let eDef = tObj.t * dM;
-                    if (val > eDef) {
-                        tObj.own = atkId;
-                        tObj.t = Math.floor(val - eDef);
-                        tObj.b = null;
-                    } else {
-                        tObj.t = Math.floor((eDef - val) / dM);
-                    }
+                    window.UI.toast("Za malo sil na atak!", true);
                 }
-                
-                if (!window.AppCore.isOffline) {
-                    let updO = {};
-                    updO['rooms/' + window.AppCore.roomId + '/map/' + sObj.x + '_' + sObj.y + '/t'] = sObj.t;
-                    updO['rooms/' + window.AppCore.roomId + '/map/' + tObj.x + '_' + tObj.y + '/own'] = tObj.own;
-                    updO['rooms/' + window.AppCore.roomId + '/map/' + tObj.x + '_' + tObj.y + '/t'] = tObj.t;
-                    updO['rooms/' + window.AppCore.roomId + '/map/' + tObj.x + '_' + tObj.y + '/b'] = tObj.b;
-                    window.FirebaseHelpers.updateRef('/', updO);
-                }
-                
-            }, 400);
+            }
+            
+            document.getElementsByClassName('class-balance-val')[0].innerText = Math.floor(mp.bal);
         },
-
-        doOp: function() {
-            if (!this.src || !this.tgt) return;
+        
+        draw: function() {
+            this.ctx.fillStyle = 'rgb(24, 76, 116)';
+            this.ctx.fillRect(0, 0, this.w, this.h);
             
-            let val = parseInt(document.getElementsByClassName('slider-move')[0].value);
-            if (this.src.t <= val) return;
-            
-            this.simAtk(this.src, this.tgt, val, window.AppCore.uid);
-            
-            UI.hideModals();
-            this.src = null;
-        },
-
-        drawF: function() {
-            this.ctx.fillStyle = 'rgb(2, 6, 23)';
-            this.ctx.fillRect(0, 0, this.cvs.width, this.cvs.height);
-            
-            for (let y = 0; y < this.rows; y++) {
-                for (let x = 0; x < this.cols; x++) {
-                    let cell = this.grid[y][x];
+            for(let y=0; y<this.rows; y++) {
+                for(let x=0; x<this.cols; x++) {
+                    let c = this.grid[y][x];
                     let px = x * this.sz;
                     let py = y * this.sz;
                     
-                    if (cell.w) {
-                        this.ctx.fillStyle = 'rgb(14, 165, 233)';
-                    } else {
-                        if (cell.own === 0) {
-                            this.ctx.fillStyle = 'rgb(30, 41, 59)';
+                    if(c.type === 1) {
+                        if(c.own === 0) {
+                            this.ctx.fillStyle = 'rgb(65, 125, 45)';
                         } else {
-                            let strU = String(cell.own);
-                            let cS = 0;
-                            for (let i = 0; i < strU.length; i++) cS += strU.charCodeAt(i);
-                            this.ctx.fillStyle = ColorPallete[cS % ColorPallete.length];
+                            let p = this.players[c.own];
+                            if(p) {
+                                this.ctx.fillStyle = p.col;
+                            } else {
+                                this.ctx.fillStyle = 'rgb(255,255,255)';
+                            }
                         }
-                    }
-                    
-                    this.ctx.fillRect(px, py, this.sz, this.sz);
-                    this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-                    this.ctx.lineWidth = 1;
-                    this.ctx.strokeRect(px, py, this.sz, this.sz);
-                    
-                    if (cell.b && B_DATA[cell.b]) {
-                        this.ctx.fillStyle = "rgb(255, 255, 255)";
-                        this.ctx.font = "20px sans-serif";
-                        this.ctx.textAlign = "center";
-                        this.ctx.fillText(B_DATA[cell.b].i, px + this.sz / 2, py + 24);
-                    }
-                    
-                    if (!cell.w && (cell.t > 0 || cell.own !== 0)) {
-                        this.ctx.fillStyle = "rgb(255, 255, 255)";
-                        this.ctx.font = "900 15px sans-serif";
-                        this.ctx.textAlign = "center";
-                        this.ctx.shadowColor = "rgb(0, 0, 0)";
-                        this.ctx.shadowBlur = 4;
-                        this.ctx.fillText(Math.floor(cell.t), px + this.sz / 2, py + this.sz - 4);
-                        this.ctx.shadowBlur = 0;
-                    }
-                    
-                    if (this.hov === cell && !cell.w) {
-                        this.ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
                         this.ctx.fillRect(px, py, this.sz, this.sz);
-                    }
-                    
-                    if (this.src === cell) {
-                        let pls = Math.abs(Math.sin(Date.now() / 200)) * 2;
-                        this.ctx.strokeStyle = "rgba(245, 158, 11, 0.9)";
-                        this.ctx.lineWidth = 3 + pls;
-                        this.ctx.strokeRect(px + 2, py + 2, this.sz - 4, this.sz - 4);
-                        this.ctx.lineWidth = 1;
                     }
                 }
             }
-            
-            this.pt.step(this.ctx);
         },
-
-        frame: function() {
-            if (this.run) {
-                this.drawF();
-                let sRef = this;
-                requestAnimationFrame(function() {
-                    sRef.frame();
-                });
+        
+        loop: function() {
+            if(this.run) {
+                this.draw();
+                let sR = this;
+                requestAnimationFrame(function(){ sR.loop(); });
             }
         }
     };
 
-    document.getElementsByClassName('btn-login-google')[0].addEventListener('click', function() {
-        window.AppCore.loginGoogle();
-    });
-
-    document.getElementsByClassName('btn-login-anon')[0].addEventListener('click', function() {
-        window.AppCore.loginAnon();
-    });
-
-    document.getElementsByClassName('btn-logout')[0].addEventListener('click', function() {
-        window.AppCore.logoutUser();
-    });
-
-    document.getElementsByClassName('btn-host-menu')[0].addEventListener('click', function() {
-        LobbyManager.initHostScreen();
-    });
-
-    document.getElementsByClassName('btn-join-menu')[0].addEventListener('click', function() {
-        UI.switchScreen('screen-rooms');
-        LobbyManager.loadRooms();
-    });
-    
-    document.getElementsByClassName('btn-offline-menu')[0].addEventListener('click', function() {
-        LobbyManager.startOffline();
-    });
-
-    document.getElementsByClassName('btn-cancel-rooms')[0].addEventListener('click', function() {
-        UI.switchScreen('screen-main');
-    });
-
-    document.getElementsByClassName('btn-start-host')[0].addEventListener('click', function() {
-        LobbyManager.startHostedRoom();
-    });
-
-    document.getElementsByClassName('btn-cancel-host')[0].addEventListener('click', function() {
-        UI.switchScreen('screen-main');
-    });
-
-    document.getElementsByClassName('btn-cancel-lobby')[0].addEventListener('click', function() {
-        UI.switchScreen('screen-main');
-        if (window.AppCore.isHost && window.AppCore.roomId) {
-            window.AppCore.removeRef('rooms/' + window.AppCore.roomId);
-        }
-    });
-
-    document.getElementsByClassName('btn-start-game-host')[0].addEventListener('click', function() {
-        window.AppCore.updateRef('rooms/' + window.AppCore.roomId, { status: 'playing' });
-    });
-
-    document.getElementsByClassName('slider-move')[0].addEventListener('input', function() {
-        document.getElementsByClassName('move-val-big')[0].innerText = this.value;
-    });
-
-    document.getElementsByClassName('btn-cancel-move')[0].addEventListener('click', function() {
-        UI.hideModals();
-    });
-
-    document.getElementsByClassName('btn-cancel-build')[0].addEventListener('click', function() {
-        UI.hideModals();
-    });
-
-    document.getElementsByClassName('btn-confirm-move')[0].addEventListener('click', function() {
-        GameCore.doOp();
-    });
+    window.onload = function() {
+        Engine.init();
+    };
 
 </script>
 </body>

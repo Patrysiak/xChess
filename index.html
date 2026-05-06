@@ -3,36 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Clone V-MAX | 33MC.PL</title>
+    <title>Discord Clone V-ULTRA | Prestige & Boosts</title>
     <style>
-        /* ================= ZMIENNE KOLORYSTYCZNE ================= */
+        /* ================= ZMIENNE ================= */
         :root {
-            --bg-tertiary: #1e1f22;   /* Pasek serwerów */
-            --bg-secondary: #2b2d31;  /* Pasek kanałów/DM i Prawy Panel */
-            --bg-primary: #313338;    /* Główny czat */
-            --bg-floating: #111214;   /* Popouty, modale */
-            --bg-message-hover: #2e3035;
-            --bg-modifier-hover: rgba(78, 80, 88, 0.3);
-            --bg-modifier-active: rgba(78, 80, 88, 0.48);
-            --bg-input: #383a40;
-            --text-normal: #dbdee1;
-            --text-muted: #949ba4;
-            --header-primary: #f2f3f5;
-            --header-secondary: #b5bac1;
-            --brand-color: #5865F2;
-            --brand-hover: #4752c4;
-            --danger-color: #da373c;
-            --success-color: #23a559;
-            --warning-color: #f0b232;
-            --story-orange: #f39c12;  /* Kolor obramówki postów */
+            --bg-tertiary: #1e1f22; --bg-secondary: #2b2d31; --bg-primary: #313338;
+            --bg-floating: #111214; --bg-message-hover: #2e3035;
+            --bg-modifier-hover: rgba(78, 80, 88, 0.3); --bg-modifier-active: rgba(78, 80, 88, 0.48);
+            --bg-input: #383a40; --text-normal: #dbdee1; --text-muted: #949ba4;
+            --header-primary: #f2f3f5; --header-secondary: #b5bac1;
+            --brand-color: #5865F2; --brand-hover: #4752c4;
+            --danger-color: #da373c; --success-color: #23a559; --warning-color: #f0b232;
+            --story-orange: #f39c12; --boost-pink: #ff73fa; --prestige-gold: #ffd700;
         }
 
-        /* ================= RESET I BAZA ================= */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { 
-            background-color: var(--bg-primary); color: var(--text-normal); 
-            display: flex; height: 100vh; width: 100vw; overflow: hidden; font-size: 14px; 
-        }
+        body { background-color: var(--bg-primary); color: var(--text-normal); display: flex; height: 100vh; overflow: hidden; font-size: 14px; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-tertiary); }
         ::-webkit-scrollbar-thumb { background: #1a1b1e; border-radius: 4px; }
@@ -40,76 +26,62 @@
         button, input { outline: none; border: none; font-family: inherit; }
 
         /* ================= ANIMACJE ================= */
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes modalPop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes storyPulse { 
-            0% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--story-orange); } 
-            50% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 7px rgba(243, 156, 18, 0.4); } 
-            100% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--story-orange); } 
-        }
+        @keyframes storyPulse { 0% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--story-orange); } 50% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 7px rgba(243, 156, 18, 0.4); } 100% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--story-orange); } }
 
         /* ================= EKRAN LOGOWANIA ================= */
-        #login-screen { position: fixed; inset: 0; background: var(--bg-tertiary); z-index: 9999; display: flex; justify-content: center; align-items: center; animation: fadeIn 0.3s ease; }
-        .login-box { background: var(--bg-primary); padding: 40px; border-radius: 8px; width: 480px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); animation: slideUp 0.5s ease; }
+        #login-screen { position: fixed; inset: 0; background: var(--bg-tertiary); z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: var(--bg-primary); padding: 40px; border-radius: 8px; width: 480px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .btn-brand { background: var(--brand-color); color: white; width: 100%; padding: 14px; border-radius: 4px; font-size: 16px; cursor: pointer; transition: 0.2s; font-weight: bold; }
         .btn-brand:hover { background: var(--brand-hover); }
 
-        #app-container { display: flex; width: 100vw; height: 100vh; animation: fadeIn 0.5s ease; }
+        #app-container { display: none; width: 100vw; height: 100vh; animation: fadeIn 0.5s ease; }
 
-        /* ================= 1. PASEK SERWERÓW (LEWA) ================= */
-        .servers-nav { width: 72px; min-width: 72px; background-color: var(--bg-tertiary); display: flex; flex-direction: column; align-items: center; padding-top: 12px; gap: 8px; z-index: 10; flex-shrink: 0; }
+        /* ================= 1. PASEK SERWERÓW ================= */
+        .servers-nav { width: 72px; min-width: 72px; background-color: var(--bg-tertiary); display: flex; flex-direction: column; align-items: center; padding-top: 12px; gap: 8px; z-index: 10; }
         .server-icon-wrapper { position: relative; display: flex; justify-content: center; width: 100%; cursor: pointer; }
         .server-pill { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 8px; background: white; border-radius: 0 4px 4px 0; transition: 0.2s; opacity: 0; }
         .server-icon-wrapper:hover .server-pill { height: 20px; opacity: 1; }
         .server-icon-wrapper.active .server-pill { height: 40px; opacity: 1; }
-        .server-icon { width: 48px; height: 48px; border-radius: 50%; background-color: var(--bg-primary); color: var(--text-normal); display: flex; justify-content: center; align-items: center; transition: 0.2s; overflow: hidden; }
+        .server-icon { width: 48px; height: 48px; border-radius: 50%; background-color: var(--bg-primary); display: flex; justify-content: center; align-items: center; transition: 0.2s; overflow: hidden; }
         .server-icon img { width: 100%; height: 100%; object-fit: cover; }
         .server-icon-wrapper:hover .server-icon, .server-icon-wrapper.active .server-icon { border-radius: 16px; background-color: var(--brand-color); color: white; }
-        .server-separator { width: 32px; height: 2px; background: var(--bg-modifier-active); margin: 4px 0; border-radius: 1px; }
+        .server-separator { width: 32px; height: 2px; background: var(--bg-modifier-active); margin: 4px 0; }
 
-        /* ================= 2. BOCZNY PANEL (DM/KANAŁY) ================= */
-        .sidebar { width: 240px; min-width: 240px; background-color: var(--bg-secondary); display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-header { height: 48px; min-height: 48px; padding: 0 16px; display: flex; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.2); font-weight: 600; color: var(--header-primary); cursor: pointer; border-bottom: 1px solid var(--bg-tertiary); transition: 0.2s; }
+        /* ================= 2. BOCZNY PANEL ================= */
+        .sidebar { width: 240px; min-width: 240px; background-color: var(--bg-secondary); display: flex; flex-direction: column; }
+        .sidebar-header { height: 48px; min-height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 2px rgba(0,0,0,0.2); font-weight: 600; color: var(--header-primary); cursor: pointer; border-bottom: 1px solid var(--bg-tertiary); transition: 0.2s; }
         .sidebar-header:hover { background: var(--bg-modifier-hover); }
         .sidebar-content { flex: 1; overflow-y: auto; padding: 8px; }
-        
-        .category-name { font-size: 12px; font-weight: 600; color: var(--header-secondary); text-transform: uppercase; margin: 16px 8px 4px; display: flex; justify-content: space-between; align-items: center;}
+        .category-name { font-size: 12px; font-weight: 600; color: var(--header-secondary); text-transform: uppercase; margin: 16px 8px 4px; display: flex; justify-content: space-between; }
         .list-item { padding: 8px; border-radius: 4px; display: flex; align-items: center; cursor: pointer; color: var(--text-muted); margin-bottom: 2px; transition: 0.1s; }
         .list-item:hover { background: var(--bg-modifier-hover); color: var(--text-normal); }
         .list-item.active { background: var(--bg-modifier-active); color: var(--text-normal); }
         
-        /* Relacje/Posty - Obramówka */
+        /* Relacje i Awatary */
         .avatar-container { position: relative; margin-right: 12px; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; border-radius: 50%; }
         .list-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
         .list-avatar.has-post { animation: storyPulse 2.5s infinite; cursor: pointer; border: 2px solid var(--bg-secondary); }
         .status-dot { position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--bg-secondary); }
 
-        /* Panel Użytkownika na dole */
-        .user-panel { height: 52px; min-height: 52px; background: #232428; display: flex; align-items: center; padding: 0 8px; justify-content: space-between; }
+        /* Pasek Użytkownika & XP */
+        .user-panel { height: 60px; min-height: 60px; background: #232428; display: flex; align-items: center; padding: 0 8px; justify-content: space-between; position: relative; }
         .user-profile { display: flex; align-items: center; padding: 4px; border-radius: 4px; cursor: pointer; flex: 1; overflow: hidden; }
         .user-profile:hover { background: var(--bg-modifier-hover); }
         .user-profile img { width: 32px; height: 32px; border-radius: 50%; margin-right: 8px; object-fit: cover; }
-        .user-info { display: flex; flex-direction: column; overflow: hidden; }
-        .user-info strong { font-size: 13px; color: var(--header-primary); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .user-info { display: flex; flex-direction: column; overflow: hidden; width:100%; }
+        .user-info strong { font-size: 13px; color: var(--header-primary); }
         .user-info span { font-size: 11px; color: var(--header-secondary); }
         
-        .user-controls { display: flex; }
-        .control-btn { width: 32px; height: 32px; border-radius: 4px; display: flex; justify-content: center; align-items: center; color: var(--header-secondary); cursor: pointer; transition: 0.1s; }
-        .control-btn:hover { background: var(--bg-modifier-hover); color: var(--text-normal); }
+        .xp-bar-container { width: 100%; height: 4px; background: var(--bg-modifier-active); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+        .xp-bar-fill { height: 100%; background: var(--brand-color); width: 0%; transition: width 0.3s ease; }
 
-        /* ================= 3. ŚRODEK (CZAT I TOP BAR) ================= */
-        .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-primary); }
-        
+        /* ================= 3. ŚRODEK (CZAT) ================= */
+        .main-content { flex: 1; display: flex; flex-direction: column; background: var(--bg-primary); }
         .top-bar { height: 48px; min-height: 48px; padding: 0 16px; display: flex; align-items: center; border-bottom: 1px solid var(--bg-tertiary); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .top-bar-title { font-size: 16px; font-weight: bold; color: white; display: flex; align-items: center; gap: 8px; }
-        .top-bar-actions { margin-left: auto; display: flex; align-items: center; gap: 16px; color: var(--header-secondary); }
-        .top-bar-actions svg { cursor: pointer; transition: 0.2s; }
-        .top-bar-actions svg:hover { color: var(--text-normal); }
-
-        /* Zmiana: Układ w poziomie dla czatu i prawego panelu */
         .chat-and-members { flex: 1; display: flex; overflow: hidden; }
-        
         .messages-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .messages-list { flex: 1; overflow-y: auto; padding: 16px 0; display: flex; flex-direction: column; }
         
@@ -117,78 +89,66 @@
         .message:hover { background: var(--bg-message-hover); }
         .msg-avatar { position: absolute; left: 16px; top: 4px; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
         .msg-header { display: flex; align-items: baseline; margin-bottom: 2px; }
-        .msg-author { color: var(--header-primary); font-weight: 500; font-size: 16px; margin-right: 8px; }
+        .msg-author { color: var(--header-primary); font-weight: 500; font-size: 16px; margin-right: 8px; display: flex; align-items: center; gap: 5px;}
         .msg-time { color: var(--text-muted); font-size: 12px; }
         .msg-content { color: var(--text-normal); font-size: 15px; line-height: 1.4; word-wrap: break-word; }
-        .msg-image { max-width: 400px; max-height: 300px; border-radius: 8px; margin-top: 8px; cursor: pointer; }
+
+        .prestige-badge { background: var(--prestige-gold); color: black; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 5px var(--prestige-gold); }
+        .lvl-badge { background: var(--bg-modifier-active); color: var(--text-normal); font-size: 10px; padding: 2px 6px; border-radius: 4px; }
 
         .input-area { padding: 0 16px 24px; flex-shrink: 0; }
         .input-wrapper { background: var(--bg-input); border-radius: 8px; display: flex; align-items: center; padding: 10px 16px; }
         .chat-input { flex: 1; background: transparent; color: var(--text-normal); font-size: 15px; margin: 0 10px; width: 100%; }
 
-        /* ================= 4. PRAWY PANEL ================= */
-        .right-panel { width: 240px; min-width: 240px; background: var(--bg-secondary); border-left: 1px solid var(--bg-modifier-active); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
-        .panel-header { padding: 16px 8px 8px 16px; font-size: 12px; font-weight: 800; color: var(--header-secondary); text-transform: uppercase; }
-        .member-item { padding: 6px 8px; margin: 0 8px 2px; border-radius: 4px; display: flex; align-items: center; cursor: pointer; }
+        /* ================= 4. PRAWY PANEL (ROLE) ================= */
+        .right-panel { width: 240px; min-width: 240px; background: var(--bg-secondary); border-left: 1px solid var(--bg-modifier-active); display: flex; flex-direction: column; overflow-y: auto; padding: 16px 8px; }
+        .role-header { font-size: 12px; font-weight: 800; color: var(--header-secondary); text-transform: uppercase; margin: 10px 8px 4px; }
+        .member-item { padding: 6px 8px; border-radius: 4px; display: flex; align-items: center; cursor: pointer; margin-bottom: 2px; }
         .member-item:hover { background: var(--bg-modifier-hover); }
         .member-avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: 12px; object-fit: cover; }
+        .role-owner { color: #e91e63 !important; }
+        .role-vip { color: #f1c40f !important; }
 
-        /* ================= MODALE (WYSKAKUJĄCE OKNA) ================= */
+        /* ================= MODALE & TOASTS ================= */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 20000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
-        .modal-content { background: var(--bg-primary); border-radius: 8px; width: 460px; padding: 24px; animation: modalPop 0.2s ease; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .modal-content h2 { color: white; margin-bottom: 20px; text-align: center; font-size: 24px; }
-        .modal-close { position: absolute; top: 15px; right: 15px; color: var(--text-muted); cursor: pointer; }
-        .modal-close:hover { color: white; }
+        .modal-content { background: var(--bg-primary); border-radius: 8px; width: 460px; padding: 24px; animation: modalPop 0.2s ease; position: relative; }
+        .modal-content h2 { color: white; margin-bottom: 20px; text-align: center; }
+        .btn-submit { background: var(--brand-color); color: white; padding: 12px 24px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.2s; margin-top: 10px; }
+        .btn-boost { background: linear-gradient(45deg, #ff73fa, #5865F2); color: white; padding: 12px 24px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 15px; box-shadow: 0 4px 15px rgba(255, 115, 250, 0.3); }
+        .btn-boost:hover { filter: brightness(1.2); }
         
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; color: var(--header-secondary); font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
-        .form-input { width: 100%; padding: 12px; background: var(--bg-tertiary); color: white; border-radius: 4px; font-size: 15px; }
-        
-        .btn-submit { background: var(--brand-color); color: white; padding: 12px 24px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.2s; }
-        .btn-submit:hover { background: var(--brand-hover); }
-        .btn-danger { background: var(--danger-color); color: white; padding: 12px 24px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.2s; margin-top: 10px; }
-        .btn-danger:hover { filter: brightness(0.9); }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; color: var(--header-secondary); font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
+        .form-input { width: 100%; padding: 10px; background: var(--bg-tertiary); color: white; border-radius: 4px; font-size: 14px; }
 
-        /* Wgrywanie plików (Zdjęcia, Awatary) */
-        .upload-area { border: 2px dashed var(--bg-modifier-active); padding: 20px; text-align: center; border-radius: 8px; cursor: pointer; transition: 0.2s; color: var(--header-secondary); margin-bottom: 15px; position: relative; overflow: hidden; }
-        .upload-area:hover { background: var(--bg-modifier-hover); border-color: var(--brand-color); color: white; }
-        .upload-preview { max-width: 100%; max-height: 150px; border-radius: 4px; display: none; margin: 0 auto; object-fit: contain; }
+        /* Toast (Powiadomienia LVL UP) */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--bg-floating); border-left: 4px solid var(--brand-color); padding: 15px 20px; border-radius: 4px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.5); animation: slideInRight 0.3s ease forwards; display: flex; align-items: center; gap: 15px; }
 
-        /* WIDOK POSTA / RELACJI (INSTAGRAM STYLE) */
-        #post-viewer-modal .modal-content { width: 420px; height: 650px; padding: 0; background: #000; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--bg-tertiary); border-radius: 12px; }
+        /* WIDOK POSTA */
+        #post-viewer-modal .modal-content { width: 420px; height: 650px; padding: 0; background: #000; display: flex; flex-direction: column; overflow: hidden; }
         .post-header { padding: 15px; display: flex; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position: absolute; width: 100%; top: 0; z-index: 10; }
         .post-header img { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; object-fit: cover; }
-        .post-header div { color: white; text-align: left; }
-        .post-header span { font-size: 11px; color: rgba(255,255,255,0.7); }
-        
         .post-body { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; background: var(--bg-floating); }
         .post-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6); }
         .post-text-content { position: relative; color: white; font-size: 26px; text-align: center; padding: 20px; font-weight: bold; text-shadow: 0 2px 10px rgba(0,0,0,0.8); z-index: 2; }
-        
-        .post-progress-bar { position: absolute; top: 8px; left: 10px; right: 10px; height: 3px; background: rgba(255,255,255,0.3); border-radius: 3px; z-index: 11; }
-        .post-progress-fill { height: 100%; background: white; width: 0%; border-radius: 3px; }
-
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-box">
-            <svg viewBox="0 0 127.14 96.36" style="width: 60px; height: 60px; color: var(--brand-color); margin-bottom: 20px;"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.68,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.36,46,96.26,53,91.08,65.69,84.69,65.69Z"/></svg>
-            <h2>Witaj w 33MC.PL</h2>
-            <p style="color: var(--header-secondary); margin-bottom: 25px;">Połącz się, aby uzyskać dostęp do serwerów i postów znajomych.</p>
-            <button class="btn-brand" id="btn-login" onclick="loginWithGoogle()">Zaloguj przez Google</button>
+            <h2 style="color:white; font-size:24px; margin-bottom:10px;">V-ULTRA Login</h2>
+            <p style="color:var(--header-secondary); margin-bottom:20px;">Zaloguj się, by zdobywać XP i Prestiż!</p>
+            <button class="btn-brand" onclick="loginWithGoogle()">Zaloguj z Firebase</button>
         </div>
     </div>
 
     <div id="app-container">
-        
         <div class="servers-nav">
             <div class="server-icon-wrapper active" id="nav-home" onclick="switchToDM()">
                 <div class="server-pill"></div>
-                <div class="server-icon" style="background: var(--brand-color);">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-                </div>
+                <div class="server-icon" style="background: var(--brand-color);">🏠</div>
             </div>
             <div class="server-separator"></div>
             <div class="server-icon-wrapper" id="nav-server" onclick="switchToServer()">
@@ -198,27 +158,19 @@
         </div>
 
         <div class="sidebar">
-            <div class="sidebar-header">
-                <input type="text" placeholder="Znajdź lub rozpocznij..." style="width:100%; background:var(--bg-tertiary); color:white; padding:6px 8px; border-radius:4px; font-size:13px;">
+            <div class="sidebar-header" id="sidebar-header-area">
+                <span id="sidebar-title">Znajdź rozmowę</span>
             </div>
             
-            <div class="sidebar-content" id="sidebar-content">
-                </div>
+            <div class="sidebar-content" id="sidebar-content"></div>
 
             <div class="user-panel">
                 <div class="user-profile" onclick="openModal('settings-modal')">
                     <img id="my-avatar" src="">
                     <div class="user-info">
                         <strong id="my-name">Ładowanie...</strong>
-                        <span id="my-status" style="color:var(--success-color)">Online</span>
-                    </div>
-                </div>
-                <div class="user-controls">
-                    <div class="control-btn" title="Dodaj swój post (Znika po 24h)" onclick="openModal('add-post-modal')">
-                        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                    </div>
-                    <div class="control-btn" title="Ustawienia Profilu" onclick="openModal('settings-modal')">
-                        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                        <span id="my-lvl-text">Poziom 1</span>
+                        <div class="xp-bar-container"><div class="xp-bar-fill" id="my-xp-bar"></div></div>
                     </div>
                 </div>
             </div>
@@ -226,44 +178,49 @@
 
         <div class="main-content">
             <div class="top-bar">
-                <div class="top-bar-title">
-                    <svg style="color:#80848e;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                <div style="display:flex; align-items:center; color:white; font-weight:bold; font-size:16px;">
                     <span id="chat-header-title">Znajomi</span>
-                </div>
-                <div class="top-bar-actions">
-                    <svg title="Rozpocznij połączenie głosowe"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
-                    <svg title="Rozpocznij rozmowę wideo"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
                 </div>
             </div>
 
             <div class="chat-and-members">
                 <div class="messages-wrapper">
-                    <div class="messages-list" id="messages-area">
-                        </div>
+                    <div class="messages-list" id="messages-area"></div>
                     <div class="input-area">
                         <div class="input-wrapper">
-                            <svg style="color:var(--header-secondary); margin-right:15px; cursor:pointer;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
-                            <input type="text" class="chat-input" id="message-input" placeholder="Napisz wiadomość..." onkeypress="sendMessage(event)">
+                            <input type="text" class="chat-input" id="message-input" placeholder="Napisz wiadomość (Zdobywaj XP!)" onkeypress="sendMessage(event)">
                         </div>
                     </div>
                 </div>
 
-                <div class="right-panel" id="right-panel">
-                    </div>
+                <div class="right-panel" id="right-panel"></div>
             </div>
         </div>
     </div>
 
-    <div class="modal-overlay" id="post-viewer-modal">
+    <div class="modal-overlay" id="boost-modal">
         <div class="modal-content">
-            <div class="post-progress-bar"><div class="post-progress-fill" id="post-progress"></div></div>
+            <svg style="position:absolute; top:15px; right:15px; cursor:pointer; color:var(--text-muted);" onclick="closeModal('boost-modal')"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            <h2 style="color:var(--boost-pink);">Ulepszenia Serwera</h2>
+            <p style="color:var(--header-secondary); margin-bottom:20px;">Poziom ulepszeń określa jakość audio, limity plików i ilość emoji. Zdobądź wyższy poziom boostując serwer!</p>
+            
+            <div style="background:var(--bg-tertiary); padding:15px; border-radius:8px; margin-bottom:15px;">
+                <h3 style="color:white; font-size:16px; margin-bottom:5px;">Obecny Poziom: <span id="server-lvl">Poziom 1</span></h3>
+                <p style="color:var(--text-muted); font-size:13px;">Brakuje 2 ulepszeń do Poziomu 2.</p>
+                <div class="xp-bar-container" style="height:8px; margin-top:10px;"><div class="xp-bar-fill" style="width:33%; background:var(--boost-pink);"></div></div>
+            </div>
+
+            <button class="btn-boost" onclick="boostServer()">Zastosuj Ulepszenie (Boost)</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="post-viewer-modal">
+        <div class="modal-content" style="width:400px; height:600px; padding:0; background:#000;">
+            <div style="position:absolute; top:8px; left:10px; right:10px; height:3px; background:rgba(255,255,255,0.3); z-index:11;"><div id="post-progress" style="height:100%; background:white; width:0%;"></div></div>
             <div class="post-header">
                 <img id="post-viewer-avatar" src="">
-                <div>
-                    <strong id="post-viewer-name" style="display:block; font-size:14px;">Nazwa</strong>
-                    <span id="post-viewer-time">Dodano 2h temu</span>
-                </div>
-                <svg class="modal-close" style="top:15px; right:15px;" onclick="closePostViewer()"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                <div style="color:white;"><strong id="post-viewer-name" style="display:block;">Nazwa</strong></div>
+                <svg style="position:absolute; right:15px; color:white; cursor:pointer;" onclick="closeModal('post-viewer-modal')"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </div>
             <div class="post-body">
                 <img id="post-viewer-img" class="post-bg-img" src="" style="display:none;">
@@ -272,69 +229,24 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="add-post-modal">
-        <div class="modal-content" style="width:500px;">
-            <svg class="modal-close" onclick="closeModal('add-post-modal')"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            <h2>Dodaj Relację (Znika po 24h)</h2>
-            
-            <label class="upload-area">
-                <input type="file" id="post-image-upload" accept="image/*" style="display:none;" onchange="handlePostImage(event)">
-                <div id="post-upload-text">Kliknij tutaj, aby wgrać zdjęcie (Opcjonalnie)</div>
-                <img id="post-image-preview" class="upload-preview" src="">
-            </label>
-
-            <div class="form-group">
-                <label class="form-label">Co u Ciebie słychać?</label>
-                <input type="text" id="new-post-text" class="form-input" placeholder="Wpisz treść relacji...">
-            </div>
-            
-            <button class="btn-submit" onclick="publishPost()">Opublikuj na 24 godziny</button>
-        </div>
-    </div>
-
     <div class="modal-overlay" id="settings-modal">
-        <div class="modal-content" style="width:500px;">
-            <svg class="modal-close" onclick="closeModal('settings-modal')"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            <h2>Ustawienia Użytkownika</h2>
-            
-            <div style="display:flex; gap:20px;">
-                <label class="upload-area" style="width:120px; height:120px; padding:0; border-radius:50%; display:flex; justify-content:center; align-items:center; border:3px solid var(--brand-color);">
-                    <input type="file" id="avatar-upload" accept="image/*" style="display:none;" onchange="handleAvatarUpload(event)">
-                    <img id="settings-avatar-preview" src="" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
-                    <div style="position:absolute; background:rgba(0,0,0,0.6); inset:0; display:flex; justify-content:center; align-items:center; opacity:0; transition:0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">Zmień</div>
-                </label>
-
-                <div style="flex:1;">
-                    <div class="form-group">
-                        <label class="form-label">Nazwa wyświetlana</label>
-                        <input type="text" id="edit-name" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Status</label>
-                        <select id="edit-status" class="form-input" style="cursor:pointer;">
-                            <option value="online">Online 🟢</option>
-                            <option value="idle">Zaraz wracam 🌙</option>
-                            <option value="dnd">Nie przeszkadzać 🔴</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
+        <div class="modal-content">
+            <h2>Ustawienia Profilu</h2>
+            <div class="form-group"><label class="form-label">Nazwa wyświetlana</label><input type="text" id="edit-name" class="form-input"></div>
             <button class="btn-submit" onclick="saveSettings()">Zapisz Zmiany</button>
-            <button class="btn-danger" style="background:transparent; border:1px solid var(--danger-color); color:var(--danger-color);" onclick="window.logout()">Wyloguj się z Firebase</button>
+            <button class="btn-danger" style="background:transparent; border:1px solid var(--danger-color); color:var(--danger-color);" onclick="window.logout()">Wyloguj</button>
         </div>
     </div>
+
+    <div id="toast-container"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // Konfiguracja Firebase (Z Twojego prompta)
         const firebaseConfig = {
-            apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
-            authDomain: "xchess-79e2d.firebaseapp.com",
-            projectId: "xchess-79e2d"
+            apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU", authDomain: "xchess-79e2d.firebaseapp.com", projectId: "xchess-79e2d"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -343,21 +255,19 @@
         const provider = new GoogleAuthProvider();
 
         let currentUser = null;
-        let postTimer = null;
 
-        // Baza Danych Mock (Znajomi, Wiadomości zrzut z obrazka)
+        // BAZA DANYCH MOCK (Z ROLAMI I PRESTIŻEM)
         const mockData = {
-            friends: [
-                { id: "f1", name: "Anna Nowak", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anna", post: { text: "Piszę nowy kod w HTML 💻", img: null, timestamp: Date.now() - 3600000 }, status: "online" },
-                { id: "f2", name: "Blaaqu", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Blaaqu", post: null, status: "idle" },
-                { id: "f3", name: "xPatrysiak", avatar: "https://api.dicebear.com/7.x/bot/svg?seed=Patryk", post: { text: "Stary post (Zignoruj)", img: null, timestamp: Date.now() - 90000000 }, status: "dnd" } // Ten ma ponad 24h, zniknie!
+            serverRoles: [
+                { name: "Właściciel", color: "role-owner", users: [{ name: "Blaaqu", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Blaaqu", lvl: 150, prestige: 3 }] },
+                { name: "VIP", color: "role-vip", users: [{ name: "Anna Nowak", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anna", lvl: 45, prestige: 0 }] },
+                { name: "Użytkownicy", color: "", users: [] } // Tu wpadnie zalogowany gracz
             ],
-            messages: [
-                { author: "Blaaqu", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Blaaqu", text: "Jak ci idzie kodowanie?", time: "Wczoraj o 22:23" }
-            ]
+            friends: [
+                { id: "f1", name: "Anna Nowak", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anna", post: { text: "Piję kawkę!", timestamp: Date.now() - 3600000 } }
+            ],
+            messages: [{ author: "Blaaqu", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Blaaqu", text: "Serwer odpalony!", time: "Wczoraj", lvl: 150, prestige: 3 }]
         };
-
-        const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 24 godziny w milisekundach
 
         // --- AUTH ---
         window.loginWithGoogle = () => signInWithPopup(auth, provider);
@@ -366,223 +276,218 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'flex';
                 
                 const docRef = doc(db, 'users', user.uid);
                 const docSnap = await getDoc(docRef);
                 
                 let avatarUrl = user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`;
                 if (!docSnap.exists()) {
-                    currentUser = { uid: user.uid, name: user.displayName, avatar: avatarUrl, status: "online", post: null };
+                    currentUser = { uid: user.uid, name: user.displayName, avatar: avatarUrl, xp: 0, level: 1, prestige: 0 };
                     await setDoc(docRef, currentUser);
                 } else {
                     currentUser = docSnap.data();
+                    if(currentUser.xp === undefined) { currentUser.xp = 0; currentUser.level = 1; currentUser.prestige = 0; }
                 }
                 
-                // My w MockDB
-                mockData.friends.unshift({ id: "me", name: currentUser.name, avatar: currentUser.avatar, post: currentUser.post, status: currentUser.status });
+                mockData.serverRoles[2].users.push({ name: currentUser.name, avatar: currentUser.avatar, lvl: currentUser.level, prestige: currentUser.prestige });
                 
-                updateUI();
-                window.switchToDM();
+                updateXPUI();
+                window.switchToServer();
             } else {
                 document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('app-container').style.display = 'none';
             }
         });
 
-        function updateUI() {
+        // --- SYSTEM XP, LVL I PRESTIŻU ---
+        const XP_PER_MSG = 15;
+        function getXpNeeded(lvl) { return 100 * Math.pow(1.5, lvl - 1); }
+
+        function gainXp() {
+            currentUser.xp += XP_PER_MSG;
+            let needed = getXpNeeded(currentUser.level);
+            
+            if(currentUser.xp >= needed) {
+                currentUser.xp -= needed;
+                currentUser.level++;
+                
+                // Prestiż co 50 poziomów
+                if(currentUser.level > 50) {
+                    currentUser.level = 1;
+                    currentUser.prestige++;
+                    showToast(`🏆 PRESTIŻ +1! Gratulacje!`, "var(--prestige-gold)");
+                } else {
+                    showToast(`🎉 Awans na Poziom ${currentUser.level}!`, "var(--brand-color)");
+                }
+                
+                // Sync z DB
+                setDoc(doc(db, 'users', currentUser.uid), currentUser);
+                
+                // Update w prawym panelu
+                mockData.serverRoles[2].users[0].lvl = currentUser.level;
+                mockData.serverRoles[2].users[0].prestige = currentUser.prestige;
+                if(document.getElementById('right-panel').innerHTML !== "") window.switchToServer();
+            }
+            updateXPUI();
+        }
+
+        function updateXPUI() {
             document.getElementById('my-avatar').src = currentUser.avatar;
             document.getElementById('my-name').innerText = currentUser.name;
             
-            // Kolor statusu kropki
-            const colors = { "online": "var(--success-color)", "idle": "var(--warning-color)", "dnd": "var(--danger-color)" };
-            document.getElementById('my-status').innerText = currentUser.status === "dnd" ? "Nie przeszkadzać" : (currentUser.status === "idle" ? "Zaraz wracam" : "Online");
-            document.getElementById('my-status').style.color = colors[currentUser.status];
+            let prestigeStr = currentUser.prestige > 0 ? `[P${currentUser.prestige}] ` : "";
+            document.getElementById('my-lvl-text').innerText = `${prestigeStr}Poziom ${currentUser.level}`;
+            
+            let needed = getXpNeeded(currentUser.level);
+            let percent = (currentUser.xp / needed) * 100;
+            document.getElementById('my-xp-bar').style.width = percent + "%";
         }
 
-        // --- RENDEROWANIE I NAWIGACJA ---
-        window.switchToDM = () => {
-            document.getElementById('nav-home').classList.add('active');
-            document.getElementById('nav-server').classList.remove('active');
-            document.getElementById('chat-header-title').innerText = "Wiadomości ze znajomymi";
+        function showToast(msg, color) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.borderLeftColor = color;
+            toast.innerHTML = `<span style="font-size:20px;">🔥</span> <div>${msg}</div>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 4000);
+        }
 
-            // Lewy Panel - Logika 24h POSTÓW (Relacji)
-            let sb = `<div class="category-name">Prywatne wiadomości</div>`;
-            const now = Date.now();
+        // --- RENDEROWANIE INTERFEJSU ---
+        window.switchToServer = () => {
+            document.getElementById('nav-server').classList.add('active');
+            document.getElementById('nav-home').classList.remove('active');
+            document.getElementById('chat-header-title').innerText = "ogólny";
+            
+            document.getElementById('sidebar-header-area').innerHTML = `
+                <span id="sidebar-title">33MC.PL</span>
+                <svg style="cursor:pointer; color:var(--header-secondary);" onclick="openModal('boost-modal')" title="Ulepsz Serwer"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+            `;
+            
+            document.getElementById('sidebar-content').innerHTML = `
+                <div class="category-name">Informacje</div>
+                <div class="list-item active"># ogólny</div>
+            `;
 
-            mockData.friends.forEach((f, i) => {
-                // Walidacja czasu postu (24h)
-                let hasValidPost = false;
-                if (f.post && f.post.timestamp) {
-                    if (now - f.post.timestamp < ONE_DAY_MS) hasValidPost = true;
-                    else f.post = null; // Usuń przeterminowany post
-                }
-
-                const hasPostClass = hasValidPost ? "has-post" : "";
-                const postOnClick = hasValidPost ? `onclick="event.stopPropagation(); window.viewPost('${f.id}')"` : "";
-                const dotColor = { "online": "var(--success-color)", "idle": "var(--warning-color)", "dnd": "var(--danger-color)" }[f.status];
-
-                sb += `
-                    <div class="list-item ${i===1?'active':''}">
-                        <div class="avatar-container" ${postOnClick} title="${hasValidPost ? 'Kliknij by zobaczyć post' : ''}">
-                            <img src="${f.avatar}" class="list-avatar ${hasPostClass}">
-                            <div class="status-dot" style="background:${dotColor}"></div>
-                        </div>
-                        <div style="flex:1;">${f.id === "me" ? "Ty" : f.name}</div>
-                    </div>`;
-            });
-            document.getElementById('sidebar-content').innerHTML = sb;
             renderMessages();
 
-            // Prawy Panel (Aktywni)
-            let rp = `<div class="panel-header">Aktywni znajomi</div>`;
-            mockData.friends.forEach(f => {
-                if(f.id !== "me" && f.status === "online") {
-                    rp += `
-                        <div class="member-item">
-                            <img src="${f.avatar}" class="member-avatar">
-                            <div><h4>${f.name}</h4><p style="color:var(--success-color);font-size:11px;">Online</p></div>
-                        </div>`;
+            // Render Rol (Prestiż i LVL)
+            let rp = "";
+            mockData.serverRoles.forEach(role => {
+                if(role.users.length > 0) {
+                    rp += `<div class="role-header">${role.name} - ${role.users.length}</div>`;
+                    role.users.forEach(u => {
+                        let badges = `<span class="lvl-badge">Lvl ${u.lvl}</span>`;
+                        if(u.prestige > 0) badges += `<span class="prestige-badge">P${u.prestige}</span>`;
+                        
+                        rp += `
+                            <div class="member-item">
+                                <img src="${u.avatar}" class="member-avatar">
+                                <div>
+                                    <h4 class="${role.color}">${u.name}</h4>
+                                    <div style="display:flex; gap:5px; margin-top:2px;">${badges}</div>
+                                </div>
+                            </div>`;
+                    });
                 }
             });
             document.getElementById('right-panel').innerHTML = rp;
         };
 
-        window.switchToServer = () => {
-            document.getElementById('nav-server').classList.add('active');
-            document.getElementById('nav-home').classList.remove('active');
-            document.getElementById('chat-header-title').innerText = "strona-prowizja";
+        window.switchToDM = () => {
+            document.getElementById('nav-home').classList.add('active');
+            document.getElementById('nav-server').classList.remove('active');
+            document.getElementById('chat-header-title').innerText = "Prywatne Wiadomości";
+            document.getElementById('sidebar-header-area').innerHTML = `<span id="sidebar-title">Znajdź rozmowę</span>`;
             
-            document.getElementById('sidebar-content').innerHTML = `
-                <div class="category-name">Informacje</div>
-                <div class="list-item active"><svg><path d="M21 8.5h-4.5V4h-2v4.5H9.5V4h-2v4.5H3v2h4.5V15H3v2h4.5v4.5h2V17h5v4.5h2V17H21v-2h-4.5v-4.5H21v-2zm-6.5 6.5h-5v-4.5h5v4.5z"/></svg> strona-prowizja</div>
-            `;
-            document.getElementById('messages-area').innerHTML = `<div class="welcome-msg"><h1>Witamy na: # strona-prowizja!</h1><p style="color:var(--text-muted);">To jest początek kanału.</p></div>`;
-            document.getElementById('right-panel').innerHTML = `<div class="panel-header">Zarząd</div><div class="member-item"><img src="https://api.dicebear.com/7.x/initials/svg?seed=Admin" class="member-avatar"><div><h4>Admin</h4></div></div>`;
+            let sb = `<div class="category-name">Znajomi</div>`;
+            mockData.friends.forEach(f => {
+                const hasPost = f.post && (Date.now() - f.post.timestamp < 86400000) ? "has-post" : "";
+                sb += `
+                    <div class="list-item">
+                        <div class="avatar-container" onclick="viewPost('${f.id}')">
+                            <img src="${f.avatar}" class="list-avatar ${hasPost}">
+                        </div>
+                        <div>${f.name}</div>
+                    </div>`;
+            });
+            document.getElementById('sidebar-content').innerHTML = sb;
+            document.getElementById('messages-area').innerHTML = `<div class="welcome-msg"><h1>Wybierz znajomego!</h1></div>`;
+            document.getElementById('right-panel').innerHTML = ``;
         };
 
         function renderMessages() {
             let html = "";
             mockData.messages.forEach(m => {
+                let badges = `<span class="lvl-badge">Lvl ${m.lvl}</span>`;
+                if(m.prestige > 0) badges += ` <span class="prestige-badge">P${m.prestige}</span>`;
+                
                 html += `
                     <div class="message">
                         <img src="${m.avatar}" class="msg-avatar">
-                        <div class="msg-header"><span class="msg-author">${m.author}</span><span class="msg-time">${m.time}</span></div>
+                        <div class="msg-header">
+                            <span class="msg-author">${m.author} ${badges}</span>
+                            <span class="msg-time">${m.time}</span>
+                        </div>
                         <div class="msg-content">${m.text}</div>
                     </div>`;
             });
-            document.getElementById('messages-area').innerHTML = html;
             const container = document.getElementById('messages-area');
+            container.innerHTML = html;
             container.scrollTop = container.scrollHeight;
         }
 
         window.sendMessage = (e) => {
             if (e.key === "Enter" && e.target.value.trim() !== "") {
-                mockData.messages.push({ author: currentUser.name, avatar: currentUser.avatar, text: e.target.value.trim(), time: "Dzisiaj o " + new Date().toLocaleTimeString().slice(0,5) });
+                mockData.messages.push({ 
+                    author: currentUser.name, avatar: currentUser.avatar, 
+                    text: e.target.value.trim(), time: "Przed chwilą", 
+                    lvl: currentUser.level, prestige: currentUser.prestige 
+                });
                 e.target.value = "";
+                gainXp(); // DODAJ XP!
                 renderMessages();
             }
         };
 
-        // --- SYSTEM POSTÓW (ZDJĘCIA I CZAS) ---
-        let tempPostBase64 = null;
-        
-        window.handlePostImage = (e) => {
-            const file = e.target.files[0];
-            if(file) {
-                const r = new FileReader();
-                r.onload = (ev) => {
-                    tempPostBase64 = ev.target.result;
-                    document.getElementById('post-image-preview').src = tempPostBase64;
-                    document.getElementById('post-image-preview').style.display = 'block';
-                    document.getElementById('post-upload-text').style.display = 'none';
-                };
-                r.readAsDataURL(file);
-            }
-        };
-
-        window.publishPost = async () => {
-            const text = document.getElementById('new-post-text').value.trim();
-            if(!text && !tempPostBase64) return alert("Dodaj tekst lub zdjęcie!");
+        // --- POSTY I MODALE ---
+        let postTimer;
+        window.viewPost = (fid) => {
+            const f = mockData.friends.find(x => x.id === fid);
+            if(!f || !f.post) return;
             
-            // Zapis do obiektu z Timestampem
-            currentUser.post = { text: text, img: tempPostBase64, timestamp: Date.now() };
-            await setDoc(doc(db, 'users', currentUser.uid), currentUser);
-            
-            mockData.friends[0].post = currentUser.post; // Sync z UI
-            
-            closeModal('add-post-modal');
-            document.getElementById('new-post-text').value = "";
-            document.getElementById('post-image-preview').style.display = "none";
-            document.getElementById('post-upload-text').style.display = "block";
-            tempPostBase64 = null;
-            window.switchToDM(); 
-        };
-
-        window.viewPost = (userId) => {
-            const friend = mockData.friends.find(f => f.id === userId);
-            if(!friend || !friend.post) return;
-
             document.getElementById('post-viewer-modal').style.display = 'flex';
-            document.getElementById('post-viewer-avatar').src = friend.avatar;
-            document.getElementById('post-viewer-name').innerText = friend.name === currentUser.name ? "Twój Post" : friend.name;
+            document.getElementById('post-viewer-avatar').src = f.avatar;
+            document.getElementById('post-viewer-name').innerText = f.name;
+            document.getElementById('post-viewer-text').innerText = f.post.text;
             
-            // Obliczenie czasu temu
-            const diffHours = Math.floor((Date.now() - friend.post.timestamp) / 3600000);
-            document.getElementById('post-viewer-time').innerText = diffHours === 0 ? "Dodano przed chwilą" : `Dodano ${diffHours} godz. temu`;
+            const prog = document.getElementById('post-progress');
+            prog.style.transition = "none"; prog.style.width = "0%";
+            setTimeout(() => { prog.style.transition = "width 4s linear"; prog.style.width = "100%"; }, 50);
             
-            const bgImg = document.getElementById('post-viewer-img');
-            if(friend.post.img) { bgImg.src = friend.post.img; bgImg.style.display = 'block'; }
-            else { bgImg.style.display = 'none'; }
-            
-            document.getElementById('post-viewer-text').innerText = friend.post.text;
-
-            // Animacja Paska na 5 sekund
-            const progress = document.getElementById('post-progress');
-            progress.style.transition = "none"; progress.style.width = "0%";
-            setTimeout(() => { progress.style.transition = "width 5s linear"; progress.style.width = "100%"; }, 50);
-
             clearTimeout(postTimer);
-            postTimer = setTimeout(() => { window.closePostViewer(); }, 5000);
+            postTimer = setTimeout(() => closeModal('post-viewer-modal'), 4000);
         };
 
-        window.closePostViewer = () => { document.getElementById('post-viewer-modal').style.display = 'none'; clearTimeout(postTimer); };
-
-        // --- USTAWIENIA PROFILU ---
-        let tempAvatarBase64 = null;
-
-        window.openModal = (id) => {
-            document.getElementById(id).style.display = 'flex';
-            if(id === 'settings-modal') {
-                document.getElementById('edit-name').value = currentUser.name;
-                document.getElementById('edit-status').value = currentUser.status;
-                document.getElementById('settings-avatar-preview').src = currentUser.avatar;
-                tempAvatarBase64 = currentUser.avatar;
-            }
+        window.openModal = (id) => { 
+            document.getElementById(id).style.display = 'flex'; 
+            if(id === 'settings-modal') document.getElementById('edit-name').value = currentUser.name;
         };
-
         window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-
-        window.handleAvatarUpload = (e) => {
-            const file = e.target.files[0];
-            if(file) {
-                const r = new FileReader();
-                r.onload = (ev) => { tempAvatarBase64 = ev.target.result; document.getElementById('settings-avatar-preview').src = tempAvatarBase64; };
-                r.readAsDataURL(file);
-            }
-        };
 
         window.saveSettings = async () => {
             currentUser.name = document.getElementById('edit-name').value;
-            currentUser.status = document.getElementById('edit-status').value;
-            currentUser.avatar = tempAvatarBase64;
-            
             await setDoc(doc(db, 'users', currentUser.uid), currentUser);
-            mockData.friends[0].name = currentUser.name;
-            mockData.friends[0].avatar = currentUser.avatar;
-            mockData.friends[0].status = currentUser.status;
-            
-            updateUI();
+            mockData.serverRoles[2].users[0].name = currentUser.name;
+            updateXPUI();
             closeModal('settings-modal');
-            window.switchToDM();
+            window.switchToServer();
+        };
+
+        window.boostServer = () => {
+            showToast("💎 Serwer ulepszony! Dziękujemy za wsparcie!", "var(--boost-pink)");
+            closeModal('boost-modal');
         };
 
     </script>

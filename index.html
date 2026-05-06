@@ -2,231 +2,298 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Territorial - Procedural Edition</title>
+    <title>Territorial - Empire & Multiplayer</title>
     <style>
-        body { margin: 0; background: #111; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden; }
+        :root { --bg: #0d1117; --panel: #161b22; --text: #c9d1d9; --accent: #58a6ff; --danger: #f85149; --success: #238636; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
         
-        #hud { display: flex; gap: 30px; background: #222; padding: 15px 40px; border-radius: 0 0 15px 15px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .stat { font-size: 18px; font-weight: bold; }
-        .val { font-size: 22px; margin-left: 10px; }
-        .p1-color { color: #3498db; }
-        .p2-color { color: #e74c3c; }
+        /* MENU GŁÓWNE */
+        #main-menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(13, 17, 23, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
+        .menu-title { font-size: 4rem; color: var(--accent); margin-bottom: 40px; text-transform: uppercase; letter-spacing: 4px; text-shadow: 0 0 20px rgba(88, 166, 255, 0.4); }
+        .menu-btn { background: var(--panel); border: 1px solid #30363d; color: var(--text); padding: 15px 40px; font-size: 1.2rem; margin: 10px; cursor: pointer; border-radius: 6px; width: 300px; transition: 0.2s; text-align: center; }
+        .menu-btn:hover { background: #30363d; border-color: var(--text); transform: scale(1.02); }
+        .menu-btn.primary { background: var(--success); color: white; border: none; }
+        .menu-btn.primary:hover { background: #2ea043; }
 
-        canvas { background: #051923; border: 2px solid #444; box-shadow: 0 0 20px rgba(0,0,0,0.8); cursor: crosshair; }
+        /* HUD W GRZE */
+        #game-ui { display: none; flex-direction: column; height: 100%; }
+        #top-bar { background: var(--panel); padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 1px solid #30363d; }
+        .stat { font-size: 1.1rem; font-weight: bold; }
+        .val { color: var(--accent); }
+
+        /* KONTENER MAPY (Z możliwością scrollowania dużych map) */
+        #map-container { flex-grow: 1; overflow: auto; background: #010409; position: relative; display: flex; justify-content: center; align-items: center; }
+        canvas { background: #0f2a3f; cursor: crosshair; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+
+        /* PANEL BUDOWANIA */
+        #build-panel { background: var(--panel); padding: 15px; border-top: 1px solid #30363d; display: flex; gap: 15px; justify-content: center; align-items: center; }
+        .build-btn { background: #21262d; border: 1px solid #30363d; color: white; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .build-btn:hover { background: #30363d; }
+        .build-btn.active { border-color: var(--accent); background: rgba(88, 166, 255, 0.1); }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="hud">
-        <div class="stat p1-color">Ty (Niebieski) | Siła: <span id="p1-power" class="val">10</span> | Teren: <span id="p1-area" class="val">1</span></div>
-        <div class="stat p2-color">Bot (Czerwony) | Siła: <span id="p2-power" class="val">10</span> | Teren: <span id="p2-area" class="val">1</span></div>
+    <div id="main-menu">
+        <div class="menu-title">Global Domination</div>
+        <div id="auth-status" style="margin-bottom: 20px; color: #8b949e;">Nie zalogowano</div>
+        
+        <div class="menu-btn primary" onclick="UI.showModeSelect()">GRAJ</div>
+        <div class="menu-btn" onclick="alert('System Kont - Logowanie w Firebase...')">KONTO (Zaloguj)</div>
+        <div class="menu-btn" onclick="alert('System Klanów w budowie')">KLANY</div>
+        <div class="menu-btn" onclick="alert('Rankingi Globalne w budowie')">RANKINGI ŚWIATOWE</div>
     </div>
 
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="mode-menu" class="hidden" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(13, 17, 23, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 101;">
+        <h2 style="color: white; font-size: 2rem;">Wybierz tryb gry</h2>
+        <div class="menu-btn" onclick="Game.start('bots')">Zagraj z Botami (Offline)</div>
+        <div class="menu-btn primary" onclick="Game.start('multiplayer')">Wojny Multiplayer (Online)</div>
+        <div class="menu-btn" onclick="UI.backToMenu()" style="margin-top: 30px; background: transparent; border: none; color: #8b949e;">Wróć</div>
+    </div>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+    <div id="game-ui">
+        <div id="top-bar">
+            <div class="stat">Wojsko: <span id="ui-troops" class="val">0</span></div>
+            <div class="stat">Złoto/Zasoby: <span id="ui-gold" class="val">100</span></div>
+            <div class="stat">Terytorium: <span id="ui-area" class="val">0</span> px</div>
+            <button onclick="Game.quit()" style="background: var(--danger); color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer;">Poddaj się</button>
+        </div>
 
-        // USTAWIENIA GRY
-        const P_SIZE = 8; // Rozmiar "piksela" - im mniejszy, tym dokładniejsza mapa
-        const cols = Math.floor(canvas.width / P_SIZE);
-        const rows = Math.floor(canvas.height / P_SIZE);
-        
-        let grid = [];
-        
-        const players = {
-            1: { color: "#3498db", power: 50, area: 1, lastTick: Date.now() },
-            2: { color: "#e74c3c", power: 50, area: 1, lastTick: Date.now() }
+        <div id="map-container">
+            <canvas id="gameCanvas" width="1600" height="900"></canvas>
+        </div>
+
+        <div id="build-panel">
+            <div style="color: #8b949e; font-size: 0.9rem;">Wybierz akcję (LPM na mapie):</div>
+            <button class="build-btn active" onclick="Game.setCursorMode('attack')" id="btn-attack">⚔️ Atak / Ekspansja</button>
+            <button class="build-btn" onclick="Game.setCursorMode('port')" id="btn-port">⚓ Buduj Port (Koszt: 50 zasobów)</button>
+            <button class="build-btn" onclick="Game.setCursorMode('mine')" id="btn-mine">⛏️ Buduj Kopalnię (Koszt: 100 zasobów)</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        // TWOJA KONFIGURACJA
+        const firebaseConfig = {
+            apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
+            authDomain: "xchess-79e2d.firebaseapp.com",
+            projectId: "xchess-79e2d",
+            storageBucket: "xchess-79e2d.firebasestorage.app",
+            messagingSenderId: "382071993193",
+            appId: "1:382071993193:web:86dbe5211f2151cb5383f8",
+            measurementId: "G-E8RJF7LKLE"
         };
 
-        // 1. PROCEDURALNA GENERACJA MAPY (Cellular Automata)
-        function generateMap() {
-            // Krok 1: Losowy szum (45% szans na ląd)
-            let tempGrid = [];
-            for (let y = 0; y < rows; y++) {
-                let row = [];
-                for (let x = 0; x < cols; x++) {
-                    row.push(Math.random() > 0.55 ? 1 : 0); // 1 = ląd, 0 = woda
-                }
-                tempGrid.push(row);
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+
+        window.FirebaseAPI = { db, auth, ref, set, onValue, signInAnonymously, onAuthStateChanged };
+    </script>
+
+    <script>
+        const UI = {
+            showModeSelect: () => {
+                document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('mode-menu').classList.remove('hidden');
+            },
+            backToMenu: () => {
+                document.getElementById('mode-menu').classList.add('hidden');
+                document.getElementById('main-menu').classList.remove('hidden');
             }
+        };
 
-            // Krok 2: Wygładzanie (algorytm Automatu Komórkowego)
-            // Powtarzamy 5 razy, aby stworzyć ładne, gładkie wyspy
-            for (let step = 0; step < 5; step++) {
-                let newGrid = [];
-                for (let y = 0; y < rows; y++) {
-                    let newRow = [];
-                    for (let x = 0; x < cols; x++) {
-                        let neighbors = countNeighbors(tempGrid, x, y);
-                        // Jeśli wokół jest dużo lądu, stań się lądem. W przeciwnym razie woda.
-                        if (neighbors > 4) newRow.push(1);
-                        else if (neighbors < 4) newRow.push(0);
-                        else newRow.push(tempGrid[y][x]);
-                    }
-                    newGrid.push(newRow);
-                }
-                tempGrid = newGrid;
-            }
-
-            // Krok 3: Konwersja na obiekty gry
-            grid = [];
-            for (let y = 0; y < rows; y++) {
-                let row = [];
-                for (let x = 0; x < cols; x++) {
-                    row.push({
-                        isLand: tempGrid[y][x] === 1,
-                        owner: null
-                    });
-                }
-                grid.push(row);
-            }
-        }
-
-        function countNeighbors(map, x, y) {
-            let count = 0;
-            for (let dy = -1; dy <= 1; dy++) {
-                for (let dx = -1; dx <= 1; dx++) {
-                    if (dx === 0 && dy === 0) continue;
-                    let nx = x + dx, ny = y + dy;
-                    if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
-                        count += map[ny][nx];
-                    }
-                }
-            }
-            return count;
-        }
-
-        // 2. SPAWNOWANIE GRACZY
-        function spawnPlayers() {
-            function getRandomLand() {
-                let x, y;
-                do {
-                    x = Math.floor(Math.random() * cols);
-                    y = Math.floor(Math.random() * rows);
-                } while (!grid[y][x].isLand || grid[y][x].owner !== null);
-                return {x, y};
-            }
-
-            let p1 = getRandomLand();
-            grid[p1.y][p1.x].owner = 1;
-
-            let p2 = getRandomLand();
-            grid[p2.y][p2.x].owner = 2;
-        }
-
-        // 3. MECHANIKA ROZROSTU I SIŁY
-        function updatePower() {
-            let now = Date.now();
-            [1, 2].forEach(id => {
-                let p = players[id];
-                // Zyskujesz siłę bazując na swoim terytorium (np. 1 punkt za każde 2 piksele co sekundę)
-                if (now - p.lastTick > 1000) {
-                    p.power += Math.max(1, Math.floor(p.area / 2));
-                    p.lastTick = now;
-                }
-            });
+        const Game = {
+            canvas: document.getElementById('gameCanvas'),
+            ctx: document.getElementById('gameCanvas').getContext('2d'),
+            isRunning: false,
+            mode: 'bots', // 'bots' lub 'multiplayer'
+            cursorMode: 'attack', // 'attack', 'port', 'mine'
             
-            document.getElementById('p1-power').innerText = players[1].power;
-            document.getElementById('p1-area').innerText = players[1].area;
-            document.getElementById('p2-power').innerText = players[2].power;
-            document.getElementById('p2-area').innerText = players[2].area;
-        }
+            // Surowce gracza
+            player: {
+                id: 1, color: "#58a6ff", troops: 100, gold: 100, area: 0
+            },
 
-        function canClaim(x, y, ownerId) {
-            if (!grid[y][x].isLand || grid[y][x].owner !== null) return false;
-            // Sprawdza czy sąsiaduje z Twoim
-            const neighbors = [[-1,0], [1,0], [0,-1], [0,1]];
-            return neighbors.some(([dx, dy]) => {
-                let nx = x + dx, ny = y + dy;
-                return nx >= 0 && nx < cols && ny >= 0 && ny < rows && grid[ny][nx].owner === ownerId;
-            });
-        }
+            // Mapa: 0 = głęboka woda, 1 = płytka woda, 2 = ląd
+            // Aby pływać po wodzie, potrzebny jest port na styku lądu i wody.
+            gridSize: 10,
+            cols: 160,
+            rows: 90,
+            grid: [], // Stan terytorium
+            terrain: [], // Stan geografii
+            buildings: [], // Lista budynków
 
-        // Ekspansja gracza (kosztuje siłę!)
-        let isDragging = false;
-        canvas.addEventListener('mousedown', () => isDragging = true);
-        window.addEventListener('mouseup', () => isDragging = false);
-        
-        canvas.addEventListener('mousemove', (e) => { if(isDragging) attemptClaim(e); });
-        canvas.addEventListener('click', (e) => attemptClaim(e));
+            start(mode) {
+                this.mode = mode;
+                document.getElementById('mode-menu').classList.add('hidden');
+                document.getElementById('game-ui').style.display = 'flex';
+                this.generateTerrain();
+                this.initInteraction();
+                this.isRunning = true;
+                this.gameLoop();
 
-        function attemptClaim(e) {
-            const rect = canvas.getBoundingClientRect();
-            const x = Math.floor((e.clientX - rect.left) / P_SIZE);
-            const y = Math.floor((e.clientY - rect.top) / P_SIZE);
-
-            if (x >= 0 && x < cols && y >= 0 && y < rows) {
-                // Jeśli masz min. 1 punkt siły i klikasz obok swojego terenu
-                if (players[1].power > 0 && canClaim(x, y, 1)) {
-                    grid[y][x].owner = 1;
-                    players[1].area++;
-                    players[1].power--; // Koszt zajęcia terenu
+                if (mode === 'multiplayer') {
+                    alert("Łączenie z Firebase Database...\n(Gdyby to była pełna wersja, tu pobrałbyś mapę z serwera).");
+                    // Tu wchodzi kod: FirebaseAPI.onValue(...)
                 }
-            }
-        }
+            },
 
-        // 4. INTELIGENTNY BOT
-        function botAI() {
-            if (players[2].power <= 0) return; // Czeka aż zbierze siły
+            quit() {
+                this.isRunning = false;
+                document.getElementById('game-ui').style.display = 'none';
+                document.getElementById('main-menu').classList.remove('hidden');
+            },
 
-            let possibleMoves = [];
-            for (let y = 0; y < rows; y++) {
-                for (let x = 0; x < cols; x++) {
-                    if (canClaim(x, y, 2)) {
-                        possibleMoves.push({x, y});
+            setCursorMode(mode) {
+                this.cursorMode = mode;
+                document.querySelectorAll('.build-btn').forEach(btn => btn.classList.remove('active'));
+                document.getElementById('btn-' + mode).classList.add('active');
+            },
+
+            generateTerrain() {
+                this.terrain = new Array(this.cols * this.rows).fill(0);
+                this.grid = new Array(this.cols * this.rows).fill(0);
+                
+                // Generowanie prostej "wyspy" na środku wielkiej mapy (Ląd = 2, Woda = 0)
+                for(let y = 0; y < this.rows; y++) {
+                    for(let x = 0; x < this.cols; x++) {
+                        let distFromCenter = Math.sqrt(Math.pow(x - this.cols/2, 2) + Math.pow(y - this.rows/2, 2));
+                        let idx = y * this.cols + x;
+                        if(distFromCenter < 30 + Math.random() * 10) {
+                            this.terrain[idx] = 2; // Ląd
+                        } else {
+                            this.terrain[idx] = 0; // Woda
+                        }
                     }
                 }
-            }
 
-            // Bot atakuje naraz tyle pól, na ile go stać, ale maksymalnie 5 na tick
-            let attacks = Math.min(possibleMoves.length, players[2].power, 5);
-            
-            for(let i = 0; i < attacks; i++) {
-                let idx = Math.floor(Math.random() * possibleMoves.length);
-                let move = possibleMoves[idx];
-                grid[move.y][move.x].owner = 2;
-                players[2].area++;
-                players[2].power--;
-                possibleMoves.splice(idx, 1);
-            }
-        }
+                // Dajemy graczowi stolicę na lądzie
+                let centerIdx = Math.floor(this.rows/2) * this.cols + Math.floor(this.cols/2);
+                this.grid[centerIdx] = 1;
+                this.player.area = 1;
+            },
 
-        // 5. RYSOWANIE
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            for (let y = 0; y < rows; y++) {
-                for (let x = 0; x < cols; x++) {
-                    let cell = grid[y][x];
+            initInteraction() {
+                this.canvas.onmousedown = (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    // Skalowanie uwzględniające CSS
+                    const scaleX = this.canvas.width / rect.width;
+                    const scaleY = this.canvas.height / rect.height;
+                    const x = Math.floor(((e.clientX - rect.left) * scaleX) / this.gridSize);
+                    const y = Math.floor(((e.clientY - rect.top) * scaleY) / this.gridSize);
                     
-                    if (cell.isLand) {
-                        if (cell.owner === 1) ctx.fillStyle = players[1].color;
-                        else if (cell.owner === 2) ctx.fillStyle = players[2].color;
-                        else ctx.fillStyle = "#2c3e50"; // Zwykły ląd
+                    this.handleAction(x, y);
+                };
+            },
+
+            handleAction(x, y) {
+                let idx = y * this.cols + x;
+
+                if (this.cursorMode === 'attack') {
+                    // Logika ataku lądowego lub morskiego (jeśli ma port)
+                    if (this.terrain[idx] === 0) {
+                        alert("Aby pływać po głębokiej wodzie, musisz najpierw zbudować PORT na wybrzeżu i użyć statków!");
+                    } else if (this.grid[idx] !== 1 && this.player.troops >= 5) {
+                        this.grid[idx] = 1;
+                        this.player.troops -= 5;
+                        this.player.area++;
+                    }
+                } 
+                else if (this.cursorMode === 'port') {
+                    if (this.player.gold >= 50) {
+                        this.buildings.push({ type: 'port', x, y });
+                        this.player.gold -= 50;
+                        alert("Zbudowano Port! Możesz teraz budować flotę (w pełnej wersji).");
+                        this.setCursorMode('attack');
                     } else {
-                        ctx.fillStyle = "#051923"; // Woda
+                        alert("Za mało złota!");
                     }
-                    
-                    ctx.fillRect(x * P_SIZE, y * P_SIZE, P_SIZE, P_SIZE);
                 }
+                else if (this.cursorMode === 'mine') {
+                    if (this.terrain[idx] !== 2 || this.grid[idx] !== 1) {
+                        alert("Kopalnię można zbudować tylko na Twoim lądzie!");
+                        return;
+                    }
+                    if (this.player.gold >= 100) {
+                        this.buildings.push({ type: 'mine', x, y });
+                        this.player.gold -= 100;
+                        alert("Zbudowano Kopalnię! Twoje zasoby będą rosnąć szybciej.");
+                        this.setCursorMode('attack');
+                    }
+                }
+            },
+
+            updateEconomy() {
+                // Podstawowy przyrost
+                this.player.troops += this.player.area * 0.01;
+                
+                // Przyrost z budynków (Kopalnie dają złoto)
+                let goldIncome = 0.1;
+                this.buildings.forEach(b => {
+                    if (b.type === 'mine') goldIncome += 0.5;
+                });
+                this.player.gold += goldIncome;
+
+                // Aktualizacja UI
+                document.getElementById('ui-troops').innerText = Math.floor(this.player.troops);
+                document.getElementById('ui-gold').innerText = Math.floor(this.player.gold);
+                document.getElementById('ui-area').innerText = this.player.area;
+            },
+
+            draw() {
+                // Rysowanie terenu (Geografia)
+                for(let i = 0; i < this.terrain.length; i++) {
+                    let x = i % this.cols;
+                    let y = Math.floor(i / this.cols);
+                    
+                    if (this.terrain[i] === 2) {
+                        this.ctx.fillStyle = "#2c3e50"; // Ląd
+                    } else {
+                        this.ctx.fillStyle = "#0f2a3f"; // Woda
+                    }
+                    this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
+                }
+
+                // Rysowanie terytorium państw
+                for(let i = 0; i < this.grid.length; i++) {
+                    if (this.grid[i] === 1) {
+                        let x = i % this.cols;
+                        let y = Math.floor(i / this.cols);
+                        // Nakładamy kolor gracza z przezroczystością, żeby było widać teren pod spodem
+                        this.ctx.fillStyle = "rgba(88, 166, 255, 0.7)";
+                        this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
+                    }
+                }
+
+                // Rysowanie Budynków
+                this.buildings.forEach(b => {
+                    if (b.type === 'port') {
+                        this.ctx.fillStyle = "#e67e22"; // Pomarańczowy port
+                    } else if (b.type === 'mine') {
+                        this.ctx.fillStyle = "#f1c40f"; // Złota kopalnia
+                    }
+                    this.ctx.beginPath();
+                    this.ctx.arc(b.x * this.gridSize + this.gridSize/2, b.y * this.gridSize + this.gridSize/2, this.gridSize, 0, Math.PI*2);
+                    this.ctx.fill();
+                    this.ctx.strokeStyle = "black";
+                    this.ctx.stroke();
+                });
+            },
+
+            gameLoop() {
+                if(!this.isRunning) return;
+                this.updateEconomy();
+                this.draw();
+                // Ograniczenie do około 30 klatek na sekundę dla lepszej wydajności przy dużej mapie
+                setTimeout(() => requestAnimationFrame(() => this.gameLoop()), 1000 / 30);
             }
-        }
-
-        // GŁÓWNA PĘTLA GRY
-        function gameLoop() {
-            updatePower();
-            botAI();
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
-
-        // START
-        generateMap();
-        spawnPlayers();
-        gameLoop();
-
+        };
     </script>
 </body>
 </html>

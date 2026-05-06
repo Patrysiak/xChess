@@ -14,7 +14,7 @@
                 <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.68,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.36,46,96.26,53,91.08,65.69,84.69,65.69Z"/>
             </svg>
             <h2>Witaj w 33MC.PL</h2>
-            <p>Zaloguj się przez Firebase, aby wejść na serwer.</p>
+            <p>Zaloguj się przez Firebase, aby wejść na serwer i zbierać XP.</p>
             <button class="btn-brand" id="btn-login">Zaloguj przez Google</button>
         </div>
     </div>
@@ -22,19 +22,30 @@
     <div id="app-container">
         
         <nav class="servers-nav" id="servers-nav">
-            </nav>
+            <div class="server-icon-wrapper active" id="nav-home">
+                <div class="server-pill"></div>
+                <div class="server-icon" style="background: var(--brand-color);">🏠</div>
+            </div>
+            <div class="server-separator"></div>
+            <div class="server-icon-wrapper" id="nav-server">
+                <div class="server-pill"></div>
+                <div class="server-icon"><img src="https://api.dicebear.com/7.x/initials/svg?seed=33MC&backgroundColor=111" alt="33MC"></div>
+            </div>
+        </nav>
 
         <aside class="sidebar">
             <header class="sidebar-header" id="sidebar-header-area">
                 <span id="sidebar-title">Ładowanie...</span>
             </header>
             
-            <div class="sidebar-content" id="sidebar-content">
-                </div>
+            <div class="sidebar-content" id="sidebar-content"></div>
 
             <div class="user-panel">
                 <div class="user-profile" id="btn-open-settings">
-                    <img id="my-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Puste" alt="Avatar">
+                    <div class="avatar-container" style="margin-right: 8px;">
+                        <img id="my-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Puste" alt="Avatar">
+                        <div id="my-status-dot" class="status-dot"></div>
+                    </div>
                     <div class="user-info">
                         <strong id="my-name">...</strong>
                         <span id="my-lvl-text">Poziom 1</span>
@@ -42,10 +53,10 @@
                     </div>
                 </div>
                 <div class="user-controls">
-                    <button class="control-btn" id="btn-add-post" title="Dodaj Post">
+                    <button class="control-btn" id="btn-add-post" title="Dodaj relację (Znika po 24h)">
                         <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
                     </button>
-                    <button class="control-btn" id="btn-settings" title="Ustawienia">
+                    <button class="control-btn" id="btn-settings" title="Ustawienia Profilu">
                         <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
                     </button>
                 </div>
@@ -54,11 +65,10 @@
 
         <main class="main-content">
             <header class="top-bar">
-                <div class="top-bar-title" id="chat-header-title">
-                    Wybierz kanał
-                </div>
+                <div class="top-bar-title" id="chat-header-title">Wybierz kanał</div>
                 <div class="top-bar-actions">
-                    <svg title="Dzwonienie" id="btn-call"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    <svg title="Rozmowa Głosowa" id="btn-call"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    <svg title="Kamera" id="btn-video"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
                 </div>
             </header>
 
@@ -67,18 +77,83 @@
                     <div class="messages-list" id="messages-area"></div>
                     <div class="input-area">
                         <div class="input-wrapper">
-                            <input type="text" class="chat-input" id="message-input" placeholder="Napisz wiadomość (Zdobywaj XP!)">
+                            <input type="text" class="chat-input" id="message-input" placeholder="Napisz wiadomość (Zdobądź XP!)">
                         </div>
                     </div>
                 </section>
-
-                <aside class="right-panel" id="right-panel">
-                    </aside>
+                <aside class="right-panel" id="right-panel"></aside>
             </div>
         </main>
     </div>
 
-    <div id="modal-container"></div>
+    <div id="modal-container">
+        
+        <div class="modal-overlay" id="settings-modal">
+            <div class="modal-content">
+                <svg class="modal-close" id="close-settings"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                <h2>Edytuj Profil</h2>
+                <div style="display:flex; gap:20px;">
+                    <label class="upload-area" style="width:120px; height:120px; padding:0; border-radius:50%; border:3px solid var(--brand-color);">
+                        <input type="file" id="avatar-upload" accept="image/*" style="display:none;">
+                        <img id="settings-avatar-preview" src="" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                        <div class="upload-overlay">Zmień</div>
+                    </label>
+                    <div style="flex:1;">
+                        <div class="form-group">
+                            <label class="form-label">Nazwa wyświetlana</label>
+                            <input type="text" id="edit-name" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status Aktywności</label>
+                            <select id="edit-status" class="form-input">
+                                <option value="online">Online 🟢</option>
+                                <option value="idle">Zaraz wracam 🌙</option>
+                                <option value="dnd">Nie przeszkadzać 🔴</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-submit" id="save-settings">Zapisz Zmiany</button>
+                <button class="btn-danger" id="btn-logout" style="background:transparent; border:1px solid var(--danger-color); color:var(--danger-color);">Wyloguj z Firebase</button>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="add-post-modal">
+            <div class="modal-content" style="width:500px;">
+                <svg class="modal-close" id="close-add-post"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                <h2>Dodaj Relację (Post)</h2>
+                <p style="color:var(--text-muted); margin-bottom:15px; font-size:12px;">Relacja zniknie automatycznie po 24 godzinach.</p>
+                <label class="upload-area" id="post-upload-area">
+                    <input type="file" id="post-image-upload" accept="image/*" style="display:none;">
+                    <div id="post-upload-text">Kliknij tutaj, aby dodać zdjęcie (Opcjonalnie)</div>
+                    <img id="post-image-preview" src="" style="display:none; max-width:100%; border-radius:8px;">
+                </label>
+                <div class="form-group">
+                    <input type="text" id="new-post-text" class="form-input" placeholder="Co u Ciebie słychać?">
+                </div>
+                <button class="btn-submit" id="publish-post">Opublikuj na 24 godziny</button>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="post-viewer-modal">
+            <div class="post-viewer">
+                <div class="post-progress-bar"><div class="post-progress-fill" id="post-progress"></div></div>
+                <div class="post-header">
+                    <img id="post-viewer-avatar" src="">
+                    <div>
+                        <strong id="post-viewer-name" style="display:block; font-size:14px; color:white;">Nazwa</strong>
+                        <span id="post-viewer-time" style="font-size:11px; color:#ddd;">Czas</span>
+                    </div>
+                    <svg class="modal-close" id="close-post-viewer" style="top:15px; right:15px;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </div>
+                <div class="post-body">
+                    <img id="post-viewer-img" class="post-bg-img" src="" style="display:none;">
+                    <div class="post-text-content" id="post-viewer-text"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-container"></div>
 
     <script type="module" src="app.js"></script>

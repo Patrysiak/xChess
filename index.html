@@ -10,18 +10,20 @@
             --bg-darkest: #1e1f22;
             --bg-sidebar: #2b2d31;
             --bg-chat: #313338;
-            --text-main: #dbdee1;
-            --text-muted: #949ba4;
             --bg-input: #383a40;
             --bg-hover: rgba(255, 255, 255, 0.08);
+            --text-main: #dbdee1;
+            --text-muted: #949ba4;
+            --brand-blue: #5865F2; /* Discord Blurple */
             --messenger-blue: #0084ff;
+            --danger-red: #f23f42;
+            --success-green: #23a559;
             --insta-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-darkest);
             color: var(--text-main);
@@ -30,548 +32,434 @@
             overflow: hidden;
         }
 
-        /* Niestandardowy pasek przewijania */
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #1a1b1e; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #111214; }
+
+        svg { width: 24px; height: 24px; fill: currentColor; }
+
+        /* ================= EKRAN LOGOWANIA (STYL DISCORDA) ================= */
+        #login-screen {
+            position: fixed; inset: 0;
+            background: var(--bg-darkest);
+            background-image: radial-gradient(circle at center, #2b2d31 0%, #1e1f22 100%);
+            z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .login-box {
+            background: var(--bg-chat);
+            padding: 40px;
+            border-radius: 8px;
+            width: 480px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .login-box h2 { font-size: 24px; color: white; margin-bottom: 8px; }
+        .login-box p { color: var(--text-muted); font-size: 15px; margin-bottom: 30px; }
+        
+        .btn-brand {
+            background: var(--brand-blue); color: white; border: none;
+            width: 100%; padding: 15px; border-radius: 4px; font-size: 16px;
+            font-weight: bold; cursor: pointer; transition: 0.2s;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+        .btn-brand:hover { background: #4752c4; }
+
+        /* Główny kontener aplikacji (ukryty do zalogowania) */
+        #app-container { display: none; width: 100%; height: 100%; }
 
         /* ================= 1. DISCORD NAV ================= */
         .app-nav {
-            width: 75px;
-            background-color: var(--bg-darkest);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 15px;
-            gap: 12px;
-            z-index: 10;
+            width: 75px; background-color: var(--bg-darkest);
+            display: flex; flex-direction: column; align-items: center;
+            padding-top: 15px; gap: 12px; z-index: 10;
         }
 
         .nav-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: var(--bg-sidebar);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            font-size: 22px;
-            position: relative;
+            width: 50px; height: 50px; border-radius: 50%;
+            background-color: var(--bg-sidebar); color: var(--text-main);
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: 0.3s; position: relative;
         }
+        .nav-icon svg { width: 28px; height: 28px; }
+        .nav-icon:hover { border-radius: 16px; background-color: var(--brand-blue); color: white; }
+        .nav-icon.active { background: var(--insta-gradient); border-radius: 16px; color: white; }
 
-        .nav-icon:hover {
-            border-radius: 16px;
-            background-color: var(--messenger-blue);
-            color: white;
-            transform: scale(1.05);
-        }
-
-        .nav-icon.active {
-            background: var(--insta-gradient);
-            border-radius: 16px;
-            color: white;
-        }
-
-        /* Notyfikacje na ikonach */
         .badge {
-            position: absolute;
-            bottom: -2px;
-            right: -2px;
-            background-color: #f23f42;
-            color: white;
-            font-size: 11px;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 10px;
-            border: 3px solid var(--bg-darkest);
+            position: absolute; bottom: -2px; right: -2px;
+            background-color: var(--danger-red); color: white;
+            font-size: 11px; font-weight: bold; padding: 2px 6px;
+            border-radius: 10px; border: 3px solid var(--bg-darkest);
         }
 
-        /* ================= 2. SIDEBAR (INSTA + MESSENGER) ================= */
+        /* ================= 2. SIDEBAR ================= */
         .sidebar {
-            width: 340px;
-            background-color: var(--bg-sidebar);
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #1f2023;
+            width: 340px; background-color: var(--bg-sidebar);
+            display: flex; flex-direction: column; border-right: 1px solid #1f2023;
         }
 
         .sidebar-header {
-            padding: 25px 20px 15px;
-            font-size: 22px;
-            font-weight: 800;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 25px 20px 15px; font-size: 22px; font-weight: 800; color: white;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* Insta Stories */
-        .stories-container {
-            display: flex;
-            padding: 0 15px 15px;
-            gap: 15px;
-            overflow-x: auto;
-            border-bottom: 1px solid #1f2023;
-        }
-
-        .story {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            min-width: 60px;
-            transition: 0.2s;
-        }
-
+        .stories-container { display: flex; padding: 0 15px 15px; gap: 15px; overflow-x: auto; border-bottom: 1px solid #1f2023; }
+        .story { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; }
         .story:hover { transform: translateY(-2px); }
-
-        .story-img-wrapper {
-            width: 58px;
-            height: 58px;
-            border-radius: 50%;
-            padding: 3px;
-            background: var(--insta-gradient);
-        }
-
+        .story-img-wrapper { width: 58px; height: 58px; border-radius: 50%; padding: 3px; background: var(--insta-gradient); }
         .story.viewed .story-img-wrapper { background: #4f545c; }
+        .story img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--bg-sidebar); }
+        .story span { font-size: 11px; width: 60px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .story img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid var(--bg-sidebar);
-        }
+        .search-bar { padding: 15px; }
+        .search-bar input { width: 100%; background: var(--bg-darkest); border: none; color: white; padding: 10px 15px; border-radius: 6px; outline: none; }
 
-        .story span {
-            font-size: 11px;
-            color: var(--text-main);
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 60px;
-        }
-
-        /* Szukajka */
-        .search-bar {
-            padding: 15px;
-        }
-        .search-bar input {
-            width: 100%;
-            background-color: var(--bg-darkest);
-            border: none;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-        }
-
-        /* Lista czatów */
-        .chat-list {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .chat-item {
-            padding: 12px 15px;
-            margin: 0 10px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            transition: 0.1s;
-        }
-
+        .chat-list { flex: 1; overflow-y: auto; }
+        .chat-item { padding: 12px 15px; margin: 0 10px; border-radius: 8px; display: flex; align-items: center; cursor: pointer; transition: 0.1s; }
         .chat-item:hover { background-color: var(--bg-hover); }
         .chat-item.active { background-color: rgba(255, 255, 255, 0.1); }
-
-        .chat-avatar-wrapper { position: relative; margin-right: 15px; }
-        .chat-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-        
-        .status-dot {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 14px;
-            height: 14px;
-            background-color: #23a559;
-            border-radius: 50%;
-            border: 3px solid var(--bg-sidebar);
-        }
-
+        .chat-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; margin-right: 15px; }
         .chat-info { flex: 1; overflow: hidden; }
-        .chat-info h4 { margin: 0; font-size: 15px; color: white; font-weight: 600; }
-        .chat-info p { 
-            margin: 4px 0 0 0; 
-            font-size: 13px; 
-            color: var(--text-muted);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .chat-time { font-size: 11px; color: var(--text-muted); margin-bottom: auto; margin-top: 5px;}
+        .chat-info h4 { font-size: 15px; color: white; font-weight: 600; margin-bottom: 4px;}
+        .chat-info p { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* ================= 3. CHAT AREA ================= */
-        .chat-area {
-            flex: 1;
-            background-color: var(--bg-chat);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .chat-header {
-            height: 70px;
-            padding: 0 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #1f2023;
-            background: var(--bg-chat);
-            z-index: 5;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
+        .chat-area { flex: 1; background-color: var(--bg-chat); display: flex; flex-direction: column; position: relative; }
+        .chat-header { height: 70px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1f2023; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .chat-header-info { display: flex; align-items: center; gap: 15px; }
         .chat-header-info img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; }
-        .chat-header-info h3 { margin: 0; font-size: 16px; color: white; }
+        .chat-header-info h3 { font-size: 16px; color: white; margin-bottom: 2px;}
         .chat-header-info span { font-size: 13px; color: var(--text-muted); }
-
-        .header-actions span {
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 20px;
-            margin-left: 20px;
-            transition: 0.2s;
-        }
+        
+        .header-actions { display: flex; gap: 20px; }
+        .header-actions span { color: var(--text-muted); cursor: pointer; transition: 0.2s; display: flex; align-items: center; }
         .header-actions span:hover { color: white; }
 
-        /* Wiadomości */
-        .messages {
-            flex: 1;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-        }
-
+        .messages { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
         .message-row { display: flex; width: 100%; flex-direction: column; }
         .message-row.received { align-items: flex-start; }
         .message-row.sent { align-items: flex-end; }
-
-        .message-bubble {
-            max-width: 65%;
-            padding: 12px 16px;
-            border-radius: 20px;
-            font-size: 15px;
-            line-height: 1.4;
-            position: relative;
-            word-wrap: break-word;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
+        .message-bubble { max-width: 65%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.4; position: relative; word-wrap: break-word; }
         .received .message-bubble { background-color: var(--bg-input); border-bottom-left-radius: 4px; }
         .sent .message-bubble { background-color: var(--messenger-blue); color: white; border-bottom-right-radius: 4px; }
-
         .message-time { font-size: 11px; color: var(--text-muted); margin-top: 4px; padding: 0 5px; }
 
-        /* Insta Like System */
-        .like-btn {
-            position: absolute;
-            bottom: -12px;
-            right: 10px;
-            background: var(--bg-chat);
-            border-radius: 50%;
-            padding: 4px 6px;
-            font-size: 14px;
-            cursor: pointer;
-            border: 2px solid var(--bg-chat);
-            opacity: 0;
-            transition: 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        
+        .like-btn { position: absolute; bottom: -12px; right: 10px; background: var(--bg-chat); border-radius: 50%; padding: 4px 6px; cursor: pointer; opacity: 0; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .sent .like-btn { left: 10px; right: auto; }
         .message-bubble:hover .like-btn { opacity: 1; transform: translateY(-2px); }
-        .like-btn.liked { opacity: 1; color: #ed4956; }
-        .like-btn:active { transform: scale(1.3); }
+        .like-btn.liked { opacity: 1; color: var(--danger-red); }
 
-        /* Input Area */
         .input-area { padding: 0 20px 25px; }
-        .input-wrapper {
-            background-color: var(--bg-input);
-            border-radius: 12px;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        .input-wrapper { background-color: var(--bg-input); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 15px; }
+        .input-wrapper input { flex: 1; background: none; border: none; color: white; outline: none; font-size: 15px; }
+        .action-icon { color: var(--text-muted); cursor: pointer; transition: 0.2s; display: flex; align-items: center;}
+        .action-icon:hover { color: white; }
 
-        .input-wrapper input {
-            flex: 1;
-            background: none;
-            border: none;
-            color: white;
-            outline: none;
-            font-size: 15px;
-        }
-
-        .input-wrapper input::placeholder { color: #6a717a; }
-
-        /* ================= MODAL RELACJI (STORIES) ================= */
-        #story-modal {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.95);
-            z-index: 100;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .close-story {
-            position: absolute;
-            top: 20px; right: 30px;
-            color: white;
-            font-size: 30px;
-            cursor: pointer;
-        }
-
-        .story-content {
-            width: 400px;
-            height: 700px;
-            background: #222;
-            border-radius: 15px;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 24px;
-            text-align: center;
-            padding: 20px;
-            background-size: cover;
-            background-position: center;
-        }
-
-        .story-bar {
-            position: absolute;
-            top: 15px; left: 15px; right: 15px;
-            height: 3px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .story-progress {
-            height: 100%;
-            background: white;
-            width: 0%;
-        }
+        /* ================= MODALS (WIDEO, TELEFON, USTAWIENIA) ================= */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--bg-sidebar); padding: 30px; border-radius: 12px; text-align: center; color: white; min-width: 300px; border: 1px solid #1f2023; position: relative;}
+        
+        .call-avatar { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 20px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(88, 101, 242, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(88, 101, 242, 0); } 100% { box-shadow: 0 0 0 0 rgba(88, 101, 242, 0); } }
+        
+        .btn-endcall { background: var(--danger-red); color: white; border: none; padding: 12px 25px; border-radius: 20px; cursor: pointer; font-weight: bold; margin-top: 20px; display: flex; align-items: center; gap: 10px; margin: 20px auto 0;}
+        .btn-logout { background: var(--bg-input); color: var(--danger-red); border: 1px solid var(--danger-red); padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight:bold; margin-top: 20px; width: 100%;}
+        .btn-logout:hover { background: var(--danger-red); color: white; }
+        
+        .close-modal { position: absolute; top: 15px; right: 15px; cursor: pointer; color: var(--text-muted); }
+        .close-modal:hover { color: white; }
 
     </style>
 </head>
 <body>
 
-    <div class="app-nav">
-        <div class="nav-icon active" title="Strona Główna">🏠</div>
-        <div class="nav-icon" title="Wiadomości">💬<div class="badge">3</div></div>
-        <div class="nav-icon" title="Powiadomienia">🔔</div>
-        <div class="nav-icon" title="Ustawienia" style="margin-top: auto; margin-bottom: 20px;">⚙️</div>
+    <div id="login-screen">
+        <div class="login-box">
+            <svg viewBox="0 0 127.14 96.36" style="width: 60px; height: 60px; color: var(--brand-blue); margin-bottom: 20px;">
+                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.68,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.36,46,96.26,53,91.08,65.69,84.69,65.69Z"/>
+            </svg>
+            <h2>Witaj ponownie!</h2>
+            <p>Jesteśmy tak bardzo podekscytowani, że znowu Cię widzimy!</p>
+            <button class="btn-brand" id="btn-login" onclick="loginWithGoogle()">
+                <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                Zaloguj przez Google
+            </button>
+        </div>
     </div>
 
-    <div class="sidebar">
-        <div class="sidebar-header">
-            Wiadomości
-            <span style="cursor: pointer; font-size: 18px;">📝</span>
-        </div>
+    <div id="app-container">
         
-        <div class="stories-container" id="stories-box"></div>
-
-        <div class="search-bar">
-            <input type="text" placeholder="Szukaj w konwersacjach..." onkeyup="filterChats(this.value)">
+        <div class="app-nav">
+            <div class="nav-icon active" title="Główna">
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            </div>
+            <div class="nav-icon" title="Czat">
+                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+                <div class="badge" id="total-unread">3</div>
+            </div>
+            <div class="nav-icon" title="Powiadomienia" onclick="alert('Brak nowych powiadomień')">
+                <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+            </div>
+            <div class="nav-icon" title="Ustawienia" style="margin-top: auto; margin-bottom: 20px;" onclick="openSettings()">
+                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            </div>
         </div>
 
-        <div class="chat-list" id="chats-box"></div>
-    </div>
+        <div class="sidebar">
+            <div class="sidebar-header">
+                Wiadomości
+                <span style="cursor:pointer; color:var(--text-muted);" title="Nowa wiadomość" onclick="alert('Wybierz kontakt z listy.')">
+                    <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                </span>
+            </div>
+            <div class="stories-container" id="stories-box"></div>
+            <div class="search-bar"><input type="text" placeholder="Szukaj..." onkeyup="filterChats(this.value)"></div>
+            <div class="chat-list" id="chats-box"></div>
+        </div>
 
-    <div class="chat-area">
-        <div class="chat-header" id="chat-header"></div>
-
-        <div class="messages" id="messages-box"></div>
-
-        <div class="input-area">
-            <div class="input-wrapper">
-                <span class="action-icon" style="color:var(--text-muted); cursor:pointer; font-size:22px;">➕</span>
-                <span class="action-icon" style="color:var(--text-muted); cursor:pointer; font-size:20px;">📷</span>
-                <input type="text" placeholder="Napisz wiadomość..." id="msg-input" onkeypress="handleKeyPress(event)" autocomplete="off">
-                <span class="action-icon" style="color:var(--text-muted); cursor:pointer; font-size:20px;">🎙️</span>
+        <div class="chat-area">
+            <div class="chat-header" id="chat-header"></div>
+            <div class="messages" id="messages-box"></div>
+            
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <label class="action-icon" title="Dodaj plik">
+                        <input type="file" style="display:none;" onchange="alert('Plik załączony: ' + this.files[0].name)">
+                        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    </label>
+                    <span class="action-icon" title="Wyślij zdjęcie" onclick="alert('Otwieram aparat...')">
+                        <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                    </span>
+                    <input type="text" placeholder="Napisz wiadomość..." id="msg-input" onkeypress="handleKeyPress(event)" autocomplete="off">
+                    <span class="action-icon" id="mic-btn" title="Nagraj głos" onmousedown="startMic()" onmouseup="stopMic()">
+                        <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+                    </span>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="story-modal">
-        <span class="close-story" onclick="closeStory()">✖</span>
-        <div class="story-content" id="story-content">
-            <div class="story-bar"><div class="story-progress" id="story-progress"></div></div>
-            <h2 id="story-text" style="text-shadow: 2px 2px 10px rgba(0,0,0,0.8);">Ładowanie...</h2>
+    <div id="call-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="call-title" style="margin-bottom:10px;">Dzwonię...</h2>
+            <p id="call-name" style="color:var(--text-muted); margin-bottom:20px;">Anna Nowak</p>
+            <img id="call-img" src="" class="call-avatar">
+            <div style="display:flex; justify-content:center; gap:20px; margin-top:10px;">
+                <button class="btn-endcall" onclick="closeModals()">
+                    <svg viewBox="0 0 24 24" style="width:20px; height:20px;"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+                    Rozłącz
+                </button>
+            </div>
         </div>
     </div>
 
-    <script>
-        // --- BAZA DANYCH (MOCK DB) ---
-        const MY_USER_ID = "u_me";
-        let activeChatId = "c_1";
-        let storyTimer = null;
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content" style="width: 350px;">
+            <span class="close-modal" onclick="closeModals()"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span>
+            <img id="my-profile-img" src="" style="width:80px; height:80px; border-radius:50%; margin-bottom:15px; border:2px solid var(--brand-blue);">
+            <h2 id="my-profile-name">Ładowanie...</h2>
+            <p style="color:var(--text-muted); font-size:13px; margin-bottom:20px;" id="my-profile-email">email@test.com</p>
+            
+            <div style="background:var(--bg-darkest); padding:15px; border-radius:8px; text-align:left; margin-bottom:20px;">
+                <p><strong>Status:</strong> Online 🟢</p>
+                <p><strong>Motyw:</strong> Ciemny 🌙</p>
+            </div>
 
+            <button class="btn-logout" onclick="logout()">Wyloguj się z Firebase</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // 1. IMPORT FIREBASE
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // 2. KONFIGURACJA Z PROMPTA
+        const firebaseConfig = {
+            apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
+            authDomain: "xchess-79e2d.firebaseapp.com",
+            projectId: "xchess-79e2d",
+            storageBucket: "xchess-79e2d.firebasestorage.app",
+            messagingSenderId: "382071993193",
+            appId: "1:382071993193:web:86dbe5211f2151cb5383f8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        // Podpięcie funkcji pod window by HTML to widział
+        window.loginWithGoogle = () => {
+            const btn = document.getElementById('btn-login');
+            btn.innerHTML = "Ładowanie...";
+            signInWithPopup(auth, provider).catch(e => {
+                alert("Błąd logowania: " + e.message);
+                btn.innerHTML = "Zaloguj przez Google";
+            });
+        };
+
+        window.logout = () => { signOut(auth); window.closeModals(); };
+
+        // 3. STAN APLIKACJI
+        window.MY_USER_DATA = null;
+        window.activeChatId = "c_1";
+
+        // Baza testowa (poza Firebase, żeby interfejs od razu był bogaty)
         const users = {
             "u_1": { name: "Anna Nowak", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anna", status: "online", lastSeen: "Teraz" },
             "u_2": { name: "Kamil Kowalski", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kamil", status: "offline", lastSeen: "15 min temu" },
-            "u_3": { name: "Grupa Projektowa", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=GP&backgroundColor=0084ff", status: "online", lastSeen: "Teraz", isGroup: true },
-            "u_4": { name: "Julia", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Julia", status: "offline", lastSeen: "Wczoraj" },
+            "u_3": { name: "Grupa Projektowa", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=GP&backgroundColor=0084ff", status: "online", isGroup: true }
         };
 
-        const stories = [
-            { id: "s_me", userId: MY_USER_ID, name: "Twój profil", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Me", viewed: false, bg: "#2c3e50", text: "Kliknij by dodać relację!" },
-            { id: "s_1", userId: "u_1", name: "Anna Nowak", avatar: users["u_1"].avatar, viewed: false, bg: "#e74c3c", text: "Kawa na mieście ☕" },
-            { id: "s_4", userId: "u_4", name: "Julia", avatar: users["u_4"].avatar, viewed: false, bg: "#8e44ad", text: "Nowy projekt w drodze! 💻" }
-        ];
-
         const chats = [
-            { id: "c_1", userId: "u_1", lastMsg: "Podeślesz mi to zdjęcie?", time: "10:45", unread: 0 },
-            { id: "c_3", userId: "u_3", lastMsg: "Kamil: Zrobię to jutro.", time: "09:30", unread: 3 },
-            { id: "c_2", userId: "u_2", lastMsg: "Haha, dokładnie!", time: "Wczoraj", unread: 0 },
-            { id: "c_4", userId: "u_4", lastMsg: "Dzięki za pomoc :)", time: "Wczoraj", unread: 0 }
+            { id: "c_1", userId: "u_1", lastMsg: "Podeślesz mi to zdjęcie?", time: "10:45", unread: 2 },
+            { id: "c_3", userId: "u_3", lastMsg: "Kamil: Zrobię to jutro.", time: "09:30", unread: 1 },
+            { id: "c_2", userId: "u_2", lastMsg: "Haha, dokładnie!", time: "Wczoraj", unread: 0 }
         ];
 
-        const messagesDb = {
+        window.messagesDb = {
             "c_1": [
                 { id: "m_1", senderId: "u_1", text: "Hej! Widziałeś najnowsze Insta Stories? 😂", time: "10:40", liked: false },
-                { id: "m_2", senderId: MY_USER_ID, text: "Tak, mega zabawne! Zrobiłem zrzut ekranu.", time: "10:42", liked: true },
+                { id: "m_2", senderId: "me", text: "Tak, mega zabawne! Zrobiłem zrzut ekranu.", time: "10:42", liked: true },
                 { id: "m_3", senderId: "u_1", text: "Podeślesz mi to zdjęcie? Zapomniałam zapisać.", time: "10:45", liked: false }
-            ],
-            "c_3": [
-                { id: "m_4", senderId: MY_USER_ID, text: "Kto ogarnia front-end?", time: "09:20", liked: false },
-                { id: "m_5", senderId: "u_2", text: "Zrobię to jutro.", time: "09:30", liked: false }
-            ],
-            "c_2": [
-                { id: "m_6", senderId: MY_USER_ID, text: "To był niezły mecz.", time: "Wczoraj", liked: false },
-                { id: "m_7", senderId: "u_2", text: "Haha, dokładnie!", time: "Wczoraj", liked: true }
-            ],
-            "c_4": [
-                { id: "m_8", senderId: "u_4", text: "Dzięki za pomoc :)", time: "Wczoraj", liked: false }
             ]
         };
 
-        // --- INICJALIZACJA APLIKACJI ---
-        function initApp() {
-            renderStories();
-            renderChats();
-            loadChat(activeChatId);
+        // 4. NASŁUCHIWANIE LOGOWANIA
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Udane logowanie -> Pokaż App, Ukryj Login
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+                
+                // Pobierz/Zapisz do Firestore
+                const docRef = doc(db, 'users', user.uid);
+                const docSnap = await getDoc(docRef);
+                
+                let avatarUrl = user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`;
+                if (!docSnap.exists()) {
+                    window.MY_USER_DATA = { uid: user.uid, name: user.displayName, email: user.email, avatar: avatarUrl };
+                    await setDoc(docRef, window.MY_USER_DATA);
+                } else {
+                    window.MY_USER_DATA = docSnap.data();
+                    if(!window.MY_USER_DATA.avatar) window.MY_USER_DATA.avatar = avatarUrl;
+                }
+
+                // Aktualizuj UI w ustawieniach
+                document.getElementById('my-profile-img').src = window.MY_USER_DATA.avatar;
+                document.getElementById('my-profile-name').innerText = window.MY_USER_DATA.name;
+                document.getElementById('my-profile-email').innerText = window.MY_USER_DATA.email;
+
+                initUI();
+            } else {
+                // Wylogowano -> Pokaż Login
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('app-container').style.display = 'none';
+                document.getElementById('btn-login').innerHTML = `<svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Zaloguj przez Google`;
+            }
+        });
+
+        // ================= FUNKCJE UI (WYWOŁYWANE Z HTML) =================
+        function initUI() {
+            window.renderStories();
+            window.renderChats();
+            window.loadChat(window.activeChatId);
         }
 
-        // --- RENDEROWANIE RELACJI (STORIES) ---
-        function renderStories() {
+        window.renderStories = () => {
             const box = document.getElementById("stories-box");
-            box.innerHTML = "";
-            stories.forEach(story => {
-                const viewedClass = story.viewed ? "viewed" : "";
-                box.innerHTML += `
-                    <div class="story ${viewedClass}" onclick="openStory('${story.id}')">
-                        <div class="story-img-wrapper">
-                            <img src="${story.avatar}" alt="${story.name}">
-                        </div>
-                        <span>${story.name === "Twój profil" ? "Ty" : story.name.split(" ")[0]}</span>
-                    </div>
-                `;
-            });
-        }
+            box.innerHTML = `
+                <div class="story" onclick="alert('Brak uprawnień do kamery!')">
+                    <div class="story-img-wrapper"><img src="${window.MY_USER_DATA.avatar}"></div>
+                    <span>Ty</span>
+                </div>
+                <div class="story" onclick="alert('Relacja od Anna Nowak')">
+                    <div class="story-img-wrapper"><img src="${users['u_1'].avatar}"></div>
+                    <span>Anna</span>
+                </div>
+            `;
+        };
 
-        // --- RENDEROWANIE LISTY CZATÓW ---
-        function renderChats(filterText = "") {
+        window.renderChats = (filter = "") => {
             const box = document.getElementById("chats-box");
             box.innerHTML = "";
-            
+            let totalUnread = 0;
+
             chats.forEach(chat => {
                 const user = users[chat.userId];
-                // Filtrowanie
-                if (filterText && !user.name.toLowerCase().includes(filterText.toLowerCase())) return;
+                if (filter && !user.name.toLowerCase().includes(filter.toLowerCase())) return;
 
-                const activeClass = chat.id === activeChatId ? "active" : "";
-                const boldMsg = chat.unread > 0 ? "font-weight: bold; color: white;" : "";
-                const dotStatus = user.status === "online" ? `<div class="status-dot"></div>` : "";
-
+                totalUnread += chat.unread;
+                const active = chat.id === window.activeChatId ? "active" : "";
+                
                 box.innerHTML += `
-                    <div class="chat-item ${activeClass}" onclick="loadChat('${chat.id}')">
-                        <div class="chat-avatar-wrapper">
-                            <img src="${user.avatar}" class="chat-avatar">
-                            ${dotStatus}
-                        </div>
+                    <div class="chat-item ${active}" onclick="loadChat('${chat.id}')">
+                        <img src="${user.avatar}" class="chat-avatar">
                         <div class="chat-info">
                             <h4>${user.name}</h4>
-                            <p style="${boldMsg}">${chat.lastMsg}</p>
+                            <p style="${chat.unread>0?'color:white;font-weight:bold;':''}">${chat.lastMsg}</p>
                         </div>
                         <div style="display:flex; flex-direction:column; align-items:flex-end;">
-                            <span class="chat-time">${chat.time}</span>
-                            ${chat.unread > 0 ? `<div style="background:#f23f42; color:white; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:bold;">${chat.unread}</div>` : ""}
+                            <span style="font-size:11px;color:var(--text-muted);">${chat.time}</span>
+                            ${chat.unread > 0 ? `<div style="background:var(--danger-red); color:white; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:bold; margin-top:5px;">${chat.unread}</div>` : ""}
                         </div>
                     </div>
                 `;
             });
-        }
+            document.getElementById('total-unread').innerText = totalUnread;
+        };
 
-        function filterChats(val) { renderChats(val); }
+        window.filterChats = (v) => window.renderChats(v);
 
-        // --- ŁADOWANIE KONKRETNEGO CZATU ---
-        function loadChat(chatId) {
-            activeChatId = chatId;
-            renderChats(); // Odśwież by zaznaczyć aktywny
-            
+        window.loadChat = (chatId) => {
+            window.activeChatId = chatId;
             const chatObj = chats.find(c => c.id === chatId);
             const user = users[chatObj.userId];
-            
-            // Reset unread
-            chatObj.unread = 0;
+            chatObj.unread = 0; // Przeczytano
+            window.renderChats();
 
-            // Render Header
+            // Header z Ikonami Akcji
             document.getElementById("chat-header").innerHTML = `
                 <div class="chat-header-info">
                     <img src="${user.avatar}">
-                    <div>
-                        <h3>${user.name}</h3>
-                        <span>${user.status === 'online' ? 'Aktywny(a) teraz' : 'Aktywność: ' + user.lastSeen}</span>
-                    </div>
+                    <div><h3>${user.name}</h3><span>${user.status==='online'?'Dostępny(a)':'Offline'}</span></div>
                 </div>
                 <div class="header-actions">
-                    <span title="Rozpocznij połączenie głosowe">📞</span>
-                    <span title="Rozpocznij rozmowę wideo">📹</span>
-                    <span title="Informacje o profilu">ℹ️</span>
+                    <span title="Zadzwoń" onclick="startCall('audio', '${user.name}', '${user.avatar}')">
+                        <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    </span>
+                    <span title="Wideo" onclick="startCall('video', '${user.name}', '${user.avatar}')">
+                        <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                    </span>
+                    <span title="Profil kontaktu" onclick="alert('Informacje o użytkowniku: ${user.name}')">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    </span>
                 </div>
             `;
+            window.renderMessages();
+        };
 
-            // Render Messages
-            renderMessages();
-        }
-
-        // --- RENDEROWANIE WIADOMOŚCI ---
-        function renderMessages() {
+        window.renderMessages = () => {
             const box = document.getElementById("messages-box");
             box.innerHTML = "";
-            const msgs = messagesDb[activeChatId] || [];
+            const msgs = window.messagesDb[window.activeChatId] || [];
 
             msgs.forEach(msg => {
-                const isMe = msg.senderId === MY_USER_ID;
+                const isMe = msg.senderId === "me";
                 const rowClass = isMe ? "sent" : "received";
-                const likedHTML = msg.liked ? `<div class="like-btn liked" onclick="toggleLike('${msg.id}')">❤️</div>` : `<div class="like-btn" onclick="toggleLike('${msg.id}')">🤍</div>`;
+                
+                // SVG Serduszka
+                const heartSvg = msg.liked 
+                    ? `<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>` 
+                    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+
+                const likedHTML = `<div class="like-btn ${msg.liked ? 'liked' : ''}" onclick="toggleLike('${msg.id}')">${heartSvg}</div>`;
 
                 box.innerHTML += `
                     <div class="message-row ${rowClass}">
@@ -583,93 +471,47 @@
                     </div>
                 `;
             });
-
-            // Przewiń na dół
             box.scrollTop = box.scrollHeight;
-        }
+        };
 
-        // --- WYSYŁANIE WIADOMOŚCI ---
-        function handleKeyPress(e) {
+        window.handleKeyPress = (e) => {
             if (e.key === "Enter") {
                 const input = document.getElementById("msg-input");
-                const text = input.value.trim();
-                
-                if (text) {
-                    const now = new Date();
-                    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                if (input.value.trim() !== "") {
+                    const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    if(!window.messagesDb[window.activeChatId]) window.messagesDb[window.activeChatId] = [];
                     
-                    // Dodaj do bazy
-                    const newMsg = {
-                        id: "m_" + Date.now(),
-                        senderId: MY_USER_ID,
-                        text: text,
-                        time: timeStr,
-                        liked: false
-                    };
+                    window.messagesDb[window.activeChatId].push({
+                        id: "m_" + Date.now(), senderId: "me", text: input.value.trim(), time: timeStr, liked: false
+                    });
                     
-                    if(!messagesDb[activeChatId]) messagesDb[activeChatId] = [];
-                    messagesDb[activeChatId].push(newMsg);
-                    
-                    // Aktualizuj listę czatów z boku
-                    const chatObj = chats.find(c => c.id === activeChatId);
-                    chatObj.lastMsg = "Ty: " + text;
-                    chatObj.time = timeStr;
-
+                    chats.find(c => c.id === window.activeChatId).lastMsg = "Ty: " + input.value.trim();
                     input.value = "";
-                    renderMessages();
-                    renderChats();
+                    window.renderMessages();
+                    window.renderChats();
                 }
             }
-        }
+        };
 
-        // --- SYSTEM LIKE (INSTA) ---
-        function toggleLike(msgId) {
-            const msgs = messagesDb[activeChatId];
-            const msg = msgs.find(m => m.id === msgId);
-            if(msg) {
-                msg.liked = !msg.liked;
-                renderMessages();
-            }
-        }
+        window.toggleLike = (msgId) => {
+            const msg = window.messagesDb[window.activeChatId].find(m => m.id === msgId);
+            if(msg) { msg.liked = !msg.liked; window.renderMessages(); }
+        };
 
-        // --- ODTWARZACZ RELACJI ---
-        function openStory(storyId) {
-            const story = stories.find(s => s.id === storyId);
-            story.viewed = true;
-            renderStories();
+        // --- OBSŁUGA MODALI ---
+        window.startCall = (type, name, avatar) => {
+            document.getElementById('call-modal').style.display = 'flex';
+            document.getElementById('call-title').innerText = type === 'video' ? 'Wideo rozmowa...' : 'Dzwonię...';
+            document.getElementById('call-name').innerText = name;
+            document.getElementById('call-img').src = avatar;
+        };
 
-            const modal = document.getElementById("story-modal");
-            const content = document.getElementById("story-content");
-            const text = document.getElementById("story-text");
-            const progress = document.getElementById("story-progress");
+        window.openSettings = () => { document.getElementById('settings-modal').style.display = 'flex'; };
+        window.closeModals = () => { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); };
 
-            content.style.background = story.bg;
-            text.innerText = story.text;
-            modal.style.display = "flex";
-            
-            // Reset animacji paska
-            progress.style.transition = "none";
-            progress.style.width = "0%";
-            
-            setTimeout(() => {
-                progress.style.transition = "width 5s linear";
-                progress.style.width = "100%";
-            }, 50);
-
-            // Zamknij po 5 sekundach
-            clearTimeout(storyTimer);
-            storyTimer = setTimeout(() => {
-                closeStory();
-            }, 5000);
-        }
-
-        function closeStory() {
-            document.getElementById("story-modal").style.display = "none";
-            clearTimeout(storyTimer);
-        }
-
-        // Uruchom aplikację po załadowaniu
-        window.onload = initApp;
+        // Fake mic
+        window.startMic = () => { document.getElementById('msg-input').placeholder = "Nagrywanie... (puść by wysłać)"; document.getElementById('mic-btn').style.color = "var(--danger-red)"; };
+        window.stopMic = () => { document.getElementById('msg-input').placeholder = "Napisz wiadomość..."; document.getElementById('mic-btn').style.color = "var(--text-muted)"; alert("Nagranie głosowe (symulacja) zapisane!"); };
 
     </script>
 </body>

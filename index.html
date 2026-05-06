@@ -3,493 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Clone V-ULTRA | Prestige & Boosts</title>
-    <style>
-        /* ================= ZMIENNE ================= */
-        :root {
-            --bg-tertiary: #1e1f22; --bg-secondary: #2b2d31; --bg-primary: #313338;
-            --bg-floating: #111214; --bg-message-hover: #2e3035;
-            --bg-modifier-hover: rgba(78, 80, 88, 0.3); --bg-modifier-active: rgba(78, 80, 88, 0.48);
-            --bg-input: #383a40; --text-normal: #dbdee1; --text-muted: #949ba4;
-            --header-primary: #f2f3f5; --header-secondary: #b5bac1;
-            --brand-color: #5865F2; --brand-hover: #4752c4;
-            --danger-color: #da373c; --success-color: #23a559; --warning-color: #f0b232;
-            --story-orange: #f39c12; --boost-pink: #ff73fa; --prestige-gold: #ffd700;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background-color: var(--bg-primary); color: var(--text-normal); display: flex; height: 100vh; overflow: hidden; font-size: 14px; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-tertiary); }
-        ::-webkit-scrollbar-thumb { background: #1a1b1e; border-radius: 4px; }
-        svg { width: 24px; height: 24px; fill: currentColor; }
-        button, input { outline: none; border: none; font-family: inherit; }
-
-        /* ================= ANIMACJE ================= */
-        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes modalPop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes storyPulse { 0% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--story-orange); } 50% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 7px rgba(243, 156, 18, 0.4); } 100% { box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--story-orange); } }
-
-        /* ================= EKRAN LOGOWANIA ================= */
-        #login-screen { position: fixed; inset: 0; background: var(--bg-tertiary); z-index: 9999; display: flex; justify-content: center; align-items: center; }
-        .login-box { background: var(--bg-primary); padding: 40px; border-radius: 8px; width: 480px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .btn-brand { background: var(--brand-color); color: white; width: 100%; padding: 14px; border-radius: 4px; font-size: 16px; cursor: pointer; transition: 0.2s; font-weight: bold; }
-        .btn-brand:hover { background: var(--brand-hover); }
-
-        #app-container { display: none; width: 100vw; height: 100vh; animation: fadeIn 0.5s ease; }
-
-        /* ================= 1. PASEK SERWERÓW ================= */
-        .servers-nav { width: 72px; min-width: 72px; background-color: var(--bg-tertiary); display: flex; flex-direction: column; align-items: center; padding-top: 12px; gap: 8px; z-index: 10; }
-        .server-icon-wrapper { position: relative; display: flex; justify-content: center; width: 100%; cursor: pointer; }
-        .server-pill { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 8px; background: white; border-radius: 0 4px 4px 0; transition: 0.2s; opacity: 0; }
-        .server-icon-wrapper:hover .server-pill { height: 20px; opacity: 1; }
-        .server-icon-wrapper.active .server-pill { height: 40px; opacity: 1; }
-        .server-icon { width: 48px; height: 48px; border-radius: 50%; background-color: var(--bg-primary); display: flex; justify-content: center; align-items: center; transition: 0.2s; overflow: hidden; }
-        .server-icon img { width: 100%; height: 100%; object-fit: cover; }
-        .server-icon-wrapper:hover .server-icon, .server-icon-wrapper.active .server-icon { border-radius: 16px; background-color: var(--brand-color); color: white; }
-        .server-separator { width: 32px; height: 2px; background: var(--bg-modifier-active); margin: 4px 0; }
-
-        /* ================= 2. BOCZNY PANEL ================= */
-        .sidebar { width: 240px; min-width: 240px; background-color: var(--bg-secondary); display: flex; flex-direction: column; }
-        .sidebar-header { height: 48px; min-height: 48px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 2px rgba(0,0,0,0.2); font-weight: 600; color: var(--header-primary); cursor: pointer; border-bottom: 1px solid var(--bg-tertiary); transition: 0.2s; }
-        .sidebar-header:hover { background: var(--bg-modifier-hover); }
-        .sidebar-content { flex: 1; overflow-y: auto; padding: 8px; }
-        .category-name { font-size: 12px; font-weight: 600; color: var(--header-secondary); text-transform: uppercase; margin: 16px 8px 4px; display: flex; justify-content: space-between; }
-        .list-item { padding: 8px; border-radius: 4px; display: flex; align-items: center; cursor: pointer; color: var(--text-muted); margin-bottom: 2px; transition: 0.1s; }
-        .list-item:hover { background: var(--bg-modifier-hover); color: var(--text-normal); }
-        .list-item.active { background: var(--bg-modifier-active); color: var(--text-normal); }
-        
-        /* Relacje i Awatary */
-        .avatar-container { position: relative; margin-right: 12px; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; border-radius: 50%; }
-        .list-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        .list-avatar.has-post { animation: storyPulse 2.5s infinite; cursor: pointer; border: 2px solid var(--bg-secondary); }
-        .status-dot { position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--bg-secondary); }
-
-        /* Pasek Użytkownika & XP */
-        .user-panel { height: 60px; min-height: 60px; background: #232428; display: flex; align-items: center; padding: 0 8px; justify-content: space-between; position: relative; }
-        .user-profile { display: flex; align-items: center; padding: 4px; border-radius: 4px; cursor: pointer; flex: 1; overflow: hidden; }
-        .user-profile:hover { background: var(--bg-modifier-hover); }
-        .user-profile img { width: 32px; height: 32px; border-radius: 50%; margin-right: 8px; object-fit: cover; }
-        .user-info { display: flex; flex-direction: column; overflow: hidden; width:100%; }
-        .user-info strong { font-size: 13px; color: var(--header-primary); }
-        .user-info span { font-size: 11px; color: var(--header-secondary); }
-        
-        .xp-bar-container { width: 100%; height: 4px; background: var(--bg-modifier-active); border-radius: 2px; margin-top: 4px; overflow: hidden; }
-        .xp-bar-fill { height: 100%; background: var(--brand-color); width: 0%; transition: width 0.3s ease; }
-
-        /* ================= 3. ŚRODEK (CZAT) ================= */
-        .main-content { flex: 1; display: flex; flex-direction: column; background: var(--bg-primary); }
-        .top-bar { height: 48px; min-height: 48px; padding: 0 16px; display: flex; align-items: center; border-bottom: 1px solid var(--bg-tertiary); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .chat-and-members { flex: 1; display: flex; overflow: hidden; }
-        .messages-wrapper { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        .messages-list { flex: 1; overflow-y: auto; padding: 16px 0; display: flex; flex-direction: column; }
-        
-        .message { padding: 4px 16px 4px 72px; position: relative; margin-top: 17px; }
-        .message:hover { background: var(--bg-message-hover); }
-        .msg-avatar { position: absolute; left: 16px; top: 4px; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .msg-header { display: flex; align-items: baseline; margin-bottom: 2px; }
-        .msg-author { color: var(--header-primary); font-weight: 500; font-size: 16px; margin-right: 8px; display: flex; align-items: center; gap: 5px;}
-        .msg-time { color: var(--text-muted); font-size: 12px; }
-        .msg-content { color: var(--text-normal); font-size: 15px; line-height: 1.4; word-wrap: break-word; }
-
-        .prestige-badge { background: var(--prestige-gold); color: black; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: bold; text-transform: uppercase; box-shadow: 0 0 5px var(--prestige-gold); }
-        .lvl-badge { background: var(--bg-modifier-active); color: var(--text-normal); font-size: 10px; padding: 2px 6px; border-radius: 4px; }
-
-        .input-area { padding: 0 16px 24px; flex-shrink: 0; }
-        .input-wrapper { background: var(--bg-input); border-radius: 8px; display: flex; align-items: center; padding: 10px 16px; }
-        .chat-input { flex: 1; background: transparent; color: var(--text-normal); font-size: 15px; margin: 0 10px; width: 100%; }
-
-        /* ================= 4. PRAWY PANEL (ROLE) ================= */
-        .right-panel { width: 240px; min-width: 240px; background: var(--bg-secondary); border-left: 1px solid var(--bg-modifier-active); display: flex; flex-direction: column; overflow-y: auto; padding: 16px 8px; }
-        .role-header { font-size: 12px; font-weight: 800; color: var(--header-secondary); text-transform: uppercase; margin: 10px 8px 4px; }
-        .member-item { padding: 6px 8px; border-radius: 4px; display: flex; align-items: center; cursor: pointer; margin-bottom: 2px; }
-        .member-item:hover { background: var(--bg-modifier-hover); }
-        .member-avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: 12px; object-fit: cover; }
-        .role-owner { color: #e91e63 !important; }
-        .role-vip { color: #f1c40f !important; }
-
-        /* ================= MODALE & TOASTS ================= */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 20000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
-        .modal-content { background: var(--bg-primary); border-radius: 8px; width: 460px; padding: 24px; animation: modalPop 0.2s ease; position: relative; }
-        .modal-content h2 { color: white; margin-bottom: 20px; text-align: center; }
-        .btn-submit { background: var(--brand-color); color: white; padding: 12px 24px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.2s; margin-top: 10px; }
-        .btn-boost { background: linear-gradient(45deg, #ff73fa, #5865F2); color: white; padding: 12px 24px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 15px; box-shadow: 0 4px 15px rgba(255, 115, 250, 0.3); }
-        .btn-boost:hover { filter: brightness(1.2); }
-        
-        .form-group { margin-bottom: 15px; }
-        .form-label { display: block; color: var(--header-secondary); font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; }
-        .form-input { width: 100%; padding: 10px; background: var(--bg-tertiary); color: white; border-radius: 4px; font-size: 14px; }
-
-        /* Toast (Powiadomienia LVL UP) */
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; }
-        .toast { background: var(--bg-floating); border-left: 4px solid var(--brand-color); padding: 15px 20px; border-radius: 4px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.5); animation: slideInRight 0.3s ease forwards; display: flex; align-items: center; gap: 15px; }
-
-        /* WIDOK POSTA */
-        #post-viewer-modal .modal-content { width: 420px; height: 650px; padding: 0; background: #000; display: flex; flex-direction: column; overflow: hidden; }
-        .post-header { padding: 15px; display: flex; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position: absolute; width: 100%; top: 0; z-index: 10; }
-        .post-header img { width: 40px; height: 40px; border-radius: 50%; margin-right: 10px; object-fit: cover; }
-        .post-body { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; background: var(--bg-floating); }
-        .post-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.6); }
-        .post-text-content { position: relative; color: white; font-size: 26px; text-align: center; padding: 20px; font-weight: bold; text-shadow: 0 2px 10px rgba(0,0,0,0.8); z-index: 2; }
-    </style>
+    <title>Discord Clone V-MAX | 33MC.PL</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="login-screen">
+    <div id="login-screen" class="active">
         <div class="login-box">
-            <h2 style="color:white; font-size:24px; margin-bottom:10px;">V-ULTRA Login</h2>
-            <p style="color:var(--header-secondary); margin-bottom:20px;">Zaloguj się, by zdobywać XP i Prestiż!</p>
-            <button class="btn-brand" onclick="loginWithGoogle()">Zaloguj z Firebase</button>
+            <svg class="discord-logo" viewBox="0 0 127.14 96.36">
+                <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.68,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.36,46,96.26,53,91.08,65.69,84.69,65.69Z"/>
+            </svg>
+            <h2>Witaj w 33MC.PL</h2>
+            <p>Zaloguj się przez Firebase, aby wejść na serwer.</p>
+            <button class="btn-brand" id="btn-login">Zaloguj przez Google</button>
         </div>
     </div>
 
     <div id="app-container">
-        <div class="servers-nav">
-            <div class="server-icon-wrapper active" id="nav-home" onclick="switchToDM()">
-                <div class="server-pill"></div>
-                <div class="server-icon" style="background: var(--brand-color);">🏠</div>
-            </div>
-            <div class="server-separator"></div>
-            <div class="server-icon-wrapper" id="nav-server" onclick="switchToServer()">
-                <div class="server-pill"></div>
-                <div class="server-icon"><img src="https://api.dicebear.com/7.x/initials/svg?seed=33MC&backgroundColor=111"></div>
-            </div>
-        </div>
+        
+        <nav class="servers-nav" id="servers-nav">
+            </nav>
 
-        <div class="sidebar">
-            <div class="sidebar-header" id="sidebar-header-area">
-                <span id="sidebar-title">Znajdź rozmowę</span>
-            </div>
+        <aside class="sidebar">
+            <header class="sidebar-header" id="sidebar-header-area">
+                <span id="sidebar-title">Ładowanie...</span>
+            </header>
             
-            <div class="sidebar-content" id="sidebar-content"></div>
+            <div class="sidebar-content" id="sidebar-content">
+                </div>
 
             <div class="user-panel">
-                <div class="user-profile" onclick="openModal('settings-modal')">
-                    <img id="my-avatar" src="">
+                <div class="user-profile" id="btn-open-settings">
+                    <img id="my-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Puste" alt="Avatar">
                     <div class="user-info">
-                        <strong id="my-name">Ładowanie...</strong>
+                        <strong id="my-name">...</strong>
                         <span id="my-lvl-text">Poziom 1</span>
                         <div class="xp-bar-container"><div class="xp-bar-fill" id="my-xp-bar"></div></div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="main-content">
-            <div class="top-bar">
-                <div style="display:flex; align-items:center; color:white; font-weight:bold; font-size:16px;">
-                    <span id="chat-header-title">Znajomi</span>
+                <div class="user-controls">
+                    <button class="control-btn" id="btn-add-post" title="Dodaj Post">
+                        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    </button>
+                    <button class="control-btn" id="btn-settings" title="Ustawienia">
+                        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                    </button>
                 </div>
             </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="top-bar-title" id="chat-header-title">
+                    Wybierz kanał
+                </div>
+                <div class="top-bar-actions">
+                    <svg title="Dzwonienie" id="btn-call"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                </div>
+            </header>
 
             <div class="chat-and-members">
-                <div class="messages-wrapper">
+                <section class="messages-wrapper">
                     <div class="messages-list" id="messages-area"></div>
                     <div class="input-area">
                         <div class="input-wrapper">
-                            <input type="text" class="chat-input" id="message-input" placeholder="Napisz wiadomość (Zdobywaj XP!)" onkeypress="sendMessage(event)">
+                            <input type="text" class="chat-input" id="message-input" placeholder="Napisz wiadomość (Zdobywaj XP!)">
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="right-panel" id="right-panel"></div>
+                <aside class="right-panel" id="right-panel">
+                    </aside>
             </div>
-        </div>
+        </main>
     </div>
 
-    <div class="modal-overlay" id="boost-modal">
-        <div class="modal-content">
-            <svg style="position:absolute; top:15px; right:15px; cursor:pointer; color:var(--text-muted);" onclick="closeModal('boost-modal')"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            <h2 style="color:var(--boost-pink);">Ulepszenia Serwera</h2>
-            <p style="color:var(--header-secondary); margin-bottom:20px;">Poziom ulepszeń określa jakość audio, limity plików i ilość emoji. Zdobądź wyższy poziom boostując serwer!</p>
-            
-            <div style="background:var(--bg-tertiary); padding:15px; border-radius:8px; margin-bottom:15px;">
-                <h3 style="color:white; font-size:16px; margin-bottom:5px;">Obecny Poziom: <span id="server-lvl">Poziom 1</span></h3>
-                <p style="color:var(--text-muted); font-size:13px;">Brakuje 2 ulepszeń do Poziomu 2.</p>
-                <div class="xp-bar-container" style="height:8px; margin-top:10px;"><div class="xp-bar-fill" style="width:33%; background:var(--boost-pink);"></div></div>
-            </div>
-
-            <button class="btn-boost" onclick="boostServer()">Zastosuj Ulepszenie (Boost)</button>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="post-viewer-modal">
-        <div class="modal-content" style="width:400px; height:600px; padding:0; background:#000;">
-            <div style="position:absolute; top:8px; left:10px; right:10px; height:3px; background:rgba(255,255,255,0.3); z-index:11;"><div id="post-progress" style="height:100%; background:white; width:0%;"></div></div>
-            <div class="post-header">
-                <img id="post-viewer-avatar" src="">
-                <div style="color:white;"><strong id="post-viewer-name" style="display:block;">Nazwa</strong></div>
-                <svg style="position:absolute; right:15px; color:white; cursor:pointer;" onclick="closeModal('post-viewer-modal')"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            </div>
-            <div class="post-body">
-                <img id="post-viewer-img" class="post-bg-img" src="" style="display:none;">
-                <div class="post-text-content" id="post-viewer-text"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="settings-modal">
-        <div class="modal-content">
-            <h2>Ustawienia Profilu</h2>
-            <div class="form-group"><label class="form-label">Nazwa wyświetlana</label><input type="text" id="edit-name" class="form-input"></div>
-            <button class="btn-submit" onclick="saveSettings()">Zapisz Zmiany</button>
-            <button class="btn-danger" style="background:transparent; border:1px solid var(--danger-color); color:var(--danger-color);" onclick="window.logout()">Wyloguj</button>
-        </div>
-    </div>
-
+    <div id="modal-container"></div>
     <div id="toast-container"></div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU", authDomain: "xchess-79e2d.firebaseapp.com", projectId: "xchess-79e2d"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
-
-        let currentUser = null;
-
-        // BAZA DANYCH MOCK (Z ROLAMI I PRESTIŻEM)
-        const mockData = {
-            serverRoles: [
-                { name: "Właściciel", color: "role-owner", users: [{ name: "Blaaqu", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Blaaqu", lvl: 150, prestige: 3 }] },
-                { name: "VIP", color: "role-vip", users: [{ name: "Anna Nowak", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anna", lvl: 45, prestige: 0 }] },
-                { name: "Użytkownicy", color: "", users: [] } // Tu wpadnie zalogowany gracz
-            ],
-            friends: [
-                { id: "f1", name: "Anna Nowak", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anna", post: { text: "Piję kawkę!", timestamp: Date.now() - 3600000 } }
-            ],
-            messages: [{ author: "Blaaqu", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Blaaqu", text: "Serwer odpalony!", time: "Wczoraj", lvl: 150, prestige: 3 }]
-        };
-
-        // --- AUTH ---
-        window.loginWithGoogle = () => signInWithPopup(auth, provider);
-        window.logout = () => signOut(auth);
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-container').style.display = 'flex';
-                
-                const docRef = doc(db, 'users', user.uid);
-                const docSnap = await getDoc(docRef);
-                
-                let avatarUrl = user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`;
-                if (!docSnap.exists()) {
-                    currentUser = { uid: user.uid, name: user.displayName, avatar: avatarUrl, xp: 0, level: 1, prestige: 0 };
-                    await setDoc(docRef, currentUser);
-                } else {
-                    currentUser = docSnap.data();
-                    if(currentUser.xp === undefined) { currentUser.xp = 0; currentUser.level = 1; currentUser.prestige = 0; }
-                }
-                
-                mockData.serverRoles[2].users.push({ name: currentUser.name, avatar: currentUser.avatar, lvl: currentUser.level, prestige: currentUser.prestige });
-                
-                updateXPUI();
-                window.switchToServer();
-            } else {
-                document.getElementById('login-screen').style.display = 'flex';
-                document.getElementById('app-container').style.display = 'none';
-            }
-        });
-
-        // --- SYSTEM XP, LVL I PRESTIŻU ---
-        const XP_PER_MSG = 15;
-        function getXpNeeded(lvl) { return 100 * Math.pow(1.5, lvl - 1); }
-
-        function gainXp() {
-            currentUser.xp += XP_PER_MSG;
-            let needed = getXpNeeded(currentUser.level);
-            
-            if(currentUser.xp >= needed) {
-                currentUser.xp -= needed;
-                currentUser.level++;
-                
-                // Prestiż co 50 poziomów
-                if(currentUser.level > 50) {
-                    currentUser.level = 1;
-                    currentUser.prestige++;
-                    showToast(`🏆 PRESTIŻ +1! Gratulacje!`, "var(--prestige-gold)");
-                } else {
-                    showToast(`🎉 Awans na Poziom ${currentUser.level}!`, "var(--brand-color)");
-                }
-                
-                // Sync z DB
-                setDoc(doc(db, 'users', currentUser.uid), currentUser);
-                
-                // Update w prawym panelu
-                mockData.serverRoles[2].users[0].lvl = currentUser.level;
-                mockData.serverRoles[2].users[0].prestige = currentUser.prestige;
-                if(document.getElementById('right-panel').innerHTML !== "") window.switchToServer();
-            }
-            updateXPUI();
-        }
-
-        function updateXPUI() {
-            document.getElementById('my-avatar').src = currentUser.avatar;
-            document.getElementById('my-name').innerText = currentUser.name;
-            
-            let prestigeStr = currentUser.prestige > 0 ? `[P${currentUser.prestige}] ` : "";
-            document.getElementById('my-lvl-text').innerText = `${prestigeStr}Poziom ${currentUser.level}`;
-            
-            let needed = getXpNeeded(currentUser.level);
-            let percent = (currentUser.xp / needed) * 100;
-            document.getElementById('my-xp-bar').style.width = percent + "%";
-        }
-
-        function showToast(msg, color) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.style.borderLeftColor = color;
-            toast.innerHTML = `<span style="font-size:20px;">🔥</span> <div>${msg}</div>`;
-            container.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 4000);
-        }
-
-        // --- RENDEROWANIE INTERFEJSU ---
-        window.switchToServer = () => {
-            document.getElementById('nav-server').classList.add('active');
-            document.getElementById('nav-home').classList.remove('active');
-            document.getElementById('chat-header-title').innerText = "ogólny";
-            
-            document.getElementById('sidebar-header-area').innerHTML = `
-                <span id="sidebar-title">33MC.PL</span>
-                <svg style="cursor:pointer; color:var(--header-secondary);" onclick="openModal('boost-modal')" title="Ulepsz Serwer"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-            `;
-            
-            document.getElementById('sidebar-content').innerHTML = `
-                <div class="category-name">Informacje</div>
-                <div class="list-item active"># ogólny</div>
-            `;
-
-            renderMessages();
-
-            // Render Rol (Prestiż i LVL)
-            let rp = "";
-            mockData.serverRoles.forEach(role => {
-                if(role.users.length > 0) {
-                    rp += `<div class="role-header">${role.name} - ${role.users.length}</div>`;
-                    role.users.forEach(u => {
-                        let badges = `<span class="lvl-badge">Lvl ${u.lvl}</span>`;
-                        if(u.prestige > 0) badges += `<span class="prestige-badge">P${u.prestige}</span>`;
-                        
-                        rp += `
-                            <div class="member-item">
-                                <img src="${u.avatar}" class="member-avatar">
-                                <div>
-                                    <h4 class="${role.color}">${u.name}</h4>
-                                    <div style="display:flex; gap:5px; margin-top:2px;">${badges}</div>
-                                </div>
-                            </div>`;
-                    });
-                }
-            });
-            document.getElementById('right-panel').innerHTML = rp;
-        };
-
-        window.switchToDM = () => {
-            document.getElementById('nav-home').classList.add('active');
-            document.getElementById('nav-server').classList.remove('active');
-            document.getElementById('chat-header-title').innerText = "Prywatne Wiadomości";
-            document.getElementById('sidebar-header-area').innerHTML = `<span id="sidebar-title">Znajdź rozmowę</span>`;
-            
-            let sb = `<div class="category-name">Znajomi</div>`;
-            mockData.friends.forEach(f => {
-                const hasPost = f.post && (Date.now() - f.post.timestamp < 86400000) ? "has-post" : "";
-                sb += `
-                    <div class="list-item">
-                        <div class="avatar-container" onclick="viewPost('${f.id}')">
-                            <img src="${f.avatar}" class="list-avatar ${hasPost}">
-                        </div>
-                        <div>${f.name}</div>
-                    </div>`;
-            });
-            document.getElementById('sidebar-content').innerHTML = sb;
-            document.getElementById('messages-area').innerHTML = `<div class="welcome-msg"><h1>Wybierz znajomego!</h1></div>`;
-            document.getElementById('right-panel').innerHTML = ``;
-        };
-
-        function renderMessages() {
-            let html = "";
-            mockData.messages.forEach(m => {
-                let badges = `<span class="lvl-badge">Lvl ${m.lvl}</span>`;
-                if(m.prestige > 0) badges += ` <span class="prestige-badge">P${m.prestige}</span>`;
-                
-                html += `
-                    <div class="message">
-                        <img src="${m.avatar}" class="msg-avatar">
-                        <div class="msg-header">
-                            <span class="msg-author">${m.author} ${badges}</span>
-                            <span class="msg-time">${m.time}</span>
-                        </div>
-                        <div class="msg-content">${m.text}</div>
-                    </div>`;
-            });
-            const container = document.getElementById('messages-area');
-            container.innerHTML = html;
-            container.scrollTop = container.scrollHeight;
-        }
-
-        window.sendMessage = (e) => {
-            if (e.key === "Enter" && e.target.value.trim() !== "") {
-                mockData.messages.push({ 
-                    author: currentUser.name, avatar: currentUser.avatar, 
-                    text: e.target.value.trim(), time: "Przed chwilą", 
-                    lvl: currentUser.level, prestige: currentUser.prestige 
-                });
-                e.target.value = "";
-                gainXp(); // DODAJ XP!
-                renderMessages();
-            }
-        };
-
-        // --- POSTY I MODALE ---
-        let postTimer;
-        window.viewPost = (fid) => {
-            const f = mockData.friends.find(x => x.id === fid);
-            if(!f || !f.post) return;
-            
-            document.getElementById('post-viewer-modal').style.display = 'flex';
-            document.getElementById('post-viewer-avatar').src = f.avatar;
-            document.getElementById('post-viewer-name').innerText = f.name;
-            document.getElementById('post-viewer-text').innerText = f.post.text;
-            
-            const prog = document.getElementById('post-progress');
-            prog.style.transition = "none"; prog.style.width = "0%";
-            setTimeout(() => { prog.style.transition = "width 4s linear"; prog.style.width = "100%"; }, 50);
-            
-            clearTimeout(postTimer);
-            postTimer = setTimeout(() => closeModal('post-viewer-modal'), 4000);
-        };
-
-        window.openModal = (id) => { 
-            document.getElementById(id).style.display = 'flex'; 
-            if(id === 'settings-modal') document.getElementById('edit-name').value = currentUser.name;
-        };
-        window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-
-        window.saveSettings = async () => {
-            currentUser.name = document.getElementById('edit-name').value;
-            await setDoc(doc(db, 'users', currentUser.uid), currentUser);
-            mockData.serverRoles[2].users[0].name = currentUser.name;
-            updateXPUI();
-            closeModal('settings-modal');
-            window.switchToServer();
-        };
-
-        window.boostServer = () => {
-            showToast("💎 Serwer ulepszony! Dziękujemy za wsparcie!", "var(--boost-pink)");
-            closeModal('boost-modal');
-        };
-
-    </script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

@@ -2,81 +2,68 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Age of Territorial - Ultimate Limit Edition</title>
+    <title>Age of Territorial - MMO Online</title>
     <style>
-        /* CSS W PEŁNI ZOPTYMALIZOWANY */
-        :root { --bg: #020617; --panel: #0f172a; --border: #1e293b; --text: #f8fafc; --blue: #3b82f6; --red: #ef4444; --green: #10b981; --gold: #f59e0b; }
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+        /* === UI & CSS === */
+        :root { --bg: #0f172a; --panel: #1e293b; --accent: #3b82f6; --text: #f8fafc; --red: #ef4444; --green: #10b981; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; flex-direction: column; height: 100vh; user-select: none; }
         
-        #menu { position: absolute; inset: 0; background: #020617; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
-        .title { font-size: 3rem; color: var(--blue); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 4px; }
-        .btn { background: transparent; border: 2px solid var(--border); color: white; padding: 15px 40px; font-size: 1.2rem; margin: 10px; cursor: pointer; border-radius: 8px; width: 300px; transition: 0.3s; }
-        .btn:hover { border-color: var(--blue); background: rgba(59,130,246,0.1); }
-        
-        #ui { display: none; flex-direction: column; height: 100%; }
-        #hud { display: flex; justify-content: space-between; background: var(--panel); padding: 15px; border-bottom: 2px solid var(--border); z-index: 10; }
-        .res { display: flex; gap: 20px; font-weight: bold; font-size: 1.1rem; }
-        .res span { background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 5px; border: 1px solid var(--border); }
-        
-        #map { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #000; overflow: hidden; }
-        canvas { box-shadow: 0 0 30px black; }
+        #menu { position: absolute; inset: 0; background: #020617; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+        .title { font-size: 3rem; color: var(--accent); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        .btn { background: var(--panel); border: 2px solid var(--accent); color: white; padding: 15px 40px; font-size: 1.2rem; cursor: pointer; border-radius: 8px; margin: 10px; width: 300px; transition: 0.2s; }
+        .btn:hover { background: var(--accent); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; border-color: gray; background: gray; }
 
-        /* MODALE */
-        .modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); border: 2px solid var(--blue); padding: 25px; border-radius: 10px; z-index: 100; flex-direction: column; gap: 15px; min-width: 350px; }
-        .modal h2 { text-align: center; color: var(--blue); }
-        .slider { width: 100%; margin: 15px 0; }
-        .btn-row { display: flex; gap: 10px; }
-        .btn-action { flex: 1; padding: 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; }
-        .btn-ok { background: var(--green); } .btn-no { background: var(--red); }
+        #hud { display: none; justify-content: space-between; background: var(--panel); padding: 15px; border-bottom: 2px solid #334155; }
+        .res { font-weight: bold; font-size: 1.2rem; margin-right: 20px; }
         
-        .build-item { background: rgba(0,0,0,0.3); padding: 10px; border: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .build-item:hover { border-color: var(--gold); }
-        
-        #toast { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; pointer-events: none; z-index: 200; }
-        .msg { background: rgba(15,23,42,0.9); padding: 10px 20px; border-radius: 20px; border: 1px solid var(--border); font-weight: bold; animation: fade 2.5s forwards; }
+        #map-container { flex-grow: 1; display: none; justify-content: center; align-items: center; background: #000; }
+        canvas { box-shadow: 0 0 40px rgba(0,0,0,0.8); cursor: crosshair; }
+
+        /* MODAL WOJSKA */
+        #troop-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); border: 2px solid var(--accent); padding: 30px; border-radius: 10px; z-index: 50; flex-direction: column; width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
+        .slider-val { font-size: 2rem; color: var(--red); font-weight: bold; margin: 15px 0; }
+        input[type="range"] { width: 100%; cursor: pointer; }
+        .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+        .action-btn { flex: 1; padding: 12px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; color: white; }
+        .btn-ok { background: var(--green); } .btn-cancel { background: var(--red); }
+
+        #toast-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 200; pointer-events: none; }
+        .toast { background: rgba(0,0,0,0.8); padding: 10px 20px; border: 1px solid var(--accent); border-radius: 8px; font-weight: bold; animation: fade 2.5s forwards; }
         @keyframes fade { 0% { opacity: 0; transform: translateY(20px); } 10% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; } 100% { opacity: 0; } }
     </style>
 </head>
 <body>
 
     <div id="menu">
-        <div class="title">Age of Territorial</div>
-        <div id="net-stat" style="color:var(--gold); margin-bottom: 20px;">Łączenie z serwerem...</div>
-        <button class="btn" id="btn-play" onclick="Game.init()" disabled>Wejdź do Gry</button>
+        <div class="title">Territorial MMO</div>
+        <div id="db-status" style="color: var(--green); margin-bottom: 20px;">Inicjalizacja systemu...</div>
+        <button id="btn-start" class="btn" onclick="Game.start()" disabled>Graj Online</button>
+        <div style="margin-top: 20px; color: gray;">Zintegrowano z Firebase</div>
     </div>
 
-    <div id="ui">
-        <div id="hud">
-            <div class="res">
-                <span style="color:var(--gold)">🪙 <b id="r-gold">0</b></span>
-                <span style="color:#b45309">🪵 <b id="r-wood">0</b></span>
-                <span style="color:#94a3b8">🪨 <b id="r-stone">0</b></span>
-                <span style="color:var(--red)">⚔️ <b id="r-troops">0</b></span>
-            </div>
-            <div style="color:var(--text); font-size: 0.9rem;">
-                [LPM] Wybierz -> [LPM] Atak/Ruch | [PPM] Buduj
-            </div>
+    <div id="hud">
+        <div>
+            <span class="res" style="color: #f59e0b">🪙 <span id="ui-gold">0</span></span>
+            <span class="res" style="color: #ef4444">⚔️ <span id="ui-troops">0</span></span>
         </div>
-        <div id="map"><canvas id="cvs" width="1200" height="700"></canvas></div>
-        <div id="toast"></div>
+        <div style="color: gray;">[1 Klik] Wybierz start | [2 Klik] Wybierz cel</div>
     </div>
 
-    <div id="modal-move" class="modal">
-        <h2>Wyślij Wojska</h2>
-        <div style="text-align: center; font-size: 1.5rem; font-weight: bold; color: var(--red);" id="move-val">10</div>
-        <input type="range" class="slider" id="move-slider" min="1" max="100" value="10" oninput="document.getElementById('move-val').innerText=this.value">
+    <div id="map-container"><canvas id="gameCanvas" width="1000" height="600"></canvas></div>
+
+    <div id="troop-modal">
+        <h2>Wyślij Jednostki</h2>
+        <div id="modal-desc" style="color: gray;">Skąd -> Dokąd</div>
+        <div class="slider-val" id="slider-display">10</div>
+        <input type="range" id="troop-slider" min="1" max="100" value="10">
         <div class="btn-row">
-            <button class="btn-action btn-no" onclick="UI.closeModals()">Anuluj</button>
-            <button class="btn-action btn-ok" onclick="Input.confirmMove()">Wyślij</button>
+            <button class="action-btn btn-cancel" onclick="UI.closeModal()">Anuluj</button>
+            <button class="action-btn btn-ok" onclick="Input.confirmMove()">Atakuj / Przesuń</button>
         </div>
     </div>
-
-    <div id="modal-build" class="modal">
-        <h2>Rozbudowa Prowincji</h2>
-        <div id="build-list"></div>
-        <button class="btn-action btn-no" style="margin-top:10px;" onclick="UI.closeModals()">Zamknij</button>
-    </div>
+    
+    <div id="toast-container"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -92,69 +79,55 @@
             appId: "1:382071993193:web:86dbe5211f2151cb5383f8"
         };
 
-        window.Net = {
-            db: null, uid: null, ok: false,
+        window.Network = {
+            db: null, uid: null, isConnected: false,
             init() {
                 try {
                     const app = initializeApp(firebaseConfig);
                     const auth = getAuth(app);
                     this.db = getDatabase(app);
+                    
                     signInAnonymously(auth);
                     onAuthStateChanged(auth, user => {
-                        if(user) {
-                            this.uid = user.uid; this.ok = true;
-                            document.getElementById('net-stat').innerText = "Serwer Online (Gotowy)";
-                            document.getElementById('net-stat').style.color = "var(--green)";
-                            document.getElementById('btn-play').disabled = false;
+                        if (user) {
+                            this.uid = user.uid;
+                            this.isConnected = true;
+                            document.getElementById('db-status').innerText = "Połączono z serwerem";
+                            document.getElementById('btn-start').disabled = false;
                         }
                     });
-                } catch(e) { console.error(e); }
+                } catch(e) { document.getElementById('db-status').innerText = "Błąd: Uruchom przez serwer lokalny"; }
             },
-            update(x, y, data) { if(this.ok) update(ref(this.db, `map/${x}_${y}`), data); }
+            syncMap(data) { if(this.isConnected) set(ref(this.db, 'map_state'), data); },
+            updateCell(x, y, data) { if(this.isConnected) update(ref(this.db, `map_state/${x}_${y}`), data); },
+            listen(callback) { if(this.isConnected) onValue(ref(this.db, 'map_state'), snap => { if(snap.val()) callback(snap.val()); }); },
+            checkMap(callback) { get(ref(this.db, 'map_state')).then(s => callback(s.exists(), s.val())); }
         };
-        window.Net.init();
+        window.Network.init();
     </script>
 
     <script>
-        const BUILDINGS = {
-            mine: { name: 'Kopalnia', cost: { gold: 50 }, icon: '🪙', adds: 'gold', val: 5 },
-            wood: { name: 'Drwal', cost: { gold: 30 }, icon: '🪵', adds: 'wood', val: 5 },
-            stone: { name: 'Kamieniołom', cost: { gold: 80, wood: 20 }, icon: '🪨', adds: 'stone', val: 3 },
-            fort: { name: 'Forteca', cost: { stone: 100 }, icon: '🏰', adds: 'def', val: 2 }
-        };
-
         const UI = {
             toast(msg, err=false) {
-                const t = document.getElementById('toast');
-                const m = document.createElement('div');
-                m.className = 'msg'; m.innerText = msg;
-                m.style.borderColor = err ? 'var(--red)' : 'var(--green)';
-                t.appendChild(m);
-                setTimeout(() => m.remove(), 2500);
+                const c = document.getElementById('toast-container');
+                const t = document.createElement('div');
+                t.className = 'toast'; t.innerText = msg;
+                if(err) t.style.borderColor = 'var(--red)';
+                c.appendChild(t);
+                setTimeout(() => t.remove(), 2500);
             },
-            closeModals() {
-                document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-                Input.pendingTarget = null;
-            },
-            openMove(src, tgt) {
-                const max = Math.max(1, Math.floor(src.troops - 1));
-                const s = document.getElementById('move-slider');
+            openModal(src, tgt) {
+                const max = Math.max(1, src.troops - 1);
+                const s = document.getElementById('troop-slider');
                 s.max = max; s.value = Math.floor(max/2);
-                document.getElementById('move-val').innerText = s.value;
-                document.getElementById('modal-move').style.display = 'flex';
+                document.getElementById('slider-display').innerText = s.value;
+                document.getElementById('modal-desc').innerText = `Z [${src.x},${src.y}] do [${tgt.x},${tgt.y}]`;
+                s.oninput = function() { document.getElementById('slider-display').innerText = this.value; };
+                document.getElementById('troop-modal').style.display = 'flex';
             },
-            openBuild(prov) {
-                const list = document.getElementById('build-list');
-                list.innerHTML = '';
-                for(let k in BUILDINGS) {
-                    let b = BUILDINGS[k];
-                    let d = document.createElement('div');
-                    d.className = 'build-item';
-                    d.innerHTML = `<div><b>${b.icon} ${b.name}</b></div><button class="btn-action btn-ok" style="flex:0; padding:5px 15px;">Kup</button>`;
-                    d.querySelector('button').onclick = () => Game.buy(prov, k);
-                    list.appendChild(d);
-                }
-                document.getElementById('modal-build').style.display = 'flex';
+            closeModal() {
+                document.getElementById('troop-modal').style.display = 'none';
+                Input.tgt = null;
             }
         };
 
@@ -162,135 +135,145 @@
             src: null, tgt: null, hov: null,
             bind() {
                 const cvs = Game.cvs;
-                cvs.onmousemove = e => {
+                cvs.addEventListener('mousemove', e => {
                     const r = cvs.getBoundingClientRect();
                     const x = Math.floor((e.clientX - r.left) / Game.sz);
                     const y = Math.floor((e.clientY - r.top) / Game.sz);
-                    if(x>=0 && x<Game.w && y>=0 && y<Game.h) this.hov = Game.grid[y][x];
-                };
-                cvs.oncontextmenu = e => {
-                    e.preventDefault();
-                    if(this.hov && this.hov.own === Game.uid) UI.openBuild(this.hov);
-                };
-                cvs.onmousedown = e => {
+                    if(x>=0 && x<Game.cols && y>=0 && y<Game.rows) this.hov = Game.grid[y][x];
+                });
+
+                cvs.addEventListener('dblclick', e => {
+                    if(!this.src || !this.hov || this.src === this.hov || this.hov.water) return;
+                    let dist = Math.max(Math.abs(this.src.x - this.hov.x), Math.abs(this.src.y - this.hov.y));
+                    if(dist === 1) {
+                        if(this.src.troops > 1) {
+                            this.tgt = this.hov;
+                            UI.openModal(this.src, this.tgt);
+                        } else UI.toast("Za mało wojska, by wykonać ruch!", true);
+                    } else { UI.toast("Prowincja za daleko!", true); }
+                });
+
+                cvs.addEventListener('mousedown', e => {
                     if(e.button !== 0 || !this.hov || this.hov.water) return;
-                    if(this.src) {
-                        let dist = Math.max(Math.abs(this.src.x - this.hov.x), Math.abs(this.src.y - this.hov.y));
-                        if(dist === 1) {
-                            if(this.src.troops > 1) { this.tgt = this.hov; UI.openMove(this.src, this.tgt); }
-                            else UI.toast("Za mało wojska!", true);
-                        } else if (dist === 0) { this.src = null; }
-                        else if (this.hov.own === Game.uid) { this.src = this.hov; }
-                        else { this.src = null; }
-                    } else if(this.hov.own === Game.uid) {
-                        this.src = this.hov;
-                    }
-                };
+                    if(this.hov.owner === Game.uid) this.src = this.hov;
+                    else this.src = null;
+                });
             },
             confirmMove() {
-                const val = parseInt(document.getElementById('move-slider').value);
-                Game.move(this.src, this.tgt, val);
-                UI.closeModals();
+                const val = parseInt(document.getElementById('troop-slider').value);
+                Game.execute(this.src, this.tgt, val);
+                UI.closeModal();
                 this.src = null;
             }
         };
 
         const Game = {
-            cvs: document.getElementById('cvs'),
-            ctx: document.getElementById('cvs').getContext('2d'),
-            w: 30, h: 17, sz: 40, grid: [], uid: null,
-            res: { gold: 200, wood: 100, stone: 0 },
-            
-            init() {
-                this.uid = window.Net.uid || "DEV";
+            cvs: document.getElementById('gameCanvas'),
+            ctx: document.getElementById('gameCanvas').getContext('2d'),
+            cols: 25, rows: 15, sz: 40, grid: [], uid: null,
+            res: { gold: 100 }, run: false, colors: ['#ef4444', '#10b981', '#f59e0b', '#8b5cf6'],
+
+            start() {
+                this.uid = window.Network.uid;
                 document.getElementById('menu').style.display = 'none';
-                document.getElementById('ui').style.display = 'flex';
-                this.genMap();
-                Input.bind();
-                setInterval(() => this.tick(), 1000);
-                this.loop();
+                document.getElementById('hud').style.display = 'flex';
+                document.getElementById('map-container').style.display = 'flex';
+
+                window.Network.checkMap((exists, data) => {
+                    if(exists) { this.parseMap(data); this.spawn(); UI.toast("Pobrano mapę z serwera"); }
+                    else { this.genMap(); this.spawn(); window.Network.syncMap(this.packMap()); UI.toast("Wygenerowano nową mapę"); }
+                    
+                    Input.bind();
+                    window.Network.listen(d => this.parseMap(d));
+                    setInterval(() => this.tick(), 1000);
+                    this.run = true; this.loop();
+                });
             },
             genMap() {
-                for(let y=0; y<this.h; y++) {
-                    let r = [];
-                    for(let x=0; x<this.w; x++) {
-                        let w = (x===0||y===0||x===this.w-1||y===this.h-1||Math.random()<0.15);
-                        r.push({x, y, own:0, troops: w?0:Math.floor(Math.random()*5), water:w, b:null});
+                this.grid = [];
+                for(let y=0; y<this.rows; y++) {
+                    let row = [];
+                    for(let x=0; x<this.cols; x++) {
+                        let w = (x===0||y===0||x===this.cols-1||y===this.rows-1||Math.random()<0.1);
+                        row.push({x, y, owner:0, troops: w?0:Math.floor(Math.random()*5), water:w});
                     }
-                    this.grid.push(r);
+                    this.grid.push(row);
                 }
-                // Spawn
-                let p = this.grid[Math.floor(this.h/2)][Math.floor(this.w/2)];
-                p.water = false; p.own = this.uid; p.troops = 100;
+            },
+            packMap() {
+                let obj = {};
+                for(let y=0; y<this.rows; y++) for(let x=0; x<this.cols; x++) obj[`${x}_${y}`] = this.grid[y][x];
+                return obj;
+            },
+            parseMap(data) {
+                this.grid = [];
+                for(let y=0; y<this.rows; y++) {
+                    let row = [];
+                    for(let x=0; x<this.cols; x++) {
+                        let d = data[`${x}_${y}`];
+                        row.push({x, y, owner: d?d.owner:0, troops: d?d.troops:0, water: d?d.water:false});
+                    }
+                    this.grid.push(row);
+                }
+            },
+            spawn() {
+                let lands = [];
+                for(let y=0; y<this.rows; y++) for(let x=0; x<this.cols; x++) if(!this.grid[y][x].water && this.grid[y][x].owner === 0) lands.push(this.grid[y][x]);
+                if(lands.length > 0) {
+                    let p = lands[Math.floor(Math.random() * lands.length)];
+                    p.owner = this.uid; p.troops = 50;
+                    window.Network.updateCell(p.x, p.y, {owner: p.owner, troops: p.troops});
+                }
             },
             tick() {
                 let t = 0;
-                for(let y=0; y<this.h; y++) {
-                    for(let x=0; x<this.w; x++) {
+                for(let y=0; y<this.rows; y++) {
+                    for(let x=0; x<this.cols; x++) {
                         let p = this.grid[y][x];
-                        if(p.own === this.uid) {
-                            p.troops++; t += p.troops;
-                            this.res.gold++;
-                            if(p.b) {
-                                let b = BUILDINGS[p.b];
-                                if(b.adds !== 'def') this.res[b.adds] += b.val;
-                            }
-                            window.Net.update(x, y, {troops: p.troops});
+                        if(p.owner === this.uid) {
+                            p.troops++; t += p.troops; this.res.gold++;
+                            window.Network.updateCell(x, y, {troops: p.troops});
                         }
                     }
                 }
-                document.getElementById('r-gold').innerText = this.res.gold;
-                document.getElementById('r-wood').innerText = this.res.wood;
-                document.getElementById('r-stone').innerText = this.res.stone;
-                document.getElementById('r-troops').innerText = t;
+                document.getElementById('ui-gold').innerText = this.res.gold;
+                document.getElementById('ui-troops').innerText = t;
             },
-            buy(p, bType) {
-                let c = BUILDINGS[bType].cost;
-                for(let k in c) if(this.res[k] < c[k]) return UI.toast("Brak surowców!", true);
-                if(p.b) return UI.toast("Już zabudowane!", true);
-                for(let k in c) this.res[k] -= c[k];
-                p.b = bType;
-                UI.closeModals(); UI.toast("Zbudowano " + BUILDINGS[bType].name);
-                window.Net.update(p.x, p.y, {b: p.b});
-            },
-            move(s, t, v) {
-                if(s.troops <= v) return;
+            execute(s, t, v) {
                 s.troops -= v;
-                let defBonus = (t.b === 'fort') ? 2 : 1;
-                
-                if(t.own === this.uid) { t.troops += v; }
+                if(t.owner === this.uid) { t.troops += v; }
                 else {
-                    let def = t.troops * defBonus;
-                    if(v > def) {
-                        t.own = this.uid; t.troops = v - def;
-                        if(t.b === 'fort') t.b = null;
-                        UI.toast("Prowincja zdobyta!");
-                    } else {
-                        t.troops = Math.floor((def - v) / defBonus);
-                        UI.toast("Atak odparty!", true);
-                    }
+                    if(v > t.troops) { t.owner = this.uid; t.troops = v - t.troops; UI.toast("Prowincja zdobyta!"); }
+                    else { t.troops -= v; UI.toast("Atak odparty!", true); }
                 }
-                window.Net.update(s.x, s.y, {troops: s.troops});
-                window.Net.update(t.x, t.y, {own: t.own, troops: t.troops, b: t.b});
+                window.Network.updateCell(s.x, s.y, {troops: s.troops});
+                window.Network.updateCell(t.x, t.y, {owner: t.owner, troops: t.troops});
             },
             draw() {
-                this.ctx.fillStyle = '#020617'; this.ctx.fillRect(0,0,1200,700);
-                for(let y=0; y<this.h; y++) {
-                    for(let x=0; x<this.w; x++) {
+                this.ctx.fillStyle = '#0f172a'; this.ctx.fillRect(0,0,1000,600);
+                for(let y=0; y<this.rows; y++) {
+                    for(let x=0; x<this.cols; x++) {
                         let p = this.grid[y][x], px = x*this.sz, py = y*this.sz;
-                        this.ctx.fillStyle = p.water ? '#0ea5e9' : (p.own===0 ? '#1e293b' : (p.own===this.uid ? '#3b82f6' : '#ef4444'));
+                        
+                        if(p.water) this.ctx.fillStyle = '#0ea5e9';
+                        else if(p.owner === 0) this.ctx.fillStyle = '#1e293b';
+                        else if(p.owner === this.uid) this.ctx.fillStyle = '#3b82f6';
+                        else this.ctx.fillStyle = this.colors[(p.owner.charCodeAt(0) || 0) % this.colors.length];
+                        
                         this.ctx.fillRect(px, py, this.sz, this.sz);
-                        this.ctx.strokeStyle = '#000'; this.ctx.strokeRect(px, py, this.sz, this.sz);
-                        
-                        if(p.b) { this.ctx.fillStyle='#fff'; this.ctx.font='16px Arial'; this.ctx.fillText(BUILDINGS[p.b].icon, px+this.sz/2-8, py+this.sz/2+6); }
-                        if(!p.water && p.troops>0) { this.ctx.fillStyle='#fff'; this.ctx.font='bold 12px Arial'; this.ctx.fillText(Math.floor(p.troops), px+5, py+this.sz-5); }
-                        
-                        if(Input.hov===p && !p.water) { this.ctx.fillStyle='rgba(255,255,255,0.2)'; this.ctx.fillRect(px,py,this.sz,this.sz); }
-                        if(Input.src===p) { this.ctx.strokeStyle='#facc15'; this.ctx.lineWidth=3; this.ctx.strokeRect(px+2,py+2,this.sz-4,this.sz-4); this.ctx.lineWidth=1; }
+                        this.ctx.strokeStyle = '#020617'; this.ctx.strokeRect(px, py, this.sz, this.sz);
+
+                        if(!p.water && (p.troops>0 || p.owner!==0)) {
+                            this.ctx.fillStyle = 'white'; this.ctx.font = 'bold 12px Arial'; this.ctx.textAlign = 'center';
+                            this.ctx.fillText(Math.floor(p.troops), px+this.sz/2, py+this.sz/2+5);
+                        }
+
+                        if(Input.hov === p && !p.water) { this.ctx.fillStyle = 'rgba(255,255,255,0.2)'; this.ctx.fillRect(px,py,this.sz,this.sz); }
+                        if(Input.src === p) { this.ctx.strokeStyle = '#facc15'; this.ctx.lineWidth = 3; this.ctx.strokeRect(px+2,py+2,this.sz-4,this.sz-4); this.ctx.lineWidth = 1; }
                     }
                 }
             },
-            loop() { this.draw(); requestAnimationFrame(() => this.loop()); }
+            loop() { if(this.run) { this.draw(); requestAnimationFrame(() => this.loop()); } }
         };
     </script>
 </body>

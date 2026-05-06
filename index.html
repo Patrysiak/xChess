@@ -2,68 +2,423 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Age of Territorial - MMO Online</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Age of Territorial - Giga MMO</title>
     <style>
-        /* === UI & CSS === */
-        :root { --bg: #0f172a; --panel: #1e293b; --accent: #3b82f6; --text: #f8fafc; --red: #ef4444; --green: #10b981; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; flex-direction: column; height: 100vh; user-select: none; }
-        
-        #menu { position: absolute; inset: 0; background: #020617; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        .title { font-size: 3rem; color: var(--accent); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
-        .btn { background: var(--panel); border: 2px solid var(--accent); color: white; padding: 15px 40px; font-size: 1.2rem; cursor: pointer; border-radius: 8px; margin: 10px; width: 300px; transition: 0.2s; }
-        .btn:hover { background: var(--accent); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; border-color: gray; background: gray; }
+        /* =========================================
+           SEKCJA 1: ZMIENNE CSS
+           ========================================= */
+        :root {
+            --bg-dark: #020617;
+            --panel-bg: #0f172a;
+            --panel-border: #1e293b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --color-blue: #3b82f6;
+            --color-red: #ef4444;
+            --color-green: #10b981;
+            --color-gold: #f59e0b;
+            --color-wood: #b45309;
+            --color-stone: #64748b;
+            --font-main: 'Segoe UI', sans-serif;
+            --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
 
-        #hud { display: none; justify-content: space-between; background: var(--panel); padding: 15px; border-bottom: 2px solid #334155; }
-        .res { font-weight: bold; font-size: 1.2rem; margin-right: 20px; }
-        
-        #map-container { flex-grow: 1; display: none; justify-content: center; align-items: center; background: #000; }
-        canvas { box-shadow: 0 0 40px rgba(0,0,0,0.8); cursor: crosshair; }
+        /* =========================================
+           SEKCJA 2: RESET I BAZA
+           ========================================= */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
 
-        /* MODAL WOJSKA */
-        #troop-modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); border: 2px solid var(--accent); padding: 30px; border-radius: 10px; z-index: 50; flex-direction: column; width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
-        .slider-val { font-size: 2rem; color: var(--red); font-weight: bold; margin: 15px 0; }
-        input[type="range"] { width: 100%; cursor: pointer; }
-        .btn-row { display: flex; gap: 10px; margin-top: 20px; }
-        .action-btn { flex: 1; padding: 12px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; color: white; }
-        .btn-ok { background: var(--green); } .btn-cancel { background: var(--red); }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: var(--font-main);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+        }
 
-        #toast-container { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 200; pointer-events: none; }
-        .toast { background: rgba(0,0,0,0.8); padding: 10px 20px; border: 1px solid var(--accent); border-radius: 8px; font-weight: bold; animation: fade 2.5s forwards; }
-        @keyframes fade { 0% { opacity: 0; transform: translateY(20px); } 10% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; } 100% { opacity: 0; } }
+        /* =========================================
+           SEKCJA 3: MENU GŁÓWNE
+           ========================================= */
+        #main-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        .menu-title {
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--color-blue);
+            text-shadow: var(--shadow-glow);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+        }
+
+        .network-status {
+            color: var(--color-gold);
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            font-weight: bold;
+        }
+
+        .btn-large {
+            background: transparent;
+            border: 2px solid var(--panel-border);
+            color: var(--text-light);
+            padding: 15px 60px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.3s;
+            width: 350px;
+            text-align: center;
+        }
+
+        .btn-large:hover {
+            border-color: var(--color-blue);
+            background: rgba(59, 130, 246, 0.1);
+            transform: scale(1.05);
+        }
+
+        .btn-large:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: #333;
+        }
+
+        .btn-primary {
+            border-color: var(--color-green);
+            color: var(--color-green);
+        }
+
+        .btn-primary:hover {
+            background: var(--color-green);
+            color: black;
+        }
+
+        /* =========================================
+           SEKCJA 4: HUD W GRZE
+           ========================================= */
+        #game-ui {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #top-hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.95);
+            border-bottom: 2px solid var(--panel-border);
+            padding: 15px 30px;
+            z-index: 10;
+        }
+
+        .resource-bar {
+            display: flex;
+            gap: 20px;
+        }
+
+        .res-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 20px;
+            border-radius: 6px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .hints {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            text-align: right;
+            line-height: 1.5;
+        }
+
+        .hints span {
+            color: var(--color-gold);
+            font-weight: bold;
+        }
+
+        /* =========================================
+           SEKCJA 5: KANWA MAPY
+           ========================================= */
+        #map-container {
+            flex-grow: 1;
+            position: relative;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: crosshair;
+            overflow: hidden;
+        }
+
+        canvas {
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+            border: 2px solid var(--panel-border);
+        }
+
+        /* =========================================
+           SEKCJA 6: MODAL WOJSKA I BUDOWY
+           ========================================= */
+        .modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--panel-bg);
+            border: 2px solid var(--color-blue);
+            padding: 30px;
+            border-radius: 12px;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            width: 400px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+        }
+
+        .modal h2 {
+            text-align: center;
+            color: var(--color-blue);
+            margin-bottom: 10px;
+        }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .slider-values {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        #slider-display {
+            color: var(--color-red);
+            font-size: 2rem;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: #1e293b;
+            outline: none;
+            margin: 15px 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: var(--color-blue);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 12px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: white;
+            transition: 0.2s;
+        }
+
+        .btn-confirm {
+            background: var(--color-green);
+            color: black;
+        }
+
+        .btn-confirm:hover {
+            background: #059669;
+        }
+
+        .btn-cancel {
+            background: var(--color-red);
+        }
+
+        .btn-cancel:hover {
+            background: #dc2626;
+        }
+
+        .build-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .build-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--panel-border);
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .build-item:hover {
+            border-color: var(--color-gold);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        /* =========================================
+           SEKCJA 7: POWIADOMIENIA (TOASTS)
+           ========================================= */
+        #toast-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(15, 23, 42, 0.95);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 30px;
+            border: 1px solid var(--panel-border);
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s ease-out;
+            transition: opacity 0.5s;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div id="menu">
-        <div class="title">Territorial MMO</div>
-        <div id="db-status" style="color: var(--green); margin-bottom: 20px;">Inicjalizacja systemu...</div>
-        <button id="btn-start" class="btn" onclick="Game.start()" disabled>Graj Online</button>
-        <div style="margin-top: 20px; color: gray;">Zintegrowano z Firebase</div>
+    <div id="main-menu">
+        <div class="menu-title">Age of Territorial</div>
+        <div class="network-status" id="db-status">Łączenie z serwerem Firebase...</div>
+        <button id="btn-join" class="btn-large btn-primary" onclick="Game.initMultiplayer()" disabled>Wejdź do Gry</button>
+        <button class="btn-large" onclick="alert('Zintegrowano Anonimowe Logowanie')">Konto</button>
     </div>
 
-    <div id="hud">
-        <div>
-            <span class="res" style="color: #f59e0b">🪙 <span id="ui-gold">0</span></span>
-            <span class="res" style="color: #ef4444">⚔️ <span id="ui-troops">0</span></span>
+    <div id="game-ui">
+        <div id="top-hud">
+            <div class="resource-bar">
+                <div class="res-item" style="color:var(--color-gold)">
+                    🪙 <span id="val-gold">0</span>
+                </div>
+                <div class="res-item" style="color:var(--color-wood)">
+                    🪵 <span id="val-wood">0</span>
+                </div>
+                <div class="res-item" style="color:var(--color-stone)">
+                    🪨 <span id="val-stone">0</span>
+                </div>
+                <div class="res-item" style="color:var(--color-red)">
+                    ⚔️ <span id="val-troops">0</span>
+                </div>
+            </div>
+            <div class="hints">
+                <span>[1 Klik]</span> Zaznacz źródło<br>
+                <span>[2 Kliki]</span> Wybierz cel i przesuń<br>
+                <span>[Prawy Przycisk]</span> Buduj
+            </div>
         </div>
-        <div style="color: gray;">[1 Klik] Wybierz start | [2 Klik] Wybierz cel</div>
+
+        <div id="map-container">
+            <canvas id="gameCanvas" width="1200" height="700"></canvas>
+        </div>
+
+        <div id="toast-container"></div>
     </div>
 
-    <div id="map-container"><canvas id="gameCanvas" width="1000" height="600"></canvas></div>
-
-    <div id="troop-modal">
-        <h2>Wyślij Jednostki</h2>
-        <div id="modal-desc" style="color: gray;">Skąd -> Dokąd</div>
-        <div class="slider-val" id="slider-display">10</div>
-        <input type="range" id="troop-slider" min="1" max="100" value="10">
-        <div class="btn-row">
-            <button class="action-btn btn-cancel" onclick="UI.closeModal()">Anuluj</button>
-            <button class="action-btn btn-ok" onclick="Input.confirmMove()">Atakuj / Przesuń</button>
+    <div id="troop-modal" class="modal">
+        <h2>Przesunięcie Wojsk</h2>
+        <div style="text-align:center; color: var(--text-muted);" id="modal-desc">
+            Skąd -> Dokąd
+        </div>
+        <div class="slider-container">
+            <div class="slider-values">
+                <span>Min: 1</span>
+                <span id="slider-display">10</span>
+                <span>Max: <span id="slider-max">100</span></span>
+            </div>
+            <input type="range" id="troop-slider" min="1" max="100" value="10">
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-action btn-cancel" onclick="UI.closeModals()">Anuluj</button>
+            <button class="btn-action btn-confirm" onclick="Input.confirmMove()">Rozkaz!</button>
         </div>
     </div>
-    
-    <div id="toast-container"></div>
+
+    <div id="build-modal" class="modal">
+        <h2>Rozbudowa Prowincji</h2>
+        <div class="build-list" id="build-list">
+            </div>
+        <div class="modal-buttons">
+            <button class="btn-action btn-cancel" onclick="UI.closeModals()">Zamknij</button>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -80,201 +435,777 @@
         };
 
         window.Network = {
-            db: null, uid: null, isConnected: false,
+            db: null,
+            uid: null,
+            isConnected: false,
+            
             init() {
                 try {
                     const app = initializeApp(firebaseConfig);
                     const auth = getAuth(app);
                     this.db = getDatabase(app);
-                    
+
                     signInAnonymously(auth);
-                    onAuthStateChanged(auth, user => {
+
+                    onAuthStateChanged(auth, (user) => {
                         if (user) {
                             this.uid = user.uid;
                             this.isConnected = true;
-                            document.getElementById('db-status').innerText = "Połączono z serwerem";
-                            document.getElementById('btn-start').disabled = false;
+                            document.getElementById('db-status').innerText = "Zalogowano anonimowo. Gotowy do gry!";
+                            document.getElementById('db-status').style.color = "var(--color-green)";
+                            document.getElementById('btn-join').disabled = false;
                         }
                     });
-                } catch(e) { document.getElementById('db-status').innerText = "Błąd: Uruchom przez serwer lokalny"; }
+                } catch (e) {
+                    console.error(e);
+                    document.getElementById('db-status').innerText = "Uruchom przez Live Server!";
+                }
             },
-            syncMap(data) { if(this.isConnected) set(ref(this.db, 'map_state'), data); },
-            updateCell(x, y, data) { if(this.isConnected) update(ref(this.db, `map_state/${x}_${y}`), data); },
-            listen(callback) { if(this.isConnected) onValue(ref(this.db, 'map_state'), snap => { if(snap.val()) callback(snap.val()); }); },
-            checkMap(callback) { get(ref(this.db, 'map_state')).then(s => callback(s.exists(), s.val())); }
+
+            syncMap(gridData) {
+                if(!this.isConnected) return;
+                let mapObj = {};
+                for(let y=0; y<gridData.length; y++) {
+                    for(let x=0; x<gridData[y].length; x++) {
+                        let cell = gridData[y][x];
+                        mapObj[`${x}_${y}`] = {
+                            owner: cell.owner,
+                            troops: cell.troops,
+                            isWater: cell.isWater,
+                            building: cell.building
+                        };
+                    }
+                }
+                set(ref(this.db, 'gamestate/map'), mapObj);
+            },
+
+            updateProvince(x, y, data) {
+                if(!this.isConnected) return;
+                update(ref(this.db, `gamestate/map/${x}_${y}`), data);
+            },
+
+            listenToMap(callback) {
+                if(!this.isConnected) return;
+                onValue(ref(this.db, 'gamestate/map'), (snapshot) => {
+                    const data = snapshot.val();
+                    if(data) callback(data);
+                });
+            },
+
+            checkIfMapExists(callback) {
+                get(ref(this.db, 'gamestate/map')).then((snapshot) => {
+                    callback(snapshot.exists(), snapshot.val());
+                });
+            }
         };
+
         window.Network.init();
     </script>
 
     <script>
-        const UI = {
-            toast(msg, err=false) {
-                const c = document.getElementById('toast-container');
-                const t = document.createElement('div');
-                t.className = 'toast'; t.innerText = msg;
-                if(err) t.style.borderColor = 'var(--red)';
-                c.appendChild(t);
-                setTimeout(() => t.remove(), 2500);
+        // BAZA BUDYNKÓW
+        const BUILDINGS = {
+            mine: { 
+                id: 'mine', 
+                name: 'Kopalnia', 
+                cost: { gold: 50 }, 
+                icon: '🪙', 
+                income: { gold: 5 } 
             },
-            openModal(src, tgt) {
-                const max = Math.max(1, src.troops - 1);
-                const s = document.getElementById('troop-slider');
-                s.max = max; s.value = Math.floor(max/2);
-                document.getElementById('slider-display').innerText = s.value;
-                document.getElementById('modal-desc').innerText = `Z [${src.x},${src.y}] do [${tgt.x},${tgt.y}]`;
-                s.oninput = function() { document.getElementById('slider-display').innerText = this.value; };
-                document.getElementById('troop-modal').style.display = 'flex';
+            lumberjack: { 
+                id: 'lumberjack', 
+                name: 'Drwal', 
+                cost: { gold: 30 }, 
+                icon: '🪵', 
+                income: { wood: 5 } 
             },
-            closeModal() {
-                document.getElementById('troop-modal').style.display = 'none';
-                Input.tgt = null;
+            quarry: { 
+                id: 'quarry', 
+                name: 'Kamieniołom', 
+                cost: { gold: 100, wood: 50 }, 
+                icon: '🪨', 
+                income: { stone: 3 } 
+            },
+            barracks: { 
+                id: 'barracks', 
+                name: 'Koszary', 
+                cost: { gold: 150, wood: 100 }, 
+                icon: '⛺', 
+                income: {} 
+            },
+            fortress: { 
+                id: 'fortress', 
+                name: 'Twierdza', 
+                cost: { stone: 100, wood: 100 }, 
+                icon: '🏰', 
+                income: {} 
             }
         };
 
-        const Input = {
-            src: null, tgt: null, hov: null,
-            bind() {
-                const cvs = Game.cvs;
-                cvs.addEventListener('mousemove', e => {
-                    const r = cvs.getBoundingClientRect();
-                    const x = Math.floor((e.clientX - r.left) / Game.sz);
-                    const y = Math.floor((e.clientY - r.top) / Game.sz);
-                    if(x>=0 && x<Game.cols && y>=0 && y<Game.rows) this.hov = Game.grid[y][x];
-                });
-
-                cvs.addEventListener('dblclick', e => {
-                    if(!this.src || !this.hov || this.src === this.hov || this.hov.water) return;
-                    let dist = Math.max(Math.abs(this.src.x - this.hov.x), Math.abs(this.src.y - this.hov.y));
-                    if(dist === 1) {
-                        if(this.src.troops > 1) {
-                            this.tgt = this.hov;
-                            UI.openModal(this.src, this.tgt);
-                        } else UI.toast("Za mało wojska, by wykonać ruch!", true);
-                    } else { UI.toast("Prowincja za daleko!", true); }
-                });
-
-                cvs.addEventListener('mousedown', e => {
-                    if(e.button !== 0 || !this.hov || this.hov.water) return;
-                    if(this.hov.owner === Game.uid) this.src = this.hov;
-                    else this.src = null;
-                });
-            },
-            confirmMove() {
-                const val = parseInt(document.getElementById('troop-slider').value);
-                Game.execute(this.src, this.tgt, val);
-                UI.closeModal();
-                this.src = null;
+        const DB = {
+            colors: {
+                neutral: '#1e293b',
+                water: '#0ea5e9',
+                players: [
+                    '#3b82f6', 
+                    '#ef4444', 
+                    '#10b981', 
+                    '#f59e0b', 
+                    '#8b5cf6', 
+                    '#ec4899', 
+                    '#14b8a6', 
+                    '#f43f5e'
+                ]
             }
         };
 
-        const Game = {
-            cvs: document.getElementById('gameCanvas'),
-            ctx: document.getElementById('gameCanvas').getContext('2d'),
-            cols: 25, rows: 15, sz: 40, grid: [], uid: null,
-            res: { gold: 100 }, run: false, colors: ['#ef4444', '#10b981', '#f59e0b', '#8b5cf6'],
+        // KLASA CZĄSTECZEK (ANIMACJE)
+        class ParticleSystem {
+            constructor() {
+                this.particles = [];
+            }
 
-            start() {
-                this.uid = window.Network.uid;
-                document.getElementById('menu').style.display = 'none';
-                document.getElementById('hud').style.display = 'flex';
-                document.getElementById('map-container').style.display = 'flex';
+            createExplosion(x, y, color) {
+                for (let i = 0; i < 15; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 3 + 1;
+                    this.particles.push({
+                        type: 'spark',
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 1.0,
+                        decay: Math.random() * 0.05 + 0.02,
+                        color: color,
+                        size: Math.random() * 3 + 1
+                    });
+                }
+            }
 
-                window.Network.checkMap((exists, data) => {
-                    if(exists) { this.parseMap(data); this.spawn(); UI.toast("Pobrano mapę z serwera"); }
-                    else { this.genMap(); this.spawn(); window.Network.syncMap(this.packMap()); UI.toast("Wygenerowano nową mapę"); }
+            createText(x, y, text, color) {
+                this.particles.push({
+                    type: 'text',
+                    x: x + (Math.random() * 20 - 10),
+                    y: y + (Math.random() * 10 - 5),
+                    text: text,
+                    life: 1.0,
+                    color: color,
+                    vy: -1.5
+                });
+            }
+
+            createLaser(sx, sy, tx, ty, color) {
+                this.particles.push({
+                    type: 'laser',
+                    sx: sx,
+                    sy: sy,
+                    tx: tx,
+                    ty: ty,
+                    progress: 0,
+                    life: 1.0,
+                    color: color
+                });
+            }
+
+            updateAndDraw(ctx) {
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    let p = this.particles[i];
                     
-                    Input.bind();
-                    window.Network.listen(d => this.parseMap(d));
-                    setInterval(() => this.tick(), 1000);
-                    this.run = true; this.loop();
+                    if (p.type === 'laser') {
+                        ctx.beginPath();
+                        ctx.moveTo(p.sx, p.sy);
+                        let cx = p.sx + (p.tx - p.sx) * p.progress;
+                        let cy = p.sy + (p.ty - p.sy) * p.progress;
+                        ctx.lineTo(cx, cy);
+                        ctx.strokeStyle = p.color;
+                        ctx.lineWidth = 4 * p.life;
+                        ctx.lineCap = "round";
+                        ctx.stroke();
+                        
+                        p.progress += 0.1;
+                        p.life -= 0.05;
+                        
+                        if (p.progress >= 1) {
+                            this.createExplosion(p.tx, p.ty, p.color);
+                            this.particles.splice(i, 1);
+                        }
+                    } else if (p.type === 'spark') {
+                        ctx.globalAlpha = p.life;
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalAlpha = 1.0;
+
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.life -= p.decay;
+                        
+                        if (p.life <= 0) {
+                            this.particles.splice(i, 1);
+                        }
+                    } else if (p.type === 'text') {
+                        ctx.globalAlpha = p.life;
+                        ctx.fillStyle = p.color;
+                        ctx.font = "bold 16px Arial";
+                        ctx.textAlign = "center";
+                        ctx.strokeStyle = "black";
+                        ctx.lineWidth = 2;
+                        ctx.strokeText(p.text, p.x, p.y);
+                        ctx.fillText(p.text, p.x, p.y);
+                        ctx.globalAlpha = 1.0;
+
+                        p.y += p.vy;
+                        p.life -= 0.02;
+
+                        if (p.life <= 0) {
+                            this.particles.splice(i, 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        // INTERFEJS
+        const UI = {
+            updateResources(gold, wood, stone, troops) {
+                document.getElementById('val-gold').innerText = Math.floor(gold);
+                document.getElementById('val-wood').innerText = Math.floor(wood);
+                document.getElementById('val-stone').innerText = Math.floor(stone);
+                document.getElementById('val-troops').innerText = Math.floor(troops);
+            },
+
+            showToast(msg, type = "info") {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.innerText = msg;
+                
+                if(type === "error") {
+                    toast.style.borderColor = "var(--color-red)";
+                } else if(type === "success") {
+                    toast.style.borderColor = "var(--color-green)";
+                }
+                
+                container.appendChild(toast);
+                
+                setTimeout(() => { 
+                    toast.style.opacity = '0'; 
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300); 
+                }, 2500);
+            },
+
+            openTroopModal(source, target) {
+                const modal = document.getElementById('troop-modal');
+                const slider = document.getElementById('troop-slider');
+                const display = document.getElementById('slider-display');
+                const maxDisplay = document.getElementById('slider-max');
+
+                const maxTroops = Math.max(1, Math.floor(source.troops - 1));
+                
+                slider.min = 1;
+                slider.max = maxTroops;
+                slider.value = Math.max(1, Math.floor(maxTroops / 2));
+                
+                display.innerText = slider.value;
+                maxDisplay.innerText = maxTroops;
+
+                slider.oninput = function() { 
+                    display.innerText = this.value; 
+                };
+
+                document.getElementById('modal-desc').innerText = `Z [${source.x},${source.y}] do [${target.x},${target.y}]`;
+                
+                modal.style.display = 'flex';
+            },
+
+            openBuildModal(prov) {
+                const list = document.getElementById('build-list');
+                list.innerHTML = '';
+
+                for (let key in BUILDINGS) {
+                    let b = BUILDINGS[key];
+                    
+                    let canAfford = true;
+                    let costStr = '';
+                    
+                    if(b.cost.gold) {
+                        costStr += `🪙${b.cost.gold} `;
+                        if(Game.resources.gold < b.cost.gold) canAfford = false;
+                    }
+                    if(b.cost.wood) {
+                        costStr += `🪵${b.cost.wood} `;
+                        if(Game.resources.wood < b.cost.wood) canAfford = false;
+                    }
+                    if(b.cost.stone) {
+                        costStr += `🪨${b.cost.stone} `;
+                        if(Game.resources.stone < b.cost.stone) canAfford = false;
+                    }
+
+                    let item = document.createElement('div');
+                    item.className = 'build-item';
+                    item.innerHTML = `
+                        <div>
+                            <div style="font-size: 1.2rem; font-weight: bold; color: var(--color-blue);">
+                                ${b.icon} ${b.name}
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                Koszt: ${costStr}
+                            </div>
+                        </div>
+                        <button class="btn-action btn-confirm" style="flex: 0; padding: 10px 20px;" ${canAfford ? '' : 'disabled'}>
+                            Kup
+                        </button>
+                    `;
+
+                    item.querySelector('button').onclick = () => {
+                        Game.buyBuilding(prov, key);
+                    };
+
+                    list.appendChild(item);
+                }
+
+                document.getElementById('build-modal').style.display = 'flex';
+            },
+
+            closeModals() {
+                document.getElementById('troop-modal').style.display = 'none';
+                document.getElementById('build-modal').style.display = 'none';
+                Input.pendingTarget = null;
+            }
+        };
+
+        // INPUT Z GRACZEM
+        const Input = {
+            hoveredProv: null,
+            selectedSource: null,
+            pendingTarget: null,
+            
+            lastClickTime: 0,
+            lastClickedProv: null,
+
+            bind() {
+                const canvas = Game.canvas;
+                
+                canvas.addEventListener('mousemove', (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    const scaleX = canvas.width / rect.width;
+                    const scaleY = canvas.height / rect.height;
+                    
+                    const x = Math.floor(((e.clientX - rect.left) * scaleX) / Game.provSize);
+                    const y = Math.floor(((e.clientY - rect.top) * scaleY) / Game.provSize);
+                    
+                    if (x >= 0 && x < Game.cols && y >= 0 && y < Game.rows) {
+                        this.hoveredProv = Game.grid[y][x];
+                    }
+                });
+
+                canvas.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    if(this.hoveredProv && this.hoveredProv.owner === Game.myPlayerId) {
+                        if(!this.hoveredProv.building) {
+                            UI.openBuildModal(this.hoveredProv);
+                            this.selectedSource = this.hoveredProv;
+                        } else {
+                            UI.showToast("Prowincja ma już budynek!", "error");
+                        }
+                    }
+                });
+
+                canvas.addEventListener('mousedown', (e) => {
+                    if (!this.hoveredProv || this.hoveredProv.isWater || e.button !== 0) {
+                        return;
+                    }
+
+                    const now = Date.now();
+                    const timeDiff = now - this.lastClickTime;
+                    
+                    // DOUBLE CLICK
+                    if (timeDiff < 400 && this.lastClickedProv === this.hoveredProv) {
+                        
+                        if (this.selectedSource) {
+                            let dist = Math.max(
+                                Math.abs(this.selectedSource.x - this.hoveredProv.x), 
+                                Math.abs(this.selectedSource.y - this.hoveredProv.y)
+                            );
+                            
+                            if (dist === 1) {
+                                if(this.selectedSource.troops > 1) {
+                                    this.pendingTarget = this.hoveredProv;
+                                    UI.openTroopModal(this.selectedSource, this.hoveredProv);
+                                } else {
+                                    UI.showToast("Za mało wojska!", "error");
+                                }
+                            } else if (dist > 1) {
+                                UI.showToast("Cel jest za daleko!", "error");
+                            }
+                        }
+                        
+                    } else {
+                        // SINGLE CLICK
+                        if (this.hoveredProv.owner === Game.myPlayerId) {
+                            this.selectedSource = this.hoveredProv;
+                        } else {
+                            this.selectedSource = null;
+                        }
+                    }
+
+                    this.lastClickTime = now;
+                    this.lastClickedProv = this.hoveredProv;
                 });
             },
-            genMap() {
-                this.grid = [];
-                for(let y=0; y<this.rows; y++) {
-                    let row = [];
-                    for(let x=0; x<this.cols; x++) {
-                        let w = (x===0||y===0||x===this.cols-1||y===this.rows-1||Math.random()<0.1);
-                        row.push({x, y, owner:0, troops: w?0:Math.floor(Math.random()*5), water:w});
-                    }
-                    this.grid.push(row);
-                }
-            },
-            packMap() {
-                let obj = {};
-                for(let y=0; y<this.rows; y++) for(let x=0; x<this.cols; x++) obj[`${x}_${y}`] = this.grid[y][x];
-                return obj;
-            },
-            parseMap(data) {
-                this.grid = [];
-                for(let y=0; y<this.rows; y++) {
-                    let row = [];
-                    for(let x=0; x<this.cols; x++) {
-                        let d = data[`${x}_${y}`];
-                        row.push({x, y, owner: d?d.owner:0, troops: d?d.troops:0, water: d?d.water:false});
-                    }
-                    this.grid.push(row);
-                }
-            },
-            spawn() {
-                let lands = [];
-                for(let y=0; y<this.rows; y++) for(let x=0; x<this.cols; x++) if(!this.grid[y][x].water && this.grid[y][x].owner === 0) lands.push(this.grid[y][x]);
-                if(lands.length > 0) {
-                    let p = lands[Math.floor(Math.random() * lands.length)];
-                    p.owner = this.uid; p.troops = 50;
-                    window.Network.updateCell(p.x, p.y, {owner: p.owner, troops: p.troops});
-                }
-            },
-            tick() {
-                let t = 0;
-                for(let y=0; y<this.rows; y++) {
-                    for(let x=0; x<this.cols; x++) {
-                        let p = this.grid[y][x];
-                        if(p.owner === this.uid) {
-                            p.troops++; t += p.troops; this.res.gold++;
-                            window.Network.updateCell(x, y, {troops: p.troops});
-                        }
-                    }
-                }
-                document.getElementById('ui-gold').innerText = this.res.gold;
-                document.getElementById('ui-troops').innerText = t;
-            },
-            execute(s, t, v) {
-                s.troops -= v;
-                if(t.owner === this.uid) { t.troops += v; }
-                else {
-                    if(v > t.troops) { t.owner = this.uid; t.troops = v - t.troops; UI.toast("Prowincja zdobyta!"); }
-                    else { t.troops -= v; UI.toast("Atak odparty!", true); }
-                }
-                window.Network.updateCell(s.x, s.y, {troops: s.troops});
-                window.Network.updateCell(t.x, t.y, {owner: t.owner, troops: t.troops});
-            },
-            draw() {
-                this.ctx.fillStyle = '#0f172a'; this.ctx.fillRect(0,0,1000,600);
-                for(let y=0; y<this.rows; y++) {
-                    for(let x=0; x<this.cols; x++) {
-                        let p = this.grid[y][x], px = x*this.sz, py = y*this.sz;
-                        
-                        if(p.water) this.ctx.fillStyle = '#0ea5e9';
-                        else if(p.owner === 0) this.ctx.fillStyle = '#1e293b';
-                        else if(p.owner === this.uid) this.ctx.fillStyle = '#3b82f6';
-                        else this.ctx.fillStyle = this.colors[(p.owner.charCodeAt(0) || 0) % this.colors.length];
-                        
-                        this.ctx.fillRect(px, py, this.sz, this.sz);
-                        this.ctx.strokeStyle = '#020617'; this.ctx.strokeRect(px, py, this.sz, this.sz);
 
-                        if(!p.water && (p.troops>0 || p.owner!==0)) {
-                            this.ctx.fillStyle = 'white'; this.ctx.font = 'bold 12px Arial'; this.ctx.textAlign = 'center';
-                            this.ctx.fillText(Math.floor(p.troops), px+this.sz/2, py+this.sz/2+5);
-                        }
-
-                        if(Input.hov === p && !p.water) { this.ctx.fillStyle = 'rgba(255,255,255,0.2)'; this.ctx.fillRect(px,py,this.sz,this.sz); }
-                        if(Input.src === p) { this.ctx.strokeStyle = '#facc15'; this.ctx.lineWidth = 3; this.ctx.strokeRect(px+2,py+2,this.sz-4,this.sz-4); this.ctx.lineWidth = 1; }
-                    }
-                }
-            },
-            loop() { if(this.run) { this.draw(); requestAnimationFrame(() => this.loop()); } }
+            confirmMove() {
+                if(!this.selectedSource || !this.pendingTarget) return;
+                
+                const sliderVal = parseInt(document.getElementById('troop-slider').value);
+                
+                Game.executeMove(this.selectedSource, this.pendingTarget, sliderVal);
+                
+                UI.closeModals();
+                this.selectedSource = null;
+            }
         };
+
+        // RENDERER
+        const Renderer = {
+            draw(ctx, canvas, grid, hovered, selected, particles) {
+                
+                ctx.fillStyle = '#020617';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                for (let y = 0; y < Game.rows; y++) {
+                    for (let x = 0; x < Game.cols; x++) {
+                        
+                        let p = grid[y][x];
+                        let px = x * Game.provSize;
+                        let py = y * Game.provSize;
+
+                        if (p.isWater) {
+                            ctx.fillStyle = DB.colors.water;
+                        } else {
+                            if (p.owner === 0) {
+                                ctx.fillStyle = DB.colors.neutral;
+                            } else {
+                                let colorIndex = 0;
+                                if(typeof p.owner === 'string') {
+                                    colorIndex = (p.owner.charCodeAt(0) + p.owner.length) % DB.colors.players.length;
+                                }
+                                ctx.fillStyle = DB.colors.players[colorIndex];
+                            }
+                        }
+
+                        ctx.fillRect(px, py, Game.provSize, Game.provSize);
+
+                        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(px, py, Game.provSize, Game.provSize);
+
+                        // Budynki
+                        if (p.building && BUILDINGS[p.building]) {
+                            ctx.fillStyle = "white";
+                            ctx.font = "20px Arial";
+                            ctx.textAlign = "center";
+                            ctx.fillText(BUILDINGS[p.building].icon, px + Game.provSize/2, py + 22);
+                        }
+
+                        // Liczba
+                        if (!p.isWater && (p.troops > 0 || p.owner !== 0)) {
+                            ctx.fillStyle = "white";
+                            ctx.font = "bold 14px 'Segoe UI'";
+                            ctx.textAlign = "center";
+                            ctx.shadowColor = "black";
+                            ctx.shadowBlur = 4;
+                            ctx.fillText(Math.floor(p.troops), px + Game.provSize/2, py + Game.provSize - 5);
+                            ctx.shadowBlur = 0;
+                        }
+
+                        if (hovered === p && !p.isWater) {
+                            ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+                            ctx.fillRect(px, py, Game.provSize, Game.provSize);
+                        }
+
+                        if (selected === p) {
+                            ctx.strokeStyle = "rgba(250, 204, 21, 0.9)";
+                            ctx.lineWidth = 3;
+                            ctx.strokeRect(px + 2, py + 2, Game.provSize - 4, Game.provSize - 4);
+                            ctx.lineWidth = 1;
+                        }
+                    }
+                }
+
+                particles.updateAndDraw(ctx);
+            }
+        };
+
+        // SILNIK GŁÓWNY
+        const Game = {
+            canvas: document.getElementById('gameCanvas'),
+            ctx: document.getElementById('gameCanvas').getContext('2d'),
+            
+            cols: 30,
+            rows: 17,
+            provSize: 40,
+            
+            grid: [],
+            
+            myPlayerId: null,
+            resources: { 
+                gold: 200, 
+                wood: 100, 
+                stone: 0 
+            },
+            
+            isRunning: false,
+            particles: new ParticleSystem(),
+
+            initMultiplayer() {
+                if (!window.Network || !window.Network.isConnected) {
+                    alert("Zaczekaj na serwer!");
+                    return;
+                }
+
+                this.myPlayerId = window.Network.uid;
+                
+                document.getElementById('main-menu').style.opacity = '0';
+                
+                setTimeout(() => {
+                    document.getElementById('main-menu').style.display = 'none';
+                    document.getElementById('game-ui').style.display = 'flex';
+                }, 500);
+
+                window.Network.checkIfMapExists((exists, data) => {
+                    if (exists) {
+                        this.parseMapData(data);
+                        this.spawnMe();
+                        UI.showToast("Pobrano mapę z serwera!", "success");
+                    } else {
+                        this.generateLocalMap();
+                        this.spawnMe();
+                        window.Network.syncMap(this.grid);
+                        UI.showToast("Stworzono nowy świat.", "success");
+                    }
+
+                    this.startEngine();
+                });
+            },
+
+            generateLocalMap() {
+                this.grid = [];
+                for (let y = 0; y < this.rows; y++) {
+                    let row = [];
+                    for (let x = 0; x < this.cols; x++) {
+                        let isEdge = x===0 || y===0 || x===this.cols-1 || y===this.rows-1;
+                        let isWater = isEdge || Math.random() < 0.15;
+                        
+                        row.push({
+                            x: x, 
+                            y: y,
+                            owner: 0,
+                            troops: isWater ? 0 : Math.floor(Math.random() * 5),
+                            isWater: isWater,
+                            building: null
+                        });
+                    }
+                    this.grid.push(row);
+                }
+            },
+
+            parseMapData(firebaseData) {
+                this.grid = [];
+                for (let y = 0; y < this.rows; y++) {
+                    let row = [];
+                    for (let x = 0; x < this.cols; x++) {
+                        let key = `${x}_${y}`;
+                        let cellData = firebaseData[key];
+                        row.push({
+                            x: x, 
+                            y: y,
+                            owner: cellData ? cellData.owner : 0,
+                            troops: cellData ? cellData.troops : 0,
+                            isWater: cellData ? cellData.isWater : false,
+                            building: cellData ? cellData.building : null
+                        });
+                    }
+                    this.grid.push(row);
+                }
+            },
+
+            spawnMe() {
+                let emptyLands = [];
+                for (let y = 0; y < this.rows; y++) {
+                    for (let x = 0; x < this.cols; x++) {
+                        if (!this.grid[y][x].isWater && this.grid[y][x].owner === 0) {
+                            emptyLands.push(this.grid[y][x]);
+                        }
+                    }
+                }
+
+                if (emptyLands.length > 0) {
+                    let spawn = emptyLands[Math.floor(Math.random() * emptyLands.length)];
+                    spawn.owner = this.myPlayerId;
+                    spawn.troops = 100;
+                    
+                    window.Network.updateProvince(spawn.x, spawn.y, {
+                        owner: this.myPlayerId,
+                        troops: 100
+                    });
+                }
+            },
+
+            startEngine() {
+                Input.bind();
+                
+                window.Network.listenToMap((data) => {
+                    this.parseMapData(data);
+                });
+
+                setInterval(() => this.tickEconomy(), 1000);
+                
+                this.isRunning = true;
+                this.loop();
+            },
+
+            tickEconomy() {
+                let myTotalTroops = 0;
+                let hasLand = false;
+
+                for (let y = 0; y < this.rows; y++) {
+                    for (let x = 0; x < this.cols; x++) {
+                        let p = this.grid[y][x];
+                        
+                        if (p.owner === this.myPlayerId) {
+                            hasLand = true;
+                            
+                            let troopInc = 1;
+                            if(p.building === 'barracks') troopInc += 4;
+                            
+                            p.troops += troopInc;
+                            myTotalTroops += p.troops;
+                            
+                            window.Network.updateProvince(x, y, { troops: p.troops });
+                            
+                            this.resources.gold += 1;
+                            
+                            if(p.building) {
+                                let b = BUILDINGS[p.building];
+                                if(b.income.gold) this.resources.gold += b.income.gold;
+                                if(b.income.wood) this.resources.wood += b.income.wood;
+                                if(b.income.stone) this.resources.stone += b.income.stone;
+                            }
+                        }
+                    }
+                }
+
+                if(!hasLand) {
+                    UI.showToast("Twoje imperium upadło!", "error");
+                }
+
+                UI.updateResources(
+                    this.resources.gold, 
+                    this.resources.wood, 
+                    this.resources.stone, 
+                    myTotalTroops
+                );
+            },
+
+            buyBuilding(prov, buildKey) {
+                let b = BUILDINGS[buildKey];
+                
+                if(b.cost.gold) this.resources.gold -= b.cost.gold;
+                if(b.cost.wood) this.resources.wood -= b.cost.wood;
+                if(b.cost.stone) this.resources.stone -= b.cost.stone;
+
+                prov.building = buildKey;
+                
+                window.Network.updateProvince(prov.x, prov.y, {
+                    building: buildKey
+                });
+
+                UI.closeModals();
+                UI.showToast(`Zbudowano ${b.name}!`, "success");
+            },
+
+            executeMove(source, target, amount) {
+                
+                if(source.owner !== this.myPlayerId) return;
+                if(source.troops <= amount) return;
+
+                source.troops -= amount;
+                
+                let pxS = source.x * this.provSize + this.provSize/2;
+                let pyS = source.y * this.provSize + this.provSize/2;
+                let pxT = target.x * this.provSize + this.provSize/2;
+                let pyT = target.y * this.provSize + this.provSize/2;
+
+                let colorIndex = (this.myPlayerId.charCodeAt(0) + this.myPlayerId.length) % DB.colors.players.length;
+                let pColor = DB.colors.players[colorIndex];
+
+                this.particles.createLaser(pxS, pyS, pxT, pyT, pColor);
+
+                setTimeout(() => {
+                    
+                    if (target.owner === this.myPlayerId) {
+                        
+                        target.troops += amount;
+                        this.particles.createText(pxT, pyT, `+${amount}`, '#10b981');
+                        
+                    } else {
+                        
+                        let defBonus = target.building === 'fortress' ? 1.5 : 1.0;
+                        let effectiveDef = target.troops * defBonus;
+
+                        if (amount > effectiveDef) {
+                            
+                            target.owner = this.myPlayerId;
+                            target.troops = Math.floor(amount - effectiveDef);
+                            if(target.building === 'fortress') target.building = null;
+                            
+                            UI.showToast(`Zdobyto terytorium!`, "success");
+                            this.particles.createText(pxT, pyT, "WIN", pColor);
+                            
+                        } else {
+                            
+                            target.troops = Math.floor((effectiveDef - amount) / defBonus);
+                            UI.showToast("Atak odparty.", "error");
+                            this.particles.createText(pxT, pyT, `-${amount}`, '#ef4444');
+                            
+                        }
+                    }
+
+                    window.Network.updateProvince(source.x, source.y, { 
+                        troops: source.troops 
+                    });
+                    window.Network.updateProvince(target.x, target.y, { 
+                        owner: target.owner, 
+                        troops: target.troops,
+                        building: target.building
+                    });
+
+                }, 400);
+            },
+
+            loop() {
+                if(!this.isRunning) return;
+                
+                Renderer.draw(
+                    this.ctx, 
+                    this.canvas, 
+                    this.grid, 
+                    Input.hoveredProv, 
+                    Input.selectedSource,
+                    this.particles
+                );
+                
+                requestAnimationFrame(() => this.loop());
+            }
+        };
+
+        // START
+        console.log("System gotowy do gry.");
     </script>
 </body>
 </html>

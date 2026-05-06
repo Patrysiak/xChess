@@ -3,493 +3,544 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Age of Territorial MMO</title>
+<title>Age of Territorial: Ultimate MMO</title>
 <style>
-:root {
---bg: rgb(2, 6, 23);
---panel: rgb(15, 23, 42);
---border: rgb(30, 41, 59);
---text: rgb(248, 250, 252);
---blue: rgb(59, 130, 246);
---red: rgb(239, 68, 68);
---green: rgb(16, 185, 129);
---gold: rgb(245, 158, 11);
-}
-* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: sans-serif; }
-body { background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; width: 100vw; height: 100vh; }
-.screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; background: radial-gradient(circle at center, rgb(30,41,59) 0%, rgb(2,6,23) 100%); z-index: 10; }
-.active { display: flex; }
-.title { font-size: 4rem; color: var(--blue); text-transform: uppercase; letter-spacing: 5px; margin-bottom: 20px; font-weight: 900; }
-.btn { background: rgba(0,0,0,0.5); border: 2px solid var(--border); color: white; padding: 15px 40px; margin: 10px; font-size: 1.2rem; cursor: pointer; border-radius: 8px; width: 350px; transition: all 0.3s ease; font-weight: bold; text-align: center; }
-.btn:hover { border-color: var(--blue); background: rgba(59,130,246,0.1); transform: scale(1.05); }
-.btn:disabled { opacity: 0.5; border-color: rgb(50,50,50); cursor: not-allowed; transform: none; background: rgba(0,0,0,0.2); }
-.btnGreen { border-color: var(--green); color: var(--green); }
-.btnGreen:hover { background: var(--green); color: black; }
-.btnRed { border-color: var(--red); color: var(--red); }
-.btnRed:hover { background: var(--red); color: white; }
-.box { background: rgba(255,255,255,0.05); padding: 40px; border-radius: 15px; border: 1px solid var(--border); text-align: center; backdrop-filter: blur(10px); }
-.loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.gameUi { z-index: 5; background: rgb(0,0,0); }
-.hud { display: flex; justify-content: space-between; align-items: center; background: rgba(10,15,36,0.95); padding: 15px 30px; border-bottom: 2px solid var(--border); position: relative; z-index: 20; }
-.resBar { display: flex; gap: 20px; font-weight: bold; font-size: 1.2rem; }
-.resItem { background: rgba(0,0,0,0.6); padding: 8px 20px; border-radius: 6px; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
-.mapContainer { flex-grow: 1; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative; }
-canvas { cursor: crosshair; border: 2px solid var(--border); }
-.modal { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); border: 2px solid var(--blue); padding: 30px; border-radius: 12px; z-index: 100; flex-direction: column; width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
-.modal h2 { text-align: center; color: var(--blue); margin-bottom: 15px; }
-input[type="range"] { -webkit-appearance: none; width: 100%; height: 10px; border-radius: 5px; background: rgb(30,41,59); outline: none; margin: 20px 0; cursor: pointer; }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 25px; height: 25px; border-radius: 50%; background: var(--blue); transition: 0.2s; }
-input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-.btnRow { display: flex; gap: 15px; margin-top: 10px; }
-.btnAct { flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; font-size: 1.1rem; transition: 0.2s; }
-.btnOk { background: var(--green); }
-.btnOk:hover { background: rgb(5,150,105); }
-.btnNo { background: var(--red); }
-.btnNo:hover { background: rgb(220,38,38); }
-.buildItem { background: rgba(0,0,0,0.4); padding: 15px; border: 1px solid var(--border); margin-bottom: 10px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
-.buildItem:hover { border-color: var(--gold); background: rgba(245,158,11,0.1); }
-.toastContainer { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; pointer-events: none; z-index: 200; }
-.toastMsg { background: rgba(10,15,36,0.95); padding: 12px 25px; border-radius: 30px; border: 1px solid var(--border); font-weight: bold; color: white; animation: slideUp 0.3s ease-out, fadeOut 0.5s ease-in 2s forwards; }
-@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+    /* ================== CSS & DESIGN ================== */
+    :root {
+        --bg: #020617; --panel: rgba(15, 23, 42, 0.85); --border: rgba(51, 65, 85, 0.8);
+        --blue: #3b82f6; --red: #ef4444; --green: #10b981; --gold: #f59e0b;
+        --wood: #b45309; --stone: #64748b; --text: #f8fafc;
+        --glow: 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; height: 100vh; width: 100vw; }
+    
+    .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; background: radial-gradient(circle at top, #0f172a, #020617); z-index: 10; backdrop-filter: blur(10px); }
+    .active { display: flex; }
+    
+    .box { background: var(--panel); padding: 40px; border-radius: 20px; border: 1px solid var(--border); text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); backdrop-filter: blur(15px); }
+    .title { font-size: 4rem; color: var(--text); margin-bottom: 25px; font-weight: 900; letter-spacing: 2px; text-shadow: var(--glow); }
+    .title span { color: var(--blue); }
+    
+    .btn { background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: white; padding: 15px 30px; margin: 10px; font-size: 1.2rem; cursor: pointer; border-radius: 12px; width: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-weight: bold; position: relative; overflow: hidden; }
+    .btn:hover { border-color: var(--blue); box-shadow: var(--glow); transform: translateY(-2px); background: rgba(59, 130, 246, 0.1); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; border-color: #333; }
+    .btn-green { border-color: var(--green); color: var(--green); } .btn-green:hover { background: var(--green); color: #000; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+    .btn-red { border-color: var(--red); color: var(--red); } .btn-red:hover { background: var(--red); color: #fff; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+    
+    .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* UI GRY */
+    #game-ui { z-index: 5; background: #000; display: none; flex-direction: column; height: 100%; width: 100%; }
+    .hud { display: flex; justify-content: space-between; align-items: center; background: var(--panel); padding: 15px 30px; border-bottom: 1px solid var(--border); z-index: 20; backdrop-filter: blur(10px); }
+    .res-bar { display: flex; gap: 20px; font-weight: bold; font-size: 1.2rem; }
+    .res-item { background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+    .hint { color: var(--text-muted); font-size: 0.9rem; } .hint b { color: var(--blue); }
+    
+    #map-container { flex-grow: 1; display: flex; justify-content: center; align-items: center; overflow: hidden; background: #020617; }
+    canvas { border: 1px solid var(--border); box-shadow: 0 0 60px rgba(0,0,0,0.9); cursor: crosshair; }
+
+    /* MODALE */
+    .modal-overlay { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 99; backdrop-filter: blur(3px); }
+    .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); border: 1px solid var(--blue); padding: 30px; border-radius: 16px; flex-direction: column; width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.9); }
+    .modal h2 { text-align: center; color: var(--text); margin-bottom: 20px; font-weight: 800; }
+    
+    input[type="range"] { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px; background: #1e293b; outline: none; margin: 25px 0; cursor: pointer; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 10px var(--blue); transition: 0.2s; }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    
+    .build-list { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding-right: 5px; }
+    .build-item { background: rgba(0,0,0,0.4); padding: 15px; border: 1px solid var(--border); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; cursor: pointer; }
+    .build-item:hover { border-color: var(--gold); background: rgba(245, 158, 11, 0.1); }
+    .btn-row { display: flex; gap: 15px; margin-top: 15px; }
+
+    /* TOASTY */
+    #toast-box { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; pointer-events: none; z-index: 200; }
+    .toast { background: rgba(15,23,42,0.95); padding: 12px 25px; border-radius: 30px; border: 1px solid var(--border); font-weight: bold; color: white; animation: slideUp 0.3s ease-out, fadeOut 0.5s ease-in 2.5s forwards; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
 </style>
 </head>
 <body>
 
-<div class="screen active screenMain" id="screenMain">
-<div class="box">
-<h1 class="title">Territorial</h1>
-<p style="margin-bottom: 10px;">Zalogowano: <strong class="playerNick" id="playerNick" style="color: var(--gold);">Gosc</strong></p>
-<p class="authStatus" id="authStatus" style="color: rgb(148,163,184); margin-bottom: 30px; font-size: 0.9rem;">Ladowanie systemu...</p>
-<button class="btn btnGoogle" id="btnLogin" style="background-color: rgb(219,68,55); border-color: rgb(219,68,55);">Zaloguj Google</button>
-<button class="btn btnGoogle" id="btnAnon" style="background-color: rgb(100,100,100); border-color: rgb(100,100,100);">Szybka Gra (Anonim)</button>
-<button class="btn btnLogout" id="btnLogout" style="display: none; background-color: var(--red); border-color: var(--red);">Wyloguj</button>
-<hr style="border-color: rgba(255,255,255,0.1); margin: 20px 0;">
-<button class="btn btnGreen btnHost" id="btnHost" disabled>Stworz Pokoj</button>
-<button class="btn btnBlue btnJoin" id="btnJoin" disabled>Dolacz do Pokoju</button>
-</div>
-</div>
-
-<div class="screen screenLobby" id="screenLobby">
-<div class="box">
-<h2 style="color: var(--gold); margin-bottom: 10px; font-size: 2.5rem;">Oczekiwanie...</h2>
-<p class="lobbyStatus" id="lobbyStatus" style="color: rgb(148,163,184); margin-bottom: 20px; font-size: 1.2rem;">Szukanie przeciwnika</p>
-<div class="loader"></div>
-<button class="btn btnNo" style="width: 200px; margin-top: 30px;" id="btnCancelLobby">Anuluj</button>
-</div>
+<div class="screen active" id="screen-main">
+    <div class="box">
+        <h1 class="title">Age of <span>Territorial</span></h1>
+        <p style="margin-bottom: 5px;">Zalogowano: <strong id="player-nick" style="color: var(--gold);">Gość</strong></p>
+        <p id="db-status" style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.9rem;">Oczekiwanie na serwer Firebase...</p>
+        
+        <button id="btn-login" class="btn" style="border-color: #DB4437; color: #DB4437;">Zaloguj przez Google</button>
+        <button id="btn-anon" class="btn" style="border-color: #94a3b8; color: #94a3b8;">Graj jako Gość (Anonim)</button>
+        <button id="btn-logout" class="btn btn-red" style="display:none;">Wyloguj</button>
+        
+        <hr style="border-color: var(--border); margin: 20px 0;">
+        
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-host" class="btn btn-green" disabled>Stwórz Grę</button>
+            <button id="btn-join" class="btn" disabled>Dołącz do Gry</button>
+        </div>
+    </div>
 </div>
 
-<div class="screen gameUi" id="gameUi">
-<div class="hud" id="hud">
-<div class="resBar">
-<div class="resItem" style="color: var(--gold)">C <span class="valGold" id="valGold">0</span></div>
-<div class="resItem" style="color: rgb(180,83,9)">D <span class="valWood" id="valWood">0</span></div>
-<div class="resItem" style="color: rgb(100,116,139)">K <span class="valStone" id="valStone">0</span></div>
-<div class="resItem" style="color: var(--red)">W <span class="valTroops" id="valTroops">0</span></div>
-</div>
-</div>
-<div class="mapContainer" id="mapContainer">
-<canvas class="gameCanvas" id="gameCanvas" width="1200" height="700"></canvas>
-</div>
-<div class="toastContainer" id="toastContainer"></div>
+<div class="screen" id="screen-lobby">
+    <div class="box">
+        <h2 style="color: var(--gold); margin-bottom: 15px; font-size: 2.5rem;">Oczekiwanie...</h2>
+        <p id="lobby-status" style="color: var(--text-muted); font-size: 1.2rem;">Szukanie przeciwnika w sieci</p>
+        <div class="loader"></div>
+        <button id="btn-cancel-lobby" class="btn btn-red" style="margin-top: 20px;">Przerwij</button>
+    </div>
 </div>
 
-<div class="modal troopModal" id="troopModal">
-<h2>Wyslij Jednostki</h2>
-<div style="text-align:center; color: rgb(148,163,184);" class="modalDesc" id="modalDesc">Skad -> Dokad</div>
-<div class="sliderDisplay" id="sliderDisplay" style="font-size: 2.5rem; color: var(--red); text-align: center; font-weight: bold; margin: 10px 0;">10</div>
-<input type="range" class="troopSlider" id="troopSlider" min="1" max="100" value="10">
-<div style="display: flex; justify-content: space-between; color: rgb(148,163,184); font-size: 0.9rem;">
-<span>Min: 1</span>
-<span>Max: <span class="moveMaxDisplay" id="moveMaxDisplay">100</span></span>
-</div>
-<div class="btnRow">
-<button class="btnAct btnNo" id="btnCancelMove">Anuluj</button>
-<button class="btnAct btnOk" id="btnConfirmMove">Rozkaz!</button>
-</div>
+<div id="game-ui">
+    <div class="hud">
+        <div class="res-bar">
+            <div class="res-item" style="color: var(--gold)">🪙 <span id="r-gold">0</span></div>
+            <div class="res-item" style="color: var(--wood)">🪵 <span id="r-wood">0</span></div>
+            <div class="res-item" style="color: var(--stone)">🪨 <span id="r-stone">0</span></div>
+            <div class="res-item" style="color: var(--red)">⚔️ <span id="r-troops">0</span></div>
+        </div>
+        <div class="hint"><b>[LPM]</b> Start -> <b>[LPMx2]</b> Atak | <b>[PPM]</b> Menu Budowy</div>
+    </div>
+    <div id="map-container">
+        <canvas id="gameCanvas" width="1300" height="750"></canvas>
+    </div>
 </div>
 
-<div class="modal buildModal" id="buildModal">
-<h2>Rozbudowa</h2>
-<div class="buildList" id="buildList" style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;"></div>
-<button class="btnAct btnNo" style="margin-top: 20px;" id="btnCloseBuild">Zamknij</button>
+<div class="modal-overlay" id="modal-overlay">
+    
+    <div class="modal" id="modal-move">
+        <h2>Wyślij Jednostki</h2>
+        <p id="move-desc" style="color: var(--text-muted); text-align: center; margin-bottom: 10px;">Cel Ataku</p>
+        <div id="move-val" style="font-size: 3rem; color: var(--red); text-align: center; font-weight: 900; text-shadow: 0 0 10px rgba(239,68,68,0.4);">10</div>
+        <input type="range" id="move-slider" min="1" max="100" value="10">
+        <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.9rem;">
+            <span>Min: 1</span><span>Max: <b id="move-max">100</b></span>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-red" style="padding: 10px;" id="btn-cancel-move">Anuluj</button>
+            <button class="btn btn-green" style="padding: 10px;" id="btn-confirm-move">Rozkaz!</button>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-build" style="width: 450px;">
+        <h2>Rozbudowa Prowincji</h2>
+        <div class="build-list" id="build-list"></div>
+        <button class="btn btn-red" style="padding: 10px; margin-top: 15px;" id="btn-cancel-build">Zamknij</button>
+    </div>
+    
 </div>
+
+<div id="toast-box"></div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getDatabase, ref, set, onValue, get, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getDatabase, ref, set, onValue, get, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-const firebaseConfig = {
-apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
-authDomain: "xchess-79e2d.firebaseapp.com",
-projectId: "xchess-79e2d",
-storageBucket: "xchess-79e2d.firebasestorage.app",
-messagingSenderId: "382071993193",
-appId: "1:382071993193:web:86dbe5211f2151cb5383f8"
-};
+    const config = {
+        apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
+        authDomain: "xchess-79e2d.firebaseapp.com",
+        projectId: "xchess-79e2d",
+        storageBucket: "xchess-79e2d.firebasestorage.app",
+        messagingSenderId: "382071993193",
+        appId: "1:382071993193:web:86dbe5211f2151cb5383f8"
+    };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
-const db = getDatabase(app);
+    const app = initializeApp(config);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    const provider = new GoogleAuthProvider();
 
-window.API = { db: db, uid: null, isOnline: false, roomId: 'room1' };
+    window.API = { db, uid: null, online: false, room: 'global_room_1' };
 
-document.getElementById('btnLogin').onclick = () => {
-signInWithPopup(auth, provider).catch(e => alert(e.message));
-};
+    // Logowanie
+    document.getElementById('btn-login').onclick = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
+    document.getElementById('btn-anon').onclick = () => signInAnonymously(auth).catch(e => alert(e.message));
+    document.getElementById('btn-logout').onclick = () => signOut(auth);
 
-document.getElementById('btnAnon').onclick = () => {
-signInAnonymously(auth).catch(e => alert(e.message));
-};
+    onAuthStateChanged(auth, user => {
+        const st = document.getElementById('db-status');
+        const nk = document.getElementById('player-nick');
+        if(user) {
+            window.API.uid = user.uid; window.API.online = true;
+            nk.innerText = user.displayName || "Anonim"; nk.style.color = "var(--green)";
+            st.innerText = "Połączono z serwerem pomyślnie."; st.style.color = "var(--green)";
+            document.getElementById('btn-login').style.display = "none";
+            document.getElementById('btn-anon').style.display = "none";
+            document.getElementById('btn-logout').style.display = "block";
+            document.getElementById('btn-host').disabled = false;
+            document.getElementById('btn-join').disabled = false;
+        } else {
+            window.API.uid = null; window.API.online = false;
+            nk.innerText = "Gość"; nk.style.color = "var(--gold)";
+            st.innerText = "Wymagane logowanie do gry online."; st.style.color = "var(--text-muted)";
+            document.getElementById('btn-login').style.display = "block";
+            document.getElementById('btn-anon').style.display = "block";
+            document.getElementById('btn-logout').style.display = "none";
+            document.getElementById('btn-host').disabled = true;
+            document.getElementById('btn-join').disabled = true;
+        }
+    });
+</script>
 
-document.getElementById('btnLogout').onclick = () => {
-signOut(auth);
-};
+<script>
+    // --- DANE BUDYNKÓW ---
+    const B_DB = {
+        mine: { id: 'mine', n: 'Kopalnia', c: { gold: 50 }, i: '🪙', d: '+5 Złota / s' },
+        wood: { id: 'wood', n: 'Drwal', c: { gold: 30 }, i: '🪵', d: '+5 Drewna / s' },
+        quarry: { id: 'quarry', n: 'Kamieniołom', c: { gold: 80, wood: 20 }, i: '🪨', d: '+3 Kamienia / s' },
+        barracks: { id: 'barracks', n: 'Koszary', c: { gold: 120, wood: 50 }, i: '⛺', d: 'Zwiększony pobór wojska' },
+        fort: { id: 'fort', n: 'Twierdza', c: { stone: 100, wood: 50 }, i: '🏰', d: 'Podwaja siłę obrony prowincji' }
+    };
 
-onAuthStateChanged(auth, user => {
-const st = document.getElementById('authStatus');
-const nk = document.getElementById('playerNick');
-if(user) {
-window.API.uid = user.uid;
-window.API.isOnline = true;
-nk.innerText = user.displayName || "Anonim";
-nk.style.color = "rgb(16,185,129)";
-st.innerText = "Polaczono";
-st.style.color = "rgb(16,185,129)";
-document.getElementById('btnLogin').style.display = "none";
-document.getElementById('btnAnon').style.display = "none";
-document.getElementById('btnLogout').style.display = "block";
-document.getElementById('btnHost').disabled = false;
-document.getElementById('btnJoin').disabled = false;
-} else {
-window.API.uid = null;
-window.API.isOnline = false;
-nk.innerText = "Gosc";
-nk.style.color = "rgb(245,158,11)";
-st.innerText = "Wymagane logowanie";
-st.style.color = "rgb(148,163,184)";
-document.getElementById('btnLogin').style.display = "block";
-document.getElementById('btnAnon').style.display = "block";
-document.getElementById('btnLogout').style.display = "none";
-document.getElementById('btnHost').disabled = true;
-document.getElementById('btnJoin').disabled = true;
-}
-});
+    // --- INTERFEJS ---
+    const UI = {
+        show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); },
+        toast(msg, err=false) {
+            const b = document.getElementById('toast-box');
+            const t = document.createElement('div'); t.className = 'toast'; t.innerText = msg;
+            t.style.borderColor = err ? 'var(--red)' : 'var(--green)';
+            b.appendChild(t); setTimeout(() => { if(t.parentNode) t.remove(); }, 3000);
+        },
+        updateRes(g, w, s, t) {
+            document.getElementById('r-gold').innerText = Math.floor(g);
+            document.getElementById('r-wood').innerText = Math.floor(w);
+            document.getElementById('r-stone').innerText = Math.floor(s);
+            document.getElementById('r-troops').innerText = Math.floor(t);
+        },
+        closeModals() {
+            document.getElementById('modal-overlay').style.display = 'none';
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+            Engine.tgt = null;
+        }
+    };
 
-const UI = {
-toast(msg, err=false) {
-const c = document.getElementById('toastContainer');
-const t = document.createElement('div');
-t.className = 'toastMsg';
-t.innerText = msg;
-t.style.borderColor = err ? 'rgb(239,68,68)' : 'rgb(16,185,129)';
-c.appendChild(t);
-setTimeout(() => { if(t.parentNode) t.remove(); }, 2500);
-},
-screen(id) {
-document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-},
-updRes(g,w,s,t) {
-document.getElementById('valGold').innerText = Math.floor(g);
-document.getElementById('valWood').innerText = Math.floor(w);
-document.getElementById('valStone').innerText = Math.floor(s);
-document.getElementById('valTroops').innerText = Math.floor(t);
-}
-};
+    // --- SYSTEM CZĄSTECZEK (ANIMACJE) ---
+    class Particles {
+        constructor() { this.p = []; }
+        fireLaser(sx, sy, tx, ty, col) { this.p.push({ type: 'L', sx, sy, tx, ty, p: 0, l: 1, c: col }); }
+        fireExplosion(x, y, col) {
+            for(let i=0; i<20; i++) {
+                let a = Math.random() * Math.PI * 2, s = Math.random() * 5 + 1;
+                this.p.push({ type: 'S', x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s, l: 1, d: Math.random()*0.05+0.02, c: col, sz: Math.random()*4+2 });
+            }
+        }
+        fireText(x, y, txt, col) { this.p.push({ type: 'T', x: x+(Math.random()*20-10), y: y+(Math.random()*10-5), txt, l: 1, c: col, vy: -1.5 }); }
+        
+        render(ctx) {
+            for(let i = this.p.length-1; i >= 0; i--) {
+                let pt = this.p[i];
+                if(pt.type === 'L') {
+                    ctx.beginPath(); ctx.moveTo(pt.sx, pt.sy);
+                    let cx = pt.sx + (pt.tx - pt.sx) * pt.p; let cy = pt.sy + (pt.ty - pt.sy) * pt.p;
+                    ctx.lineTo(cx, cy); ctx.strokeStyle = pt.c; ctx.lineWidth = 6 * pt.l; ctx.lineCap = "round"; ctx.stroke();
+                    pt.p += 0.15; pt.l -= 0.04;
+                    if(pt.p >= 1) { this.fireExplosion(pt.tx, pt.ty, pt.c); this.p.splice(i, 1); }
+                } else if(pt.type === 'S') {
+                    ctx.globalAlpha = pt.l; ctx.fillStyle = pt.c; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.sz, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1;
+                    pt.x += pt.vx; pt.y += pt.vy; pt.l -= pt.d;
+                    if(pt.l <= 0) this.p.splice(i, 1);
+                } else if(pt.type === 'T') {
+                    ctx.globalAlpha = pt.l; ctx.fillStyle = pt.c; ctx.font = "900 24px 'Segoe UI'"; ctx.textAlign = "center";
+                    ctx.strokeStyle = "black"; ctx.lineWidth = 4; ctx.strokeText(pt.txt, pt.x, pt.y); ctx.fillText(pt.txt, pt.x, pt.y); ctx.globalAlpha = 1;
+                    pt.y += pt.vy; pt.l -= 0.02;
+                    if(pt.l <= 0) this.p.splice(i, 1);
+                }
+            }
+        }
+    }
 
-const B_DATA = {
-mine: { id: 'mine', n: 'Kopalnia', c: { gold: 50 }, i: 'C', d: '+Zloto' },
-wood: { id: 'wood', n: 'Drwal', c: { gold: 30 }, i: 'D', d: '+Drewno' },
-quarry: { id: 'quarry', n: 'Kamieniolom', c: { gold: 80, wood: 20 }, i: 'K', d: '+Kamien' },
-fort: { id: 'fort', n: 'Fort', c: { stone: 100, wood: 50 }, i: 'F', d: 'Obrona' }
-};
+    // --- SILNIK GŁÓWNY ---
+    const Engine = {
+        cvs: document.getElementById('gameCanvas'),
+        ctx: document.getElementById('gameCanvas').getContext('2d'),
+        cols: 32, rows: 18, sz: 40, grid: [], uid: null, res: { g: 200, w: 100, s: 0 },
+        run: false, pt: new Particles(), hov: null, src: null, tgt: null, lastClk: 0, isHost: false,
+        colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
 
-class Particles {
-constructor() { this.p = []; }
-exp(x, y, c) {
-for(let i=0; i<15; i++) {
-const a = Math.random() * Math.PI * 2;
-const s = Math.random() * 4 + 1;
-this.p.push({ t:'s', x:x, y:y, vx:Math.cos(a)*s, vy:Math.sin(a)*s, l:1, d:Math.random()*0.05+0.02, c:c, sz:Math.random()*4+2 });
-}
-}
-txt(x, y, txt, c) {
-this.p.push({ t:'t', x:x+(Math.random()*20-10), y:y+(Math.random()*10-5), txt:txt, l:1, c:c, vy:-1.5 });
-}
-lsr(sx, sy, tx, ty, c) {
-this.p.push({ t:'l', sx:sx, sy:sy, tx:tx, ty:ty, p:0, l:1, c:c });
-}
-draw(ctx) {
-for(let i = this.p.length-1; i>=0; i--) {
-let pt = this.p[i];
-if(pt.t === 'l') {
-ctx.beginPath(); ctx.moveTo(pt.sx, pt.sy);
-let cx = pt.sx + (pt.tx-pt.sx)*pt.p; let cy = pt.sy + (pt.ty-pt.sy)*pt.p;
-ctx.lineTo(cx, cy); ctx.strokeStyle = pt.c; ctx.lineWidth = 5*pt.l; ctx.lineCap = "round"; ctx.stroke();
-pt.p += 0.12; pt.l -= 0.04;
-if(pt.p >= 1) { this.exp(pt.tx, pt.ty, pt.c); this.p.splice(i, 1); }
-} else if(pt.t === 's') {
-ctx.globalAlpha = pt.l; ctx.fillStyle = pt.c; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.sz, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1;
-pt.x += pt.vx; pt.y += pt.vy; pt.l -= pt.d;
-if(pt.l <= 0) this.p.splice(i, 1);
-} else if(pt.t === 't') {
-ctx.globalAlpha = pt.l; ctx.fillStyle = pt.c; ctx.font = "bold 22px sans-serif"; ctx.textAlign = "center";
-ctx.strokeStyle = "black"; ctx.lineWidth = 3; ctx.strokeText(pt.txt, pt.x, pt.y); ctx.fillText(pt.txt, pt.x, pt.y); ctx.globalAlpha = 1;
-pt.y += pt.vy; pt.l -= 0.02;
-if(pt.l <= 0) this.p.splice(i, 1);
-}
-}
-}
-}
+        start(asHost) {
+            this.uid = window.API.uid; this.isHost = asHost;
+            UI.show('screen-lobby');
+            
+            const db = window.API.db;
+            const rRef = window.ref(db, `rooms/${window.API.room}`);
+            
+            if(asHost) {
+                this.generateMap();
+                let flatMap = {};
+                for(let y=0; y<this.rows; y++) for(let x=0; x<this.cols; x++) flatMap[`${x}_${y}`] = this.grid[y][x];
+                
+                window.set(rRef, { status: 'waiting', map: flatMap });
+                window.onDisconnect(rRef).remove();
+                
+                document.getElementById('lobby-status').innerText = "Oczekuję na dołączenie drugiego gracza...";
+                
+                window.onValue(window.ref(db, `rooms/${window.API.room}/status`), snap => {
+                    if(snap.val() === 'playing') this.beginGame();
+                });
+            } else {
+                document.getElementById('lobby-status').innerText = "Łączenie z aktywnym pokojem...";
+                window.get(window.ref(db, `rooms/${window.API.room}/status`)).then(snap => {
+                    if(snap.exists() && snap.val() === 'waiting') {
+                        window.update(rRef, { status: 'playing' });
+                        this.beginGame();
+                    } else {
+                        UI.toast("Brak wolnego pokoju! Stwórz nowy.", true);
+                        UI.show('screen-main');
+                    }
+                });
+            }
+        },
 
-const Engine = {
-cvs: document.getElementById('gameCanvas'),
-ctx: document.getElementById('gameCanvas').getContext('2d'),
-cols: 30, rows: 17, sz: 40, grid: [], uid: null, res: { gold: 150, wood: 50, stone: 0 },
-run: false, pt: new Particles(),
-hov: null, src: null, tgt: null, lastClk: 0, host: false,
+        beginGame() {
+            document.getElementById('game-ui').style.display = 'flex';
+            UI.show('game-ui');
+            
+            window.get(window.ref(window.API.db, `rooms/${window.API.room}/map`)).then(snap => {
+                let data = snap.val();
+                this.grid = [];
+                for(let y=0; y<this.rows; y++) {
+                    let r = [];
+                    for(let x=0; x<this.cols; x++) r.push(data[`${x}_${y}`]);
+                    this.grid.push(r);
+                }
+                this.spawn();
+                this.bindInput();
+                
+                window.onValue(window.ref(window.API.db, `rooms/${window.API.room}/map`), snap => {
+                    let nd = snap.val();
+                    if(nd) {
+                        for(let y=0; y<this.rows; y++) {
+                            for(let x=0; x<this.cols; x++) {
+                                let c = nd[`${x}_${y}`];
+                                this.grid[y][x].own = c.own;
+                                this.grid[y][x].t = c.t;
+                                this.grid[y][x].b = c.b;
+                            }
+                        }
+                    }
+                });
+                
+                setInterval(() => this.processEconomy(), 1000);
+                this.run = true; this.loop();
+                UI.toast("Bitwa rozpoczęta!", false);
+            });
+        },
 
-colors: ['rgb(59,130,246)', 'rgb(239,68,68)', 'rgb(16,185,129)', 'rgb(245,158,11)', 'rgb(139,92,246)', 'rgb(236,72,153)'],
+        generateMap() {
+            this.grid = [];
+            for(let y=0; y<this.rows; y++) {
+                let r = [];
+                for(let x=0; x<this.cols; x++) {
+                    let w = (x===0 || y===0 || x===this.cols-1 || y===this.rows-1 || Math.random()<0.15);
+                    r.push({ x: x, y: y, own: 0, t: w ? 0 : Math.floor(Math.random()*4), w: w, b: null });
+                }
+                this.grid.push(r);
+            }
+        },
 
-start(asHost) {
-this.uid = window.API.uid;
-this.host = asHost;
-UI.screen('screenLobby');
-if(asHost) {
-this.gen();
-let o = {};
-for(let y=0; y<this.rows; y++) for(let x=0; x<this.cols; x++) o[`${x}_${y}`] = this.grid[y][x];
-set(ref(db, `rooms/${window.API.roomId}`), { status: 'waiting', map: o });
-onDisconnect(ref(db, `rooms/${window.API.roomId}`)).remove();
-document.getElementById('lobbyStatus').innerText = "Oczekiwanie na gracza...";
-onValue(ref(db, `rooms/${window.API.roomId}/status`), snap => {
-if(snap.val() === 'playing') this.begin();
-});
-} else {
-document.getElementById('lobbyStatus').innerText = "Szukanie pokoju...";
-get(ref(db, `rooms/${window.API.roomId}/status`)).then(snap => {
-if(snap.exists() && snap.val() === 'waiting') {
-update(ref(db, `rooms/${window.API.roomId}`), { status: 'playing' });
-this.begin();
-} else {
-UI.toast("Brak pokoju!", true);
-UI.screen('screenMain');
-}
-});
-}
-},
+        spawn() {
+            let lands = [];
+            for(let y=0; y<this.rows; y++) for(let x=0; x<this.cols; x++) if(!this.grid[y][x].w && this.grid[y][x].own === 0) lands.push(this.grid[y][x]);
+            if(lands.length > 0) {
+                let s = lands[Math.floor(Math.random()*lands.length)];
+                s.own = this.uid; s.t = 100;
+                window.update(window.ref(window.API.db, `rooms/${window.API.room}/map/${s.x}_${s.y}`), { own: this.uid, t: 100 });
+            }
+        },
 
-begin() {
-UI.screen('gameUi');
-get(ref(db, `rooms/${window.API.roomId}/map`)).then(snap => {
-let d = snap.val();
-this.grid = [];
-for(let y=0; y<this.rows; y++) {
-let r = [];
-for(let x=0; x<this.cols; x++) r.push(d[`${x}_${y}`]);
-this.grid.push(r);
-}
-this.spawn();
-this.bind();
-onValue(ref(db, `rooms/${window.API.roomId}/map`), sn => {
-let nd = sn.val();
-if(nd) {
-for(let y=0; y<this.rows; y++) {
-for(let x=0; x<this.cols; x++) {
-let c = nd[`${x}_${y}`];
-this.grid[y][x].own = c.own;
-this.grid[y][x].t = c.t;
-this.grid[y][x].b = c.b;
-}
-}
-}
-});
-setInterval(() => this.eco(), 1000);
-this.run = true;
-this.loop();
-UI.toast("Rozpoczeto!", false);
-});
-},
+        processEconomy() {
+            let totT = 0, alive = false;
+            for(let y=0; y<this.rows; y++) {
+                for(let x=0; x<this.cols; x++) {
+                    let p = this.grid[y][x];
+                    if(p.own === this.uid) {
+                        alive = true;
+                        p.t += (p.b === 'barracks' ? 5 : 1);
+                        totT += p.t;
+                        this.res.g += 1;
+                        if(p.b === 'mine') this.res.g += 5;
+                        if(p.b === 'wood') this.res.w += 5;
+                        if(p.b === 'quarry') this.res.s += 3;
+                        window.update(window.ref(window.API.db, `rooms/${window.API.room}/map/${x}_${y}`), { t: p.t });
+                    }
+                }
+            }
+            if(!alive) UI.toast("Zostałeś zniszczony!", true);
+            UI.updateRes(this.res.g, this.res.w, this.res.s, totT);
+        },
 
-gen() {
-this.grid = [];
-for(let y=0; y<this.rows; y++) {
-let r = [];
-for(let x=0; x<this.cols; x++) {
-let w = (x===0||y===0||x===this.cols-1||y===this.rows-1||Math.random()<0.15);
-r.push({ x:x, y:y, own:0, t:w?0:Math.floor(Math.random()*3), w:w, b:null });
-}
-this.grid.push(r);
-}
-},
+        bindInput() {
+            this.cvs.addEventListener('contextmenu', e => e.preventDefault());
+            this.cvs.addEventListener('mousemove', e => {
+                const r = this.cvs.getBoundingClientRect();
+                const sx = this.cvs.width / r.width, sy = this.cvs.height / r.height;
+                const x = Math.floor(((e.clientX - r.left)*sx)/this.sz), y = Math.floor(((e.clientY - r.top)*sy)/this.sz);
+                if(x>=0 && x<this.cols && y>=0 && y<this.rows) this.hov = this.grid[y][x];
+            });
 
-spawn() {
-let l = [];
-for(let y=0; y<this.rows; y++) for(let x=0; x<this.cols; x++) if(!this.grid[y][x].w && this.grid[y][x].own===0) l.push(this.grid[y][x]);
-if(l.length > 0) {
-let s = l[Math.floor(Math.random()*l.length)];
-s.own = this.uid; s.t = 100;
-update(ref(db, `rooms/${window.API.roomId}/map/${s.x}_${s.y}`), { own: this.uid, t: 100 });
-}
-},
+            this.cvs.addEventListener('mousedown', e => {
+                if(!this.hov || this.hov.w) { this.src = null; return; }
+                
+                // BUDOWANIE (PPM)
+                if(e.button === 2) {
+                    if(this.hov.own === this.uid) {
+                        if(!this.hov.b) {
+                            let list = document.getElementById('build-list'); list.innerHTML = '';
+                            for(let k in B_DB) {
+                                let b = B_DB[k], ok = true, cStr = '';
+                                if(b.c.gold) { cStr += `🪙${b.c.gold} `; if(this.res.g < b.c.gold) ok=false; }
+                                if(b.c.wood) { cStr += `🪵${b.c.wood} `; if(this.res.w < b.c.wood) ok=false; }
+                                if(b.c.stone) { cStr += `🪨${b.c.stone} `; if(this.res.s < b.c.stone) ok=false; }
+                                
+                                let item = document.createElement('div'); item.className = 'build-item';
+                                item.innerHTML = `<div><div style="font-weight:900; color:var(--blue); font-size:1.1rem;">${b.i} ${b.n}</div><div style="color:var(--text-muted); font-size:0.8rem; margin: 3px 0;">${b.d}</div><div style="color:var(--gold); font-size:0.85rem; font-weight:bold;">${cStr}</div></div><button class="btn ${ok?'btn-green':'btn-red'}" style="width: auto; padding: 10px 20px;" ${ok?'':'disabled'}>Wznieś</button>`;
+                                
+                                item.querySelector('button').onclick = () => {
+                                    if(b.c.gold) this.res.g -= b.c.gold;
+                                    if(b.c.wood) this.res.w -= b.c.wood;
+                                    if(b.c.stone) this.res.s -= b.c.stone;
+                                    this.hov.b = k;
+                                    window.update(window.ref(window.API.db, `rooms/${window.API.room}/map/${this.hov.x}_${this.hov.y}`), { b: k });
+                                    UI.closeModals(); UI.toast("Zbudowano " + b.n, false);
+                                };
+                                list.appendChild(item);
+                            }
+                            document.getElementById('modal-overlay').style.display = 'block';
+                            document.getElementById('modal-build').style.display = 'flex';
+                        } else UI.toast("Prowincja jest zajęta!", true);
+                    }
+                    return;
+                }
 
-eco() {
-let tot = 0; let a = false;
-for(let y=0; y<this.rows; y++) {
-for(let x=0; x<this.cols; x++) {
-let p = this.grid[y][x];
-if(p.own === this.uid) {
-a = true;
-p.t += 1; tot += p.t;
-this.res.gold += 1;
-if(p.b === 'mine') this.res.gold += 5;
-if(p.b === 'wood') this.res.wood += 5;
-if(p.b === 'quarry') this.res.stone += 3;
-update(ref(db, `rooms/${window.API.roomId}/map/${x}_${y}`), { t: p.t });
-}
-}
-}
-if(!a) UI.toast("Przegrales!", true);
-UI.updRes(this.res.gold, this.res.wood, this.res.stone, tot);
-},
+                // ATAK (LPM - DOUBLE CLICK)
+                if(e.button === 0) {
+                    const now = Date.now();
+                    if(now - this.lastClk < 400 && this.src) {
+                        let maxD = Math.max(Math.abs(this.src.x - this.hov.x), Math.abs(this.src.y - this.hov.y));
+                        if(maxD === 1) {
+                            if(this.src.t > 1) {
+                                this.tgt = this.hov;
+                                let s = document.getElementById('move-slider');
+                                let mx = Math.max(1, this.src.t - 1);
+                                s.min = 1; s.max = mx; s.value = Math.floor(mx/2);
+                                document.getElementById('move-val').innerText = s.value;
+                                document.getElementById('move-max').innerText = mx;
+                                document.getElementById('move-desc').innerText = `Z [${this.src.x},${this.src.y}] do [${this.tgt.x},${this.tgt.y}]`;
+                                document.getElementById('modal-overlay').style.display = 'block';
+                                document.getElementById('modal-move').style.display = 'flex';
+                            } else UI.toast("Za mało wojska na atak!", true);
+                        } else if(maxD > 1) UI.toast("Cel za daleko!", true);
+                    } else {
+                        if(this.hov.own === this.uid) this.src = this.hov;
+                        else this.src = null;
+                    }
+                    this.lastClk = now;
+                }
+            });
 
-bind() {
-this.cvs.addEventListener('contextmenu', e => e.preventDefault());
-this.cvs.addEventListener('mousemove', e => {
-const r = this.cvs.getBoundingClientRect();
-const sx = this.cvs.width / r.width; const sy = this.cvs.height / r.height;
-const x = Math.floor(((e.clientX - r.left)*sx)/this.sz);
-const y = Math.floor(((e.clientY - r.top)*sy)/this.sz);
-if(x>=0 && x<this.cols && y>=0 && y<this.rows) this.hov = this.grid[y][x];
-});
-this.cvs.addEventListener('mousedown', e => {
-if(!this.hov) return;
-if(this.hov.w) { this.src = null; return; }
-if(e.button === 2) {
-if(this.hov.own === this.uid) {
-if(!this.hov.b) {
-let ls = document.getElementById('buildList'); ls.innerHTML = '';
-for(let k in B_DATA) {
-let b = B_DATA[k]; let ok = true; let cStr = '';
-if(b.c.gold) { cStr += `C${b.c.gold} `; if(this.res.gold < b.c.gold) ok=false; }
-if(b.c.wood) { cStr += `D${b.c.wood} `; if(this.res.wood < b.c.wood) ok=false; }
-if(b.c.stone) { cStr += `K${b.c.stone} `; if(this.res.stone < b.c.stone) ok=false; }
-let i = document.createElement('div'); i.className = 'buildItem';
-i.innerHTML = `<div><div style="font-weight:bold; color:rgb(59,130,246);">${b.i} ${b.n}</div><div style="font-size:0.8rem; color:rgb(148,163,184);">${b.d}</div><div style="font-size:0.85rem; color:rgb(245,158,11);">Kosz: ${cStr}</div></div><button class="btnAct btnOk" style="flex:0; padding:10px 20px;" ${ok?'':'disabled'}>Kup</button>`;
-i.querySelector('button').onclick = () => {
-if(b.c.gold) this.res.gold -= b.c.gold;
-if(b.c.wood) this.res.wood -= b.c.wood;
-if(b.c.stone) this.res.stone -= b.c.stone;
-this.hov.b = k;
-update(ref(db, `rooms/${window.API.roomId}/map/${this.hov.x}_${this.hov.y}`), { b: k });
-document.getElementById('buildModal').style.display = 'none';
-UI.toast("Zbudowano!", false);
-};
-ls.appendChild(i);
-}
-document.getElementById('buildModal').style.display = 'flex';
-} else UI.toast("Zajete!", true);
-}
-return;
-}
-if(e.button === 0) {
-const n = Date.now();
-if(n - this.lastClk < 400 && this.src) {
-let dx = Math.abs(this.src.x - this.hov.x); let dy = Math.abs(this.src.y - this.hov.y);
-let maxD = Math.max(dx, dy);
-if(maxD === 1) {
-if(this.src.t > 1) {
-this.tgt = this.hov;
-let sl = document.getElementById('troopSlider');
-let mx = Math.max(1, this.src.t - 1);
-sl.min = 1; sl.max = mx; sl.value = Math.max(1, Math.floor(mx/2));
-document.getElementById('sliderDisplay').innerText = sl.value;
-document.getElementById('moveMaxDisplay').innerText = mx;
-document.getElementById('modalDesc').innerText = `Z [${this.src.x},${this.src.y}] do [${this.tgt.x},${this.tgt.y}]`;
-document.getElementById('troopModal').style.display = 'flex';
-} else UI.toast("Za malo wojska!", true);
-} else if(maxD > 1) UI.toast("Za daleko!", true);
-} else {
-if(this.hov.own === this.uid) this.src = this.hov;
-else this.src = null;
-}
-this.lastClk = n;
-}
-});
-document.getElementById('troopSlider').oninput = function() { document.getElementById('sliderDisplay').innerText = this.value; };
-document.getElementById('btnCancelMove').onclick = () => { document.getElementById('troopModal').style.display = 'none'; this.tgt = null; };
-document.getElementById('btnCloseBuild').onclick = () => { document.getElementById('buildModal').style.display = 'none'; };
-document.getElementById('btnConfirmMove').onclick = () => this.doMove();
-},
+            document.getElementById('move-slider').oninput = function() { document.getElementById('move-val').innerText = this.value; };
+            document.getElementById('btn-cancel-move').onclick = () => { UI.closeModals(); this.tgt = null; };
+            document.getElementById('btn-cancel-build').onclick = () => UI.closeModals();
+            document.getElementById('btn-confirm-move').onclick = () => this.executeMove();
+        },
 
-doMove() {
-if(!this.src || !this.tgt) return;
-let amt = parseInt(document.getElementById('troopSlider').value);
-if(this.src.t <= amt) return;
-this.src.t -= amt;
-let pxS = this.src.x * this.sz + this.sz/2; let pyS = this.src.y * this.sz + this.sz/2;
-let pxT = this.tgt.x * this.sz + this.sz/2; let pyT = this.tgt.y * this.sz + this.sz/2;
-let cs = 0; for(let i=0; i<this.uid.length; i++) cs += this.uid.charCodeAt(i);
-let cIdx = cs % this.colors.length; let col = this.colors[cIdx];
-this.pt.lsr(pxS, pyS, pxT, pyT, col);
-setTimeout(() => {
-if(this.tgt.own === this.uid) {
-this.tgt.t += amt; this.pt.txt(pxT, pyT, `+${amt}`, 'rgb(16,185,129)');
-} else {
-let dbn = this.tgt.b === 'fort' ? 2 : 1; let eff = this.tgt.t * dbn;
-if(amt > eff) {
-this.tgt.own = this.uid; this.tgt.t = Math.floor(amt - eff);
-if(this.tgt.b === 'fort') this.tgt.b = null;
-UI.toast("Zdobyto!", false); this.pt.txt(pxT, pyT, "WIN", col);
-} else {
-this.tgt.t = Math.floor((eff - amt)/dbn); UI.toast("Odparto.", true); this.pt.txt(pxT, pyT, `-${amt}`, 'rgb(239,68,68)');
-}
-}
-let d = {};
-d[`${this.src.x}_${this.src.y}/t`] = this.src.t;
-d[`${this.tgt.x}_${this.tgt.y}/own`] = this.tgt.own;
-d[`${this.tgt.x}_${this.tgt.y}/t`] = this.tgt.t;
-d[`${this.tgt.x}_${this.tgt.y}/b`] = this.tgt.b;
-update(ref(db, `rooms/${window.API.roomId}/map`), d);
-}, 400);
-document.getElementById('troopModal').style.display = 'none';
-this.src = null;
-},
+        executeMove() {
+            if(!this.src || !this.tgt) return;
+            let amt = parseInt(document.getElementById('move-slider').value);
+            if(this.src.t <= amt) return;
+            
+            this.src.t -= amt;
+            let pxS = this.src.x * this.sz + this.sz/2, pyS = this.src.y * this.sz + this.sz/2;
+            let pxT = this.tgt.x * this.sz + this.sz/2, pyT = this.tgt.y * this.sz + this.sz/2;
+            
+            let cs = 0; for(let i=0; i<this.uid.length; i++) cs += this.uid.charCodeAt(i);
+            let col = this.colors[cs % this.colors.length];
+            
+            this.pt.fireLaser(pxS, pyS, pxT, pyT, col);
+            
+            setTimeout(() => {
+                if(this.tgt.own === this.uid) {
+                    this.tgt.t += amt; this.pt.fireText(pxT, pyT, `+${amt}`, 'var(--green)');
+                } else {
+                    let defB = this.tgt.b === 'fort' ? 2 : 1;
+                    let effDef = this.tgt.t * defB;
+                    if(amt > effDef) {
+                        this.tgt.own = this.uid; this.tgt.t = Math.floor(amt - effDef);
+                        if(this.tgt.b === 'fort') this.tgt.b = null;
+                        UI.toast("Prowincja podbita!", false); this.pt.fireText(pxT, pyT, "WIN", col);
+                    } else {
+                        this.tgt.t = Math.floor((effDef - amt)/defB);
+                        UI.toast("Atak odparty.", true); this.pt.fireText(pxT, pyT, `-${amt}`, 'var(--red)');
+                    }
+                }
+                
+                let updObj = {};
+                updObj[`${this.src.x}_${this.src.y}/t`] = this.src.t;
+                updObj[`${this.tgt.x}_${this.tgt.y}/own`] = this.tgt.own;
+                updObj[`${this.tgt.x}_${this.tgt.y}/t`] = this.tgt.t;
+                updObj[`${this.tgt.x}_${this.tgt.y}/b`] = this.tgt.b;
+                window.update(window.ref(window.API.db, `rooms/${window.API.room}/map`), updObj);
+            }, 400);
 
-draw() {
-this.ctx.fillStyle = 'rgb(2,6,23)'; this.ctx.fillRect(0, 0, this.cvs.width, this.cvs.height);
-for(let y=0; y<this.rows; y++) {
-for(let x=0; x<this.cols; x++) {
-let p = this.grid[y][x]; let px = x * this.sz; let py = y * this.sz;
-if(p.w) this.ctx.fillStyle = 'rgb(14,165,233)';
-else {
-if(p.own === 0) this.ctx.fillStyle = 'rgb(30,41,59)';
-else {
-let cs = 0; let oStr = String(p.own); for(let i=0; i<oStr.length; i++) cs += oStr.charCodeAt(i);
-this.ctx.fillStyle = this.colors[cs % this.colors.length];
-}
-}
-this.ctx.fillRect(px, py, this.sz, this.sz);
-this.ctx.strokeStyle = 'rgba(0,0,0,0.6)'; this.ctx.lineWidth = 1; this.ctx.strokeRect(px, py, this.sz, this.sz);
-if(p.b && B_DATA[p.b]) { this.ctx.fillStyle = "white"; this.ctx.font = "20px sans-serif"; this.ctx.textAlign = "center"; this.ctx.fillText(B_DATA[p.b].i, px+this.sz/2, py+25); }
-if(!p.w && (p.t>0 || p.own!==0)) { this.ctx.fillStyle = "white"; this.ctx.font = "bold 15px sans-serif"; this.ctx.textAlign = "center"; this.ctx.shadowColor = "black"; this.ctx.shadowBlur = 4; this.ctx.fillText(Math.floor(p.t), px+this.sz/2, py+this.sz-5); this.ctx.shadowBlur = 0; }
-if(this.hov === p && !p.w) { this.ctx.fillStyle = "rgba(255,255,255,0.2)"; this.ctx.fillRect(px, py, this.sz, this.sz); }
-if(this.src === p) { let pl = Math.abs(Math.sin(Date.now()/200))*2; this.ctx.strokeStyle = "rgba(245,158,11,0.9)"; this.ctx.lineWidth = 3+pl; this.ctx.strokeRect(px+2, py+2, this.sz-4, this.sz-4); this.ctx.lineWidth = 1; }
-}
-}
-this.pt.draw(this.ctx);
-},
+            UI.closeModals(); this.src = null;
+        },
 
-loop() { if(this.run) { this.draw(); requestAnimationFrame(() => this.loop()); } }
-};
+        render() {
+            this.ctx.fillStyle = '#020617'; this.ctx.fillRect(0, 0, this.cvs.width, this.cvs.height);
+            for(let y=0; y<this.rows; y++) {
+                for(let x=0; x<this.cols; x++) {
+                    let p = this.grid[y][x], px = x * this.sz, py = y * this.sz;
+                    
+                    if(p.w) this.ctx.fillStyle = '#0ea5e9';
+                    else {
+                        if(p.own === 0) this.ctx.fillStyle = '#1e293b';
+                        else {
+                            let cs = 0, oStr = String(p.own); for(let i=0; i<oStr.length; i++) cs += oStr.charCodeAt(i);
+                            this.ctx.fillStyle = this.colors[cs % this.colors.length];
+                        }
+                    }
+                    this.ctx.fillRect(px, py, this.sz, this.sz);
+                    this.ctx.strokeStyle = 'rgba(0,0,0,0.5)'; this.ctx.lineWidth = 1; this.ctx.strokeRect(px, py, this.sz, this.sz);
+                    
+                    if(p.b && B_DB[p.b]) {
+                        this.ctx.fillStyle = "white"; this.ctx.font = "20px 'Segoe UI'"; this.ctx.textAlign = "center";
+                        this.ctx.fillText(B_DB[p.b].i, px+this.sz/2, py+24);
+                    }
+                    
+                    if(!p.w && (p.t>0 || p.own!==0)) {
+                        this.ctx.fillStyle = "white"; this.ctx.font = "900 15px 'Segoe UI'"; this.ctx.textAlign = "center";
+                        this.ctx.shadowColor = "black"; this.ctx.shadowBlur = 4;
+                        this.ctx.fillText(Math.floor(p.t), px+this.sz/2, py+this.sz-4);
+                        this.ctx.shadowBlur = 0;
+                    }
+                    
+                    if(this.hov === p && !p.w) {
+                        this.ctx.fillStyle = "rgba(255,255,255,0.2)"; this.ctx.fillRect(px, py, this.sz, this.sz);
+                    }
+                    
+                    if(this.src === p) {
+                        let pls = Math.abs(Math.sin(Date.now()/200))*2;
+                        this.ctx.strokeStyle = "rgba(245,158,11,0.9)"; this.ctx.lineWidth = 3+pls;
+                        this.ctx.strokeRect(px+2, py+2, this.sz-4, this.sz-4); this.ctx.lineWidth = 1;
+                    }
+                }
+            }
+            this.pt.render(this.ctx);
+        },
 
-document.getElementById('btnHost').onclick = () => Engine.start(true);
-document.getElementById('btnJoin').onclick = () => Engine.start(false);
-document.getElementById('btnCancelLobby').onclick = () => { UI.screen('screenMain'); if(Engine.host) set(ref(db, `rooms/${window.API.roomId}`), null); };
+        loop() { if(this.run) { this.render(); requestAnimationFrame(() => this.loop()); } }
+    };
+
+    // --- PRZYPISANIA BUTTONÓW ---
+    document.getElementById('btn-host').onclick = () => Engine.start(true);
+    document.getElementById('btn-join').onclick = () => Engine.start(false);
+    document.getElementById('btn-cancel-lobby').onclick = () => {
+        UI.show('screen-main');
+        if(Engine.isHost) window.set(window.ref(window.API.db, `rooms/${window.API.room}`), null);
+    };
+
 </script>
 </body>
 </html>

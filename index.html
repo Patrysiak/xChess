@@ -3,253 +3,389 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vulkan Connect - Discord x Messenger x Firebase</title>
-    
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Hybrid: Discord x Messenger x Insta</title>
     <style>
         :root {
-            --discord-dark: #313338;
-            --discord-side: #2b2d31;
-            --messenger-blue: #0084ff;
-            --vulcan-red: #9e0000;
-            --vulcan-glow: #ff4500;
+            /* Discord Colors */
+            --bg-darkest: #1e1f22;
+            --bg-sidebar: #2b2d31;
+            --bg-chat: #313338;
             --text-main: #dbdee1;
+            --text-muted: #949ba4;
             --bg-input: #383a40;
+            
+            /* Messenger & Insta Colors */
+            --messenger-blue: #0084ff;
+            --insta-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
         }
 
         body {
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #050000;
+            background-color: var(--bg-darkest);
             color: var(--text-main);
             display: flex;
             height: 100vh;
             overflow: hidden;
         }
 
-        /* EKRAN LOGOWANIA */
-        #login-overlay {
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(circle, #1a0000 0%, #050000 100%);
-            z-index: 9999;
+        /* 1. DISCORD: Wąski panel nawigacyjny (Serwery/Opcje) */
+        .app-nav {
+            width: 70px;
+            background-color: var(--bg-darkest);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10px;
+            gap: 10px;
+        }
+
+        .nav-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--bg-sidebar);
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
-        }
-
-        .login-card {
-            background: rgba(43, 45, 49, 0.9);
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-            border: 1px solid var(--vulcan-glow);
-            box-shadow: 0 0 30px rgba(255, 69, 0, 0.3);
-        }
-
-        .google-btn {
-            background: #DB4437;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 5px;
-            font-weight: bold;
             cursor: pointer;
-            font-size: 16px;
-            transition: 0.3s;
+            transition: 0.2s;
+            font-size: 20px;
         }
 
-        .google-btn:hover { background: #c53727; transform: scale(1.05); }
+        .nav-icon:hover {
+            border-radius: 15px;
+            background-color: var(--messenger-blue);
+            color: white;
+        }
 
-        /* GŁÓWNY INTERFEJS */
+        .nav-icon.active {
+            background: var(--insta-gradient);
+            border-radius: 15px;
+            color: white;
+        }
+
+        /* 2. MESSENGER/INSTA: Panel boczny z czatami i relacjami */
         .sidebar {
             width: 320px;
-            background-color: var(--discord-side);
-            border-right: 1px solid #1e1f22;
+            background-color: var(--bg-sidebar);
             display: flex;
             flex-direction: column;
+            border-right: 1px solid #1f2023;
         }
 
-        .user-profile-bar {
-            padding: 15px;
-            background: rgba(0,0,0,0.2);
+        .sidebar-header {
+            padding: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            border-bottom: 1px solid #1f2023;
+        }
+
+        /* INSTAGRAM: Relacje (Stories) */
+        .stories-container {
             display: flex;
+            padding: 15px;
+            gap: 15px;
+            overflow-x: auto;
+            border-bottom: 1px solid #1f2023;
+        }
+
+        .stories-container::-webkit-scrollbar { display: none; }
+
+        .story {
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid #1e1f22;
+            gap: 5px;
+            cursor: pointer;
         }
 
-        .user-avatar {
-            width: 45px;
-            height: 45px;
+        .story-img-wrapper {
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            border: 2px solid var(--vulcan-glow);
+            padding: 3px;
+            background: var(--insta-gradient);
         }
 
-        .user-info h4 { margin: 0; font-size: 14px; color: white; }
-        .user-info p { margin: 0; font-size: 11px; color: gold; font-weight: bold; }
+        .story img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--bg-sidebar);
+        }
 
-        .chat-list { flex: 1; overflow-y: auto; }
+        .story span {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* MESSENGER: Lista czatów */
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
         .chat-item {
-            padding: 12px 15px;
+            padding: 12px 20px;
             display: flex;
             align-items: center;
             cursor: pointer;
             transition: 0.2s;
         }
-        .chat-item:hover { background-color: #3f4147; }
 
-        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--discord-dark); }
+        .chat-item:hover { background-color: rgba(255, 255, 255, 0.05); }
+
+        .chat-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            margin-right: 15px;
+            object-fit: cover;
+        }
+
+        .chat-info h4 { margin: 0; font-size: 15px; color: white; }
+        .chat-info p { margin: 4px 0 0 0; font-size: 13px; color: var(--text-muted); }
+
+        /* 3. DISCORD/MESSENGER: Główny obszar czatu */
+        .chat-area {
+            flex: 1;
+            background-color: var(--bg-chat);
+            display: flex;
+            flex-direction: column;
+        }
+
         .chat-header {
-            height: 60px;
+            height: 70px;
             padding: 0 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid #1e1f22;
+            border-bottom: 1px solid #1f2023;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
-        .messages { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
-        .message { max-width: 70%; padding: 10px 15px; border-radius: 18px; font-size: 14px; }
-        .msg-received { background: #4e5058; align-self: flex-start; }
-        .msg-sent { background: var(--messenger-blue); align-self: flex-end; color: white; }
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-        .input-area { padding: 20px; }
-        .input-wrapper { background: var(--bg-input); border-radius: 8px; padding: 12px; display: flex; }
-        input { background: none; border: none; color: white; width: 100%; outline: none; }
+        .chat-header-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
 
-        .logout-btn {
-            background: none;
-            border: 1px solid #555;
-            color: #888;
-            padding: 5px 10px;
-            border-radius: 4px;
+        /* Wiadomości */
+        .messages {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .message-row {
+            display: flex;
+            width: 100%;
+        }
+
+        .message-row.received { justify-content: flex-start; }
+        .message-row.sent { justify-content: flex-end; }
+
+        .message-bubble {
+            max-width: 60%;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 15px;
+            line-height: 1.4;
+            position: relative;
+        }
+
+        .received .message-bubble {
+            background-color: var(--bg-input);
+            border-bottom-left-radius: 5px;
+        }
+
+        .sent .message-bubble {
+            background-color: var(--messenger-blue);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        /* INSTA: Przycisk polubienia wiadomości */
+        .like-btn {
+            position: absolute;
+            bottom: -10px;
+            right: -10px;
+            background: var(--bg-sidebar);
+            border-radius: 50%;
+            padding: 4px;
+            font-size: 12px;
             cursor: pointer;
-            font-size: 11px;
+            border: 1px solid #1f2023;
+            display: none;
         }
+
+        .message-bubble:hover .like-btn { display: block; }
+        .like-btn:active { transform: scale(1.2); }
+
+        /* Pole wpisywania */
+        .input-area {
+            padding: 20px;
+        }
+
+        .input-wrapper {
+            background-color: var(--bg-input);
+            border-radius: 24px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .input-wrapper input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: white;
+            outline: none;
+            font-size: 15px;
+        }
+
+        .action-icon {
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 20px;
+            transition: 0.2s;
+        }
+
+        .action-icon:hover { color: white; }
+
     </style>
 </head>
 <body>
 
-    <div id="login-overlay">
-        <div class="login-card">
-            <h1 style="color: white; margin-bottom: 10px;">Vulkan <span style="color:var(--vulcan-glow)">Connect</span></h1>
-            <p style="color: #aaa; margin-bottom: 30px;">Zaloguj się, aby połączyć się z serwerem kart.</p>
-            <button class="google-btn" onclick="loginWithGoogle()">ZALOGUJ PRZEZ GOOGLE</button>
-        </div>
+    <div class="app-nav">
+        <div class="nav-icon active">🏠</div>
+        <div class="nav-icon">💬</div>
+        <div class="nav-icon">🔔</div>
+        <div class="nav-icon">⚙️</div>
     </div>
 
     <div class="sidebar">
-        <div class="user-profile-bar">
-            <img id="my-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=fallback" class="user-avatar">
-            <div class="user-info">
-                <h4 id="my-nick">Ładowanie...</h4>
-                <p>🏆 ELO: <span id="my-elo">0</span> | $ <span id="my-coins">0</span></p>
+        <div class="sidebar-header">Wiadomości</div>
+        
+        <div class="stories-container">
+            <div class="story">
+                <div class="story-img-wrapper">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ty" alt="Twoja relacja">
+                </div>
+                <span>Twój profil</span>
             </div>
-            <button class="logout-btn" onclick="logout()">Wyjdź</button>
+            <div class="story">
+                <div class="story-img-wrapper">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Anna" alt="Anna">
+                </div>
+                <span>Anna</span>
+            </div>
+            <div class="story">
+                <div class="story-img-wrapper">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Marek" alt="Marek">
+                </div>
+                <span>Marek</span>
+            </div>
         </div>
 
-        <div class="chat-list" id="friends-list">
-            <div style="padding: 20px; color: #888; font-size: 13px; text-align: center;">Ładowanie znajomych...</div>
+        <div class="chat-list">
+            <div class="chat-item" style="background-color: rgba(255,255,255,0.05);">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Anna" class="chat-avatar">
+                <div class="chat-info">
+                    <h4>Anna Nowak</h4>
+                    <p>Wysłała Ci relację • 5 min</p>
+                </div>
+            </div>
+            <div class="chat-item">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Grupa" class="chat-avatar">
+                <div class="chat-info">
+                    <h4>Grupa Projektowa</h4>
+                    <p>Marek: Dobry pomysł!</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="chat-area">
         <div class="chat-header">
-            <div><span style="color: #80848e">#</span> Czat Ogólny</div>
-            <button class="google-btn" style="padding: 8px 15px; font-size: 12px;" onclick="location.reload()">GRAJ W KARTY</button>
+            <div class="chat-header-info">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Anna" alt="Anna">
+                <div>
+                    <h3 style="margin: 0; font-size: 16px; color: white;">Anna Nowak</h3>
+                    <span style="font-size: 12px; color: var(--text-muted);">Aktywna(y) teraz</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <span class="action-icon">📞</span>
+                <span class="action-icon">📹</span>
+                <span class="action-icon">ℹ️</span>
+            </div>
         </div>
-        
+
         <div class="messages" id="chat-box">
-            <div class="message msg-received">Witaj w Vulkan Connect! Zaloguj się, aby pisać.</div>
+            <div class="message-row received">
+                <div class="message-bubble">
+                    Hej! Widziałeś najnowsze Insta Stories? 😂
+                    <div class="like-btn" onclick="this.innerHTML='❤️'">🤍</div>
+                </div>
+            </div>
+            
+            <div class="message-row sent">
+                <div class="message-bubble">
+                    Tak, mega zabawne! Zrobiłem zrzut ekranu.
+                </div>
+            </div>
+            
+            <div class="message-row received">
+                <div class="message-bubble">
+                    Podeślesz mi? Zapomniałam zapisać.
+                    <div class="like-btn" onclick="this.innerHTML='❤️'">🤍</div>
+                </div>
+            </div>
         </div>
 
         <div class="input-area">
             <div class="input-wrapper">
-                <input type="text" id="msg-input" placeholder="Napisz coś...">
+                <span class="action-icon">➕</span>
+                <span class="action-icon">📷</span>
+                <input type="text" placeholder="Napisz wiadomość..." id="msg-input" onkeypress="handleEnter(event)">
+                <span class="action-icon">🎙️</span>
             </div>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
-        // TWOJA KONFIGURACJA Z PROMPTA
-        const firebaseConfig = {
-            apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
-            authDomain: "xchess-79e2d.firebaseapp.com",
-            projectId: "xchess-79e2d",
-            storageBucket: "xchess-79e2d.firebasestorage.app",
-            messagingSenderId: "382071993193",
-            appId: "1:382071993193:web:86dbe5211f2151cb5383f8"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const provider = new GoogleAuthProvider();
-
-        // Funkcje globalne dla przycisków HTML
-        window.loginWithGoogle = () => signInWithPopup(auth, provider);
-        window.logout = () => signOut(auth);
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const docRef = doc(db, 'users', user.uid);
-                const docSnap = await getDoc(docRef);
-
-                let userData;
-                if (!docSnap.exists()) {
-                    // Rejestracja nowego gracza (Twoja logika)
-                    userData = {
-                        uid: user.uid,
-                        displayName: user.displayName,
-                        avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
-                        elo: 1000,
-                        coins: 200,
-                        friends: []
-                    };
-                    await setDoc(docRef, userData);
-                } else {
-                    userData = docSnap.data();
-                }
-
-                // Ukryj logowanie, pokaż UI
-                document.getElementById('login-overlay').style.display = 'none';
-                updateUI(userData);
-                loadMockFriends(userData.friends);
-            } else {
-                document.getElementById('login-overlay').style.display = 'flex';
-            }
-        });
-
-        function updateUI(data) {
-            document.getElementById('my-avatar').src = data.avatar;
-            document.getElementById('my-nick').innerText = data.displayName;
-            document.getElementById('my-elo').innerText = data.elo;
-            document.getElementById('my-coins').innerText = data.coins;
-        }
-
-        function loadMockFriends(friends) {
-            const list = document.getElementById('friends-list');
-            list.innerHTML = "";
-            if (friends && friends.length > 0) {
-                friends.forEach(f => {
-                    list.innerHTML += `
-                        <div class="chat-item">
-                            <img src="${f.avatar}" class="user-avatar" style="width:35px; height:35px;">
-                            <div style="margin-left:10px">
-                                <div style="font-weight:bold; font-size:13px">${f.name}</div>
-                                <div style="font-size:11px; color:#888">Dostępny</div>
-                            </div>
+    <script>
+        // Prosty skrypt symulujący wysyłanie wiadomości (wcisnij Enter)
+        function handleEnter(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('msg-input');
+                const text = input.value.trim();
+                
+                if (text) {
+                    const chatBox = document.getElementById('chat-box');
+                    const newMsg = `
+                        <div class="message-row sent">
+                            <div class="message-bubble">${text}</div>
                         </div>
                     `;
-                });
-            } else {
-                list.innerHTML = `<div style="padding:20px; color:#555; text-align:center">Nie masz jeszcze znajomych.</div>`;
+                    chatBox.innerHTML += newMsg;
+                    input.value = '';
+                    chatBox.scrollTop = chatBox.scrollHeight; // przewija w dół
+                }
             }
         }
     </script>

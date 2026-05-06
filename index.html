@@ -3,30 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Age of Territorial - Giga MMO</title>
+    <title>Age of Territorial - MMO Google Auth</title>
     <style>
-        /* =========================================
+        /* =========================================================
            SEKCJA 1: ZMIENNE CSS
-           ========================================= */
+           ========================================================= */
         :root {
-            --bg-dark: #020617;
-            --panel-bg: #0f172a;
-            --panel-border: #1e293b;
-            --text-light: #f8fafc;
-            --text-muted: #94a3b8;
+            --bg-color: #1a1a2e;
+            --panel-bg: #0f3460;
+            --primary-btn: #0f3460;
+            --primary-hover: #e94560;
+            --text-light: #fff;
             --color-blue: #3b82f6;
             --color-red: #ef4444;
             --color-green: #10b981;
             --color-gold: #f59e0b;
-            --color-wood: #b45309;
-            --color-stone: #64748b;
-            --font-main: 'Segoe UI', sans-serif;
-            --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.4);
         }
 
-        /* =========================================
+        /* =========================================================
            SEKCJA 2: RESET I BAZA
-           ========================================= */
+           ========================================================= */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -35,105 +31,101 @@
         }
 
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-light);
-            font-family: var(--font-main);
-            overflow: hidden;
+            margin: 0; 
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: radial-gradient(circle at center, #16213e, #0f3460);
+            color: var(--text-light); 
             display: flex;
             flex-direction: column;
-            width: 100vw;
-            height: 100vh;
+            justify-content: center; 
+            align-items: center;
+            height: 100vh; 
+            overflow: hidden;
         }
 
-        /* =========================================
-           SEKCJA 3: MENU GŁÓWNE
-           ========================================= */
-        #main-menu {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at center, #1e293b 0%, #020617 100%);
-            display: flex;
+        /* =========================================================
+           SEKCJA 3: EKRANY (SCREENS)
+           ========================================================= */
+        .screen { 
+            display: none; 
+            width: 100%; 
+            height: 100%;
+            text-align: center; 
             flex-direction: column;
+        }
+
+        .active { 
+            display: flex; 
+        }
+
+        #menu-screen {
             justify-content: center;
             align-items: center;
-            z-index: 1000;
-            transition: opacity 0.5s ease;
         }
 
-        .menu-title {
-            font-size: 4rem;
-            font-weight: 900;
-            color: var(--color-blue);
-            text-shadow: var(--shadow-glow);
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-        }
-
-        .network-status {
-            color: var(--color-gold);
-            font-size: 1.2rem;
-            margin-bottom: 40px;
-            font-weight: bold;
-        }
-
-        .btn-large {
-            background: transparent;
-            border: 2px solid var(--panel-border);
-            color: var(--text-light);
-            padding: 15px 60px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin: 10px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: 0.3s;
-            width: 350px;
-            text-align: center;
-        }
-
-        .btn-large:hover {
-            border-color: var(--color-blue);
-            background: rgba(59, 130, 246, 0.1);
-            transform: scale(1.05);
-        }
-
-        .btn-large:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            border-color: #333;
-        }
-
-        .btn-primary {
-            border-color: var(--color-green);
-            color: var(--color-green);
-        }
-
-        .btn-primary:hover {
-            background: var(--color-green);
-            color: black;
-        }
-
-        /* =========================================
-           SEKCJA 4: HUD W GRZE
-           ========================================= */
-        #game-ui {
-            display: none;
+        /* =========================================================
+           SEKCJA 4: KONTENER MENU (Z TWOJEGO KODU)
+           ========================================================= */
+        .menu-container {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 40px;
+            border-radius: 20px; 
+            backdrop-filter: blur(10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5); 
+            margin: 0 auto;
             width: 100%;
-            height: 100%;
-            flex-direction: column;
-            position: relative;
+            max-width: 600px;
         }
 
+        .game-title {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .game-title span { 
+            color: var(--primary-hover); 
+        }
+
+        .btn {
+            display: block; 
+            width: 100%; 
+            padding: 15px; 
+            margin-bottom: 15px;
+            font-size: 16px; 
+            font-weight: bold; 
+            color: white; 
+            border: none;
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: 0.3s;
+            background-color: var(--primary-btn);
+        }
+
+        .btn:hover { 
+            transform: scale(1.05); 
+            background-color: var(--primary-hover); 
+        }
+
+        .btn:disabled {
+            background-color: #333;
+            color: #777;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-google { 
+            background-color: #DB4437; 
+        }
+
+        /* =========================================================
+           SEKCJA 5: INTERFEJS GRY (HUD)
+           ========================================================= */
         #top-hud {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(15, 23, 42, 0.95);
-            border-bottom: 2px solid var(--panel-border);
+            background: rgba(15, 52, 96, 0.9);
+            border-bottom: 2px solid var(--primary-hover);
             padding: 15px 30px;
             z-index: 10;
         }
@@ -152,12 +144,12 @@
             background: rgba(0, 0, 0, 0.5);
             padding: 8px 20px;
             border-radius: 6px;
-            border: 1px solid var(--panel-border);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         .hints {
             font-size: 0.95rem;
-            color: var(--text-muted);
+            color: #ccc;
             text-align: right;
             line-height: 1.5;
         }
@@ -167,9 +159,9 @@
             font-weight: bold;
         }
 
-        /* =========================================
-           SEKCJA 5: KANWA MAPY
-           ========================================= */
+        /* =========================================================
+           SEKCJA 6: MAPA GRY
+           ========================================================= */
         #map-container {
             flex-grow: 1;
             position: relative;
@@ -183,18 +175,18 @@
 
         canvas {
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
-            border: 2px solid var(--panel-border);
+            border: 2px solid var(--primary-hover);
         }
 
-        /* =========================================
-           SEKCJA 6: MODAL WOJSKA I BUDOWY
-           ========================================= */
+        /* =========================================================
+           SEKCJA 7: MODAL WOJSKA I BUDOWY
+           ========================================================= */
         .modal {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: var(--panel-bg);
+            background: var(--bg-color);
             border: 2px solid var(--color-blue);
             padding: 30px;
             border-radius: 12px;
@@ -274,49 +266,15 @@
 
         .btn-confirm {
             background: var(--color-green);
-            color: black;
-        }
-
-        .btn-confirm:hover {
-            background: #059669;
         }
 
         .btn-cancel {
             background: var(--color-red);
         }
 
-        .btn-cancel:hover {
-            background: #dc2626;
-        }
-
-        .build-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .build-item {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--panel-border);
-            padding: 15px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .build-item:hover {
-            border-color: var(--color-gold);
-            background: rgba(245, 158, 11, 0.1);
-        }
-
-        /* =========================================
-           SEKCJA 7: POWIADOMIENIA (TOASTS)
-           ========================================= */
+        /* =========================================================
+           SEKCJA 8: POWIADOMIENIA
+           ========================================================= */
         #toast-container {
             position: absolute;
             bottom: 30px;
@@ -334,44 +292,46 @@
             color: white;
             padding: 12px 25px;
             border-radius: 30px;
-            border: 1px solid var(--panel-border);
+            border: 1px solid rgba(255,255,255,0.2);
             font-weight: bold;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
             animation: slideUp 0.3s ease-out;
-            transition: opacity 0.5s;
         }
 
         @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
 
-    <div id="main-menu">
-        <div class="menu-title">Age of Territorial</div>
-        <div class="network-status" id="db-status">Łączenie z serwerem Firebase...</div>
-        <button id="btn-join" class="btn-large btn-primary" onclick="Game.initMultiplayer()" disabled>Wejdź do Gry</button>
-        <button class="btn-large" onclick="alert('Zintegrowano Anonimowe Logowanie')">Konto</button>
+    <div id="menu-screen" class="screen active">
+        <div class="menu-container">
+            <h1 class="game-title">Age of <span>Territorial</span></h1>
+            <p>Zalogowano jako: <strong id="player-nick" style="color: var(--color-gold);">Gość</strong></p>
+            <p style="margin-bottom: 20px; font-size: 0.9rem; color: #aaa;" id="auth-status">Oczekiwanie na Firebase...</p>
+            
+            <button id="login-btn" class="btn btn-google" onclick="loginWithGoogle()">G Zaloguj przez Gmail</button>
+            <button id="logout-btn" class="btn" style="display:none; background-color: var(--color-red);" onclick="logout()">Wyloguj</button>
+            
+            <hr style="border-color: rgba(255,255,255,0.1); margin: 20px 0;">
+            
+            <button id="play-btn" class="btn" onclick="GameEngine.start()" disabled>🌐 Graj Online (Wymaga Logowania)</button>
+            <button class="btn" onclick="alert('Ranking w budowie')">🏆 Tabela Rankingowa</button>
+        </div>
     </div>
 
-    <div id="game-ui">
+    <div id="game-screen" class="screen">
         <div id="top-hud">
             <div class="resource-bar">
                 <div class="res-item" style="color:var(--color-gold)">
                     🪙 <span id="val-gold">0</span>
                 </div>
-                <div class="res-item" style="color:var(--color-wood)">
+                <div class="res-item" style="color:#b45309">
                     🪵 <span id="val-wood">0</span>
                 </div>
-                <div class="res-item" style="color:var(--color-stone)">
+                <div class="res-item" style="color:#94a3b8">
                     🪨 <span id="val-stone">0</span>
                 </div>
                 <div class="res-item" style="color:var(--color-red)">
@@ -379,9 +339,9 @@
                 </div>
             </div>
             <div class="hints">
-                <span>[1 Klik]</span> Zaznacz źródło<br>
-                <span>[2 Kliki]</span> Wybierz cel i przesuń<br>
-                <span>[Prawy Przycisk]</span> Buduj
+                <span>[1 Klik]</span> Wybierz prowincję źródłową<br>
+                <span>[2 Kliki]</span> Wybierz cel i przesuń wojska<br>
+                <span>[Kliknij Wodę]</span> Odznaczenie
             </div>
         </div>
 
@@ -394,7 +354,7 @@
 
     <div id="troop-modal" class="modal">
         <h2>Przesunięcie Wojsk</h2>
-        <div style="text-align:center; color: var(--text-muted);" id="modal-desc">
+        <div style="text-align:center; color: #ccc;" id="modal-desc">
             Skąd -> Dokąd
         </div>
         <div class="slider-container">
@@ -406,23 +366,14 @@
             <input type="range" id="troop-slider" min="1" max="100" value="10">
         </div>
         <div class="modal-buttons">
-            <button class="btn-action btn-cancel" onclick="UI.closeModals()">Anuluj</button>
-            <button class="btn-action btn-confirm" onclick="Input.confirmMove()">Rozkaz!</button>
-        </div>
-    </div>
-
-    <div id="build-modal" class="modal">
-        <h2>Rozbudowa Prowincji</h2>
-        <div class="build-list" id="build-list">
-            </div>
-        <div class="modal-buttons">
-            <button class="btn-action btn-cancel" onclick="UI.closeModals()">Zamknij</button>
+            <button class="btn-action btn-cancel" onclick="UIManager.closeModals()">Anuluj</button>
+            <button class="btn-action btn-confirm" onclick="InputManager.confirmMove()">Rozkaz!</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getDatabase, ref, set, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
         const firebaseConfig = {
@@ -431,39 +382,83 @@
             projectId: "xchess-79e2d",
             storageBucket: "xchess-79e2d.firebasestorage.app",
             messagingSenderId: "382071993193",
-            appId: "1:382071993193:web:86dbe5211f2151cb5383f8"
+            appId: "1:382071993193:web:86dbe5211f2151cb5383f8",
+            measurementId: "G-E8RJF7LKLE"
         };
 
-        window.Network = {
-            db: null,
+        // Inicjalizacja
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+        const db = getDatabase(app);
+
+        // Udostępnienie dla globalnego silnika gry
+        window.FirebaseAPI = {
+            db: db,
+            auth: auth,
             uid: null,
-            isConnected: false,
-            
-            init() {
-                try {
-                    const app = initializeApp(firebaseConfig);
-                    const auth = getAuth(app);
-                    this.db = getDatabase(app);
+            displayName: null,
+            isConnected: false
+        };
 
-                    signInAnonymously(auth);
+        // ==========================================
+        // FUNKCJE LOGOWANIA GOOGLE Z TWOJEGO KODU
+        // ==========================================
+        window.loginWithGoogle = function() {
+            document.getElementById('auth-status').innerText = "Trwa logowanie Google...";
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    console.log("Zalogowano pomyślnie.");
+                }).catch((error) => {
+                    alert("Błąd logowania: " + error.message);
+                    document.getElementById('auth-status').innerText = "Błąd logowania.";
+                });
+        };
 
-                    onAuthStateChanged(auth, (user) => {
-                        if (user) {
-                            this.uid = user.uid;
-                            this.isConnected = true;
-                            document.getElementById('db-status').innerText = "Zalogowano anonimowo. Gotowy do gry!";
-                            document.getElementById('db-status').style.color = "var(--color-green)";
-                            document.getElementById('btn-join').disabled = false;
-                        }
-                    });
-                } catch (e) {
-                    console.error(e);
-                    document.getElementById('db-status').innerText = "Uruchom przez Live Server!";
-                }
-            },
+        window.logout = function() {
+            signOut(auth).then(() => {
+                console.log("Wylogowano pomyślnie.");
+                window.FirebaseAPI.uid = null;
+                window.FirebaseAPI.isConnected = false;
+                document.getElementById('play-btn').disabled = true;
+            });
+        };
 
-            syncMap(gridData) {
-                if(!this.isConnected) return;
+        // Nasłuchiwanie stanu logowania
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Gracz zalogowany przez Google
+                document.getElementById('player-nick').innerText = user.displayName;
+                document.getElementById('login-btn').style.display = 'none';
+                document.getElementById('logout-btn').style.display = 'block';
+                document.getElementById('auth-status').innerText = "Autoryzacja pomyślna. Gotowy do gry.";
+                document.getElementById('auth-status').style.color = "var(--color-green)";
+                
+                // Odblokuj przycisk gry
+                document.getElementById('play-btn').disabled = false;
+                
+                // Zapisz dane do silnika
+                window.FirebaseAPI.uid = user.uid;
+                window.FirebaseAPI.displayName = user.displayName;
+                window.FirebaseAPI.isConnected = true;
+            } else {
+                // Gracz wylogowany
+                document.getElementById('player-nick').innerText = "Gość";
+                document.getElementById('login-btn').style.display = 'block';
+                document.getElementById('logout-btn').style.display = 'none';
+                document.getElementById('auth-status').innerText = "Zaloguj się, aby połączyć się z serwerem.";
+                document.getElementById('auth-status').style.color = "#aaa";
+                document.getElementById('play-btn').disabled = true;
+            }
+        });
+
+        // ==========================================
+        // FUNKCJE BAZY DANYCH DLA SILNIKA
+        // ==========================================
+        window.DB_API = {
+            syncMap: function(gridData) {
+                if(!window.FirebaseAPI.isConnected) return;
                 let mapObj = {};
                 for(let y=0; y<gridData.length; y++) {
                     for(let x=0; x<gridData[y].length; x++) {
@@ -471,104 +466,61 @@
                         mapObj[`${x}_${y}`] = {
                             owner: cell.owner,
                             troops: cell.troops,
-                            isWater: cell.isWater,
-                            building: cell.building
+                            isWater: cell.isWater
                         };
                     }
                 }
-                set(ref(this.db, 'gamestate/map'), mapObj);
+                set(ref(db, 'world/map'), mapObj);
             },
-
-            updateProvince(x, y, data) {
-                if(!this.isConnected) return;
-                update(ref(this.db, `gamestate/map/${x}_${y}`), data);
+            updateCell: function(x, y, data) {
+                if(!window.FirebaseAPI.isConnected) return;
+                update(ref(db, `world/map/${x}_${y}`), data);
             },
-
-            listenToMap(callback) {
-                if(!this.isConnected) return;
-                onValue(ref(this.db, 'gamestate/map'), (snapshot) => {
-                    const data = snapshot.val();
-                    if(data) callback(data);
+            listen: function(callback) {
+                if(!window.FirebaseAPI.isConnected) return;
+                onValue(ref(db, 'world/map'), (snapshot) => {
+                    if(snapshot.exists()) {
+                        callback(snapshot.val());
+                    }
                 });
             },
-
-            checkIfMapExists(callback) {
-                get(ref(this.db, 'gamestate/map')).then((snapshot) => {
+            checkIfExists: function(callback) {
+                get(ref(db, 'world/map')).then((snapshot) => {
                     callback(snapshot.exists(), snapshot.val());
                 });
             }
         };
-
-        window.Network.init();
     </script>
 
     <script>
-        // BAZA BUDYNKÓW
-        const BUILDINGS = {
-            mine: { 
-                id: 'mine', 
-                name: 'Kopalnia', 
-                cost: { gold: 50 }, 
-                icon: '🪙', 
-                income: { gold: 5 } 
-            },
-            lumberjack: { 
-                id: 'lumberjack', 
-                name: 'Drwal', 
-                cost: { gold: 30 }, 
-                icon: '🪵', 
-                income: { wood: 5 } 
-            },
-            quarry: { 
-                id: 'quarry', 
-                name: 'Kamieniołom', 
-                cost: { gold: 100, wood: 50 }, 
-                icon: '🪨', 
-                income: { stone: 3 } 
-            },
-            barracks: { 
-                id: 'barracks', 
-                name: 'Koszary', 
-                cost: { gold: 150, wood: 100 }, 
-                icon: '⛺', 
-                income: {} 
-            },
-            fortress: { 
-                id: 'fortress', 
-                name: 'Twierdza', 
-                cost: { stone: 100, wood: 100 }, 
-                icon: '🏰', 
-                income: {} 
-            }
+        // BAZA KOLORÓW
+        const COLORS = {
+            water: '#0ea5e9',
+            neutral: '#1e293b',
+            players: [
+                '#3b82f6', 
+                '#ef4444', 
+                '#10b981', 
+                '#f59e0b', 
+                '#8b5cf6', 
+                '#ec4899', 
+                '#14b8a6', 
+                '#f43f5e'
+            ]
         };
 
-        const DB = {
-            colors: {
-                neutral: '#1e293b',
-                water: '#0ea5e9',
-                players: [
-                    '#3b82f6', 
-                    '#ef4444', 
-                    '#10b981', 
-                    '#f59e0b', 
-                    '#8b5cf6', 
-                    '#ec4899', 
-                    '#14b8a6', 
-                    '#f43f5e'
-                ]
-            }
-        };
-
-        // KLASA CZĄSTECZEK (ANIMACJE)
-        class ParticleSystem {
+        // =========================================================
+        // KLASA: SYSTEM CZĄSTECZEK (PARTICLES)
+        // =========================================================
+        class ParticleEngine {
             constructor() {
                 this.particles = [];
             }
 
             createExplosion(x, y, color) {
-                for (let i = 0; i < 15; i++) {
+                for (let i = 0; i < 20; i++) {
                     const angle = Math.random() * Math.PI * 2;
-                    const speed = Math.random() * 3 + 1;
+                    const speed = Math.random() * 4 + 1;
                     this.particles.push({
                         type: 'spark',
                         x: x,
@@ -578,7 +530,7 @@
                         life: 1.0,
                         decay: Math.random() * 0.05 + 0.02,
                         color: color,
-                        size: Math.random() * 3 + 1
+                        size: Math.random() * 4 + 1
                     });
                 }
             }
@@ -586,12 +538,12 @@
             createText(x, y, text, color) {
                 this.particles.push({
                     type: 'text',
-                    x: x + (Math.random() * 20 - 10),
-                    y: y + (Math.random() * 10 - 5),
+                    x: x,
+                    y: y,
                     text: text,
                     life: 1.0,
                     color: color,
-                    vy: -1.5
+                    vy: -2.0
                 });
             }
 
@@ -608,7 +560,7 @@
                 });
             }
 
-            updateAndDraw(ctx) {
+            update(ctx) {
                 for (let i = this.particles.length - 1; i >= 0; i--) {
                     let p = this.particles[i];
                     
@@ -619,7 +571,7 @@
                         let cy = p.sy + (p.ty - p.sy) * p.progress;
                         ctx.lineTo(cx, cy);
                         ctx.strokeStyle = p.color;
-                        ctx.lineWidth = 4 * p.life;
+                        ctx.lineWidth = 5 * p.life;
                         ctx.lineCap = "round";
                         ctx.stroke();
                         
@@ -648,16 +600,16 @@
                     } else if (p.type === 'text') {
                         ctx.globalAlpha = p.life;
                         ctx.fillStyle = p.color;
-                        ctx.font = "bold 16px Arial";
+                        ctx.font = "bold 20px Arial";
                         ctx.textAlign = "center";
                         ctx.strokeStyle = "black";
-                        ctx.lineWidth = 2;
+                        ctx.lineWidth = 3;
                         ctx.strokeText(p.text, p.x, p.y);
                         ctx.fillText(p.text, p.x, p.y);
                         ctx.globalAlpha = 1.0;
 
                         p.y += p.vy;
-                        p.life -= 0.02;
+                        p.life -= 0.03;
 
                         if (p.life <= 0) {
                             this.particles.splice(i, 1);
@@ -667,8 +619,10 @@
             }
         }
 
-        // INTERFEJS
-        const UI = {
+        // =========================================================
+        // MANAGER UI
+        // =========================================================
+        const UIManager = {
             updateResources(gold, wood, stone, troops) {
                 document.getElementById('val-gold').innerText = Math.floor(gold);
                 document.getElementById('val-wood').innerText = Math.floor(wood);
@@ -722,64 +676,23 @@
                 modal.style.display = 'flex';
             },
 
-            openBuildModal(prov) {
-                const list = document.getElementById('build-list');
-                list.innerHTML = '';
-
-                for (let key in BUILDINGS) {
-                    let b = BUILDINGS[key];
-                    
-                    let canAfford = true;
-                    let costStr = '';
-                    
-                    if(b.cost.gold) {
-                        costStr += `🪙${b.cost.gold} `;
-                        if(Game.resources.gold < b.cost.gold) canAfford = false;
-                    }
-                    if(b.cost.wood) {
-                        costStr += `🪵${b.cost.wood} `;
-                        if(Game.resources.wood < b.cost.wood) canAfford = false;
-                    }
-                    if(b.cost.stone) {
-                        costStr += `🪨${b.cost.stone} `;
-                        if(Game.resources.stone < b.cost.stone) canAfford = false;
-                    }
-
-                    let item = document.createElement('div');
-                    item.className = 'build-item';
-                    item.innerHTML = `
-                        <div>
-                            <div style="font-size: 1.2rem; font-weight: bold; color: var(--color-blue);">
-                                ${b.icon} ${b.name}
-                            </div>
-                            <div style="font-size: 0.8rem; color: var(--text-muted);">
-                                Koszt: ${costStr}
-                            </div>
-                        </div>
-                        <button class="btn-action btn-confirm" style="flex: 0; padding: 10px 20px;" ${canAfford ? '' : 'disabled'}>
-                            Kup
-                        </button>
-                    `;
-
-                    item.querySelector('button').onclick = () => {
-                        Game.buyBuilding(prov, key);
-                    };
-
-                    list.appendChild(item);
-                }
-
-                document.getElementById('build-modal').style.display = 'flex';
-            },
-
             closeModals() {
                 document.getElementById('troop-modal').style.display = 'none';
-                document.getElementById('build-modal').style.display = 'none';
-                Input.pendingTarget = null;
+                InputManager.pendingTarget = null;
+            },
+            
+            switchScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(el => {
+                    el.classList.remove('active');
+                });
+                document.getElementById(screenId).classList.add('active');
             }
         };
 
-        // INPUT Z GRACZEM
-        const Input = {
+        // =========================================================
+        // MANAGER INPUTU (DOUBLE CLICK)
+        // =========================================================
+        const InputManager = {
             hoveredProv: null,
             selectedSource: null,
             pendingTarget: null,
@@ -788,35 +701,29 @@
             lastClickedProv: null,
 
             bind() {
-                const canvas = Game.canvas;
+                const canvas = GameEngine.canvas;
                 
                 canvas.addEventListener('mousemove', (e) => {
                     const rect = canvas.getBoundingClientRect();
                     const scaleX = canvas.width / rect.width;
                     const scaleY = canvas.height / rect.height;
                     
-                    const x = Math.floor(((e.clientX - rect.left) * scaleX) / Game.provSize);
-                    const y = Math.floor(((e.clientY - rect.top) * scaleY) / Game.provSize);
+                    const x = Math.floor(((e.clientX - rect.left) * scaleX) / GameEngine.provSize);
+                    const y = Math.floor(((e.clientY - rect.top) * scaleY) / GameEngine.provSize);
                     
-                    if (x >= 0 && x < Game.cols && y >= 0 && y < Game.rows) {
-                        this.hoveredProv = Game.grid[y][x];
-                    }
-                });
-
-                canvas.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    if(this.hoveredProv && this.hoveredProv.owner === Game.myPlayerId) {
-                        if(!this.hoveredProv.building) {
-                            UI.openBuildModal(this.hoveredProv);
-                            this.selectedSource = this.hoveredProv;
-                        } else {
-                            UI.showToast("Prowincja ma już budynek!", "error");
-                        }
+                    if (x >= 0 && x < GameEngine.cols && y >= 0 && y < GameEngine.rows) {
+                        this.hoveredProv = GameEngine.grid[y][x];
                     }
                 });
 
                 canvas.addEventListener('mousedown', (e) => {
-                    if (!this.hoveredProv || this.hoveredProv.isWater || e.button !== 0) {
+                    if (!this.hoveredProv || e.button !== 0) {
+                        return;
+                    }
+
+                    // Jeśli kliknięto wodę, anuluj zaznaczenie
+                    if (this.hoveredProv.isWater) {
+                        this.selectedSource = null;
                         return;
                     }
 
@@ -835,18 +742,18 @@
                             if (dist === 1) {
                                 if(this.selectedSource.troops > 1) {
                                     this.pendingTarget = this.hoveredProv;
-                                    UI.openTroopModal(this.selectedSource, this.hoveredProv);
+                                    UIManager.openTroopModal(this.selectedSource, this.hoveredProv);
                                 } else {
-                                    UI.showToast("Za mało wojska!", "error");
+                                    UIManager.showToast("Za mało wojska, aby atakować!", "error");
                                 }
                             } else if (dist > 1) {
-                                UI.showToast("Cel jest za daleko!", "error");
+                                UIManager.showToast("Cel jest zbyt daleko! Atakuj sąsiadów.", "error");
                             }
                         }
                         
                     } else {
                         // SINGLE CLICK
-                        if (this.hoveredProv.owner === Game.myPlayerId) {
+                        if (this.hoveredProv.owner === GameEngine.myPlayerId) {
                             this.selectedSource = this.hoveredProv;
                         } else {
                             this.selectedSource = null;
@@ -863,86 +770,90 @@
                 
                 const sliderVal = parseInt(document.getElementById('troop-slider').value);
                 
-                Game.executeMove(this.selectedSource, this.pendingTarget, sliderVal);
+                GameEngine.executeMove(this.selectedSource, this.pendingTarget, sliderVal);
                 
-                UI.closeModals();
+                UIManager.closeModals();
                 this.selectedSource = null;
             }
         };
 
-        // RENDERER
+        // =========================================================
+        // MANAGER RENDEROWANIA
+        // =========================================================
         const Renderer = {
             draw(ctx, canvas, grid, hovered, selected, particles) {
                 
-                ctx.fillStyle = '#020617';
+                // Czyszczenie tła
+                ctx.fillStyle = '#000000';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                for (let y = 0; y < Game.rows; y++) {
-                    for (let x = 0; x < Game.cols; x++) {
+                for (let y = 0; y < GameEngine.rows; y++) {
+                    for (let x = 0; x < GameEngine.cols; x++) {
                         
                         let p = grid[y][x];
-                        let px = x * Game.provSize;
-                        let py = y * Game.provSize;
+                        let px = x * GameEngine.provSize;
+                        let py = y * GameEngine.provSize;
 
+                        // Kolorowanie terenu
                         if (p.isWater) {
-                            ctx.fillStyle = DB.colors.water;
+                            ctx.fillStyle = COLORS.water;
                         } else {
                             if (p.owner === 0) {
-                                ctx.fillStyle = DB.colors.neutral;
+                                ctx.fillStyle = COLORS.neutral;
                             } else {
-                                let colorIndex = 0;
-                                if(typeof p.owner === 'string') {
-                                    colorIndex = (p.owner.charCodeAt(0) + p.owner.length) % DB.colors.players.length;
-                                }
-                                ctx.fillStyle = DB.colors.players[colorIndex];
+                                // Dynamiczny kolor gracza na podstawie UID
+                                let sum = 0;
+                                for(let i=0; i<p.owner.length; i++) sum += p.owner.charCodeAt(i);
+                                let colorIndex = sum % COLORS.players.length;
+                                ctx.fillStyle = COLORS.players[colorIndex];
                             }
                         }
 
-                        ctx.fillRect(px, py, Game.provSize, Game.provSize);
+                        // Rysowanie kafelka
+                        ctx.fillRect(px, py, GameEngine.provSize, GameEngine.provSize);
 
-                        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                        // Siatka
+                        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
                         ctx.lineWidth = 1;
-                        ctx.strokeRect(px, py, Game.provSize, Game.provSize);
+                        ctx.strokeRect(px, py, GameEngine.provSize, GameEngine.provSize);
 
-                        // Budynki
-                        if (p.building && BUILDINGS[p.building]) {
-                            ctx.fillStyle = "white";
-                            ctx.font = "20px Arial";
-                            ctx.textAlign = "center";
-                            ctx.fillText(BUILDINGS[p.building].icon, px + Game.provSize/2, py + 22);
-                        }
-
-                        // Liczba
+                        // Rysowanie liczby jednostek
                         if (!p.isWater && (p.troops > 0 || p.owner !== 0)) {
                             ctx.fillStyle = "white";
-                            ctx.font = "bold 14px 'Segoe UI'";
+                            ctx.font = "bold 15px 'Segoe UI'";
                             ctx.textAlign = "center";
                             ctx.shadowColor = "black";
-                            ctx.shadowBlur = 4;
-                            ctx.fillText(Math.floor(p.troops), px + Game.provSize/2, py + Game.provSize - 5);
+                            ctx.shadowBlur = 5;
+                            ctx.fillText(Math.floor(p.troops), px + GameEngine.provSize/2, py + GameEngine.provSize/2 + 5);
                             ctx.shadowBlur = 0;
                         }
 
+                        // Podświetlenie myszką
                         if (hovered === p && !p.isWater) {
                             ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
-                            ctx.fillRect(px, py, Game.provSize, Game.provSize);
+                            ctx.fillRect(px, py, GameEngine.provSize, GameEngine.provSize);
                         }
 
+                        // Zaznaczenie źródła (Pulsowanie)
                         if (selected === p) {
+                            let pulse = Math.abs(Math.sin(Date.now() / 200)) * 2;
                             ctx.strokeStyle = "rgba(250, 204, 21, 0.9)";
-                            ctx.lineWidth = 3;
-                            ctx.strokeRect(px + 2, py + 2, Game.provSize - 4, Game.provSize - 4);
+                            ctx.lineWidth = 3 + pulse;
+                            ctx.strokeRect(px + 2, py + 2, GameEngine.provSize - 4, GameEngine.provSize - 4);
                             ctx.lineWidth = 1;
                         }
                     }
                 }
 
-                particles.updateAndDraw(ctx);
+                // Renderowanie cząsteczek na samym wierzchu
+                particles.update(ctx);
             }
         };
 
-        // SILNIK GŁÓWNY
-        const Game = {
+        // =========================================================
+        // GŁÓWNY SILNIK GRY
+        // =========================================================
+        const GameEngine = {
             canvas: document.getElementById('gameCanvas'),
             ctx: document.getElementById('gameCanvas').getContext('2d'),
             
@@ -954,42 +865,39 @@
             
             myPlayerId: null,
             resources: { 
-                gold: 200, 
-                wood: 100, 
+                gold: 100, 
+                wood: 50, 
                 stone: 0 
             },
             
             isRunning: false,
-            particles: new ParticleSystem(),
+            particles: new ParticleEngine(),
 
-            initMultiplayer() {
-                if (!window.Network || !window.Network.isConnected) {
-                    alert("Zaczekaj na serwer!");
+            start() {
+                if (!window.FirebaseAPI || !window.FirebaseAPI.isConnected) {
+                    alert("Zaloguj się najpierw przez Google!");
                     return;
                 }
 
-                this.myPlayerId = window.Network.uid;
+                this.myPlayerId = window.FirebaseAPI.uid;
                 
-                document.getElementById('main-menu').style.opacity = '0';
-                
-                setTimeout(() => {
-                    document.getElementById('main-menu').style.display = 'none';
-                    document.getElementById('game-ui').style.display = 'flex';
-                }, 500);
+                // Przejście ekranów
+                UIManager.switchScreen('game-screen');
 
-                window.Network.checkIfMapExists((exists, data) => {
+                // Pobieranie lub generowanie mapy
+                window.DB_API.checkIfExists((exists, data) => {
                     if (exists) {
                         this.parseMapData(data);
-                        this.spawnMe();
-                        UI.showToast("Pobrano mapę z serwera!", "success");
+                        this.spawnPlayer();
+                        UIManager.showToast("Pobrano mapę z serwera!", "success");
                     } else {
                         this.generateLocalMap();
-                        this.spawnMe();
-                        window.Network.syncMap(this.grid);
-                        UI.showToast("Stworzono nowy świat.", "success");
+                        this.spawnPlayer();
+                        window.DB_API.syncMap(this.grid);
+                        UIManager.showToast("Wygenerowano nowy świat.", "success");
                     }
 
-                    this.startEngine();
+                    this.initializeGameLoop();
                 });
             },
 
@@ -998,6 +906,7 @@
                 for (let y = 0; y < this.rows; y++) {
                     let row = [];
                     for (let x = 0; x < this.cols; x++) {
+                        // Tworzenie wody na krawędziach
                         let isEdge = x===0 || y===0 || x===this.cols-1 || y===this.rows-1;
                         let isWater = isEdge || Math.random() < 0.15;
                         
@@ -1006,8 +915,7 @@
                             y: y,
                             owner: 0,
                             troops: isWater ? 0 : Math.floor(Math.random() * 5),
-                            isWater: isWater,
-                            building: null
+                            isWater: isWater
                         });
                     }
                     this.grid.push(row);
@@ -1026,15 +934,14 @@
                             y: y,
                             owner: cellData ? cellData.owner : 0,
                             troops: cellData ? cellData.troops : 0,
-                            isWater: cellData ? cellData.isWater : false,
-                            building: cellData ? cellData.building : null
+                            isWater: cellData ? cellData.isWater : false
                         });
                     }
                     this.grid.push(row);
                 }
             },
 
-            spawnMe() {
+            spawnPlayer() {
                 let emptyLands = [];
                 for (let y = 0; y < this.rows; y++) {
                     for (let x = 0; x < this.cols; x++) {
@@ -1049,20 +956,22 @@
                     spawn.owner = this.myPlayerId;
                     spawn.troops = 100;
                     
-                    window.Network.updateProvince(spawn.x, spawn.y, {
+                    window.DB_API.updateCell(spawn.x, spawn.y, {
                         owner: this.myPlayerId,
                         troops: 100
                     });
                 }
             },
 
-            startEngine() {
-                Input.bind();
+            initializeGameLoop() {
+                InputManager.bind();
                 
-                window.Network.listenToMap((data) => {
+                // Nasłuchiwanie zmian w czasie rzeczywistym
+                window.DB_API.listen((data) => {
                     this.parseMapData(data);
                 });
 
+                // Pętla przyrostu
                 setInterval(() => this.tickEconomy(), 1000);
                 
                 this.isRunning = true;
@@ -1079,54 +988,28 @@
                         
                         if (p.owner === this.myPlayerId) {
                             hasLand = true;
-                            
-                            let troopInc = 1;
-                            if(p.building === 'barracks') troopInc += 4;
-                            
-                            p.troops += troopInc;
+                            p.troops += 1;
                             myTotalTroops += p.troops;
                             
-                            window.Network.updateProvince(x, y, { troops: p.troops });
+                            // Synchronizacja z bazą
+                            window.DB_API.updateCell(x, y, { troops: p.troops });
                             
+                            // Złoto z podatków
                             this.resources.gold += 1;
-                            
-                            if(p.building) {
-                                let b = BUILDINGS[p.building];
-                                if(b.income.gold) this.resources.gold += b.income.gold;
-                                if(b.income.wood) this.resources.wood += b.income.wood;
-                                if(b.income.stone) this.resources.stone += b.income.stone;
-                            }
                         }
                     }
                 }
 
                 if(!hasLand) {
-                    UI.showToast("Twoje imperium upadło!", "error");
+                    UIManager.showToast("Zostałeś pokonany!", "error");
                 }
 
-                UI.updateResources(
+                UIManager.updateResources(
                     this.resources.gold, 
                     this.resources.wood, 
                     this.resources.stone, 
                     myTotalTroops
                 );
-            },
-
-            buyBuilding(prov, buildKey) {
-                let b = BUILDINGS[buildKey];
-                
-                if(b.cost.gold) this.resources.gold -= b.cost.gold;
-                if(b.cost.wood) this.resources.wood -= b.cost.wood;
-                if(b.cost.stone) this.resources.stone -= b.cost.stone;
-
-                prov.building = buildKey;
-                
-                window.Network.updateProvince(prov.x, prov.y, {
-                    building: buildKey
-                });
-
-                UI.closeModals();
-                UI.showToast(`Zbudowano ${b.name}!`, "success");
             },
 
             executeMove(source, target, amount) {
@@ -1136,56 +1019,56 @@
 
                 source.troops -= amount;
                 
+                // Pozycje do animacji
                 let pxS = source.x * this.provSize + this.provSize/2;
                 let pyS = source.y * this.provSize + this.provSize/2;
                 let pxT = target.x * this.provSize + this.provSize/2;
                 let pyT = target.y * this.provSize + this.provSize/2;
 
-                let colorIndex = (this.myPlayerId.charCodeAt(0) + this.myPlayerId.length) % DB.colors.players.length;
-                let pColor = DB.colors.players[colorIndex];
+                // Ustal kolor gracza
+                let sum = 0;
+                for(let i=0; i<this.myPlayerId.length; i++) sum += this.myPlayerId.charCodeAt(i);
+                let colorIndex = sum % COLORS.players.length;
+                let pColor = COLORS.players[colorIndex];
 
+                // Wystrzel animację lasera
                 this.particles.createLaser(pxS, pyS, pxT, pyT, pColor);
 
+                // Algorytm walki wywoływany po czasie (gdy laser doleci)
                 setTimeout(() => {
                     
                     if (target.owner === this.myPlayerId) {
-                        
+                        // Wsparcie własnych wojsk
                         target.troops += amount;
                         this.particles.createText(pxT, pyT, `+${amount}`, '#10b981');
                         
                     } else {
-                        
-                        let defBonus = target.building === 'fortress' ? 1.5 : 1.0;
-                        let effectiveDef = target.troops * defBonus;
-
-                        if (amount > effectiveDef) {
-                            
+                        // Walka z wrogiem
+                        if (amount > target.troops) {
+                            // Zdobycie
                             target.owner = this.myPlayerId;
-                            target.troops = Math.floor(amount - effectiveDef);
-                            if(target.building === 'fortress') target.building = null;
-                            
-                            UI.showToast(`Zdobyto terytorium!`, "success");
-                            this.particles.createText(pxT, pyT, "WIN", pColor);
-                            
+                            target.troops = Math.floor(amount - target.troops);
+                            UIManager.showToast(`Prowincja podbita!`, "success");
+                            this.particles.createText(pxT, pyT, "ZDOBYTE", pColor);
                         } else {
-                            
-                            target.troops = Math.floor((effectiveDef - amount) / defBonus);
-                            UI.showToast("Atak odparty.", "error");
+                            // Odbicie ataku
+                            target.troops -= amount;
+                            UIManager.showToast("Atak został odparty przez wroga.", "error");
                             this.particles.createText(pxT, pyT, `-${amount}`, '#ef4444');
-                            
                         }
                     }
 
-                    window.Network.updateProvince(source.x, source.y, { 
+                    // Wysłanie wyników do Firebase (Synchronizacja)
+                    window.DB_API.updateCell(source.x, source.y, { 
                         troops: source.troops 
                     });
-                    window.Network.updateProvince(target.x, target.y, { 
+                    
+                    window.DB_API.updateCell(target.x, target.y, { 
                         owner: target.owner, 
-                        troops: target.troops,
-                        building: target.building
+                        troops: target.troops
                     });
 
-                }, 400);
+                }, 400); // Czas trwania animacji
             },
 
             loop() {
@@ -1195,17 +1078,14 @@
                     this.ctx, 
                     this.canvas, 
                     this.grid, 
-                    Input.hoveredProv, 
-                    Input.selectedSource,
+                    InputManager.hoveredProv, 
+                    InputManager.selectedSource,
                     this.particles
                 );
                 
                 requestAnimationFrame(() => this.loop());
             }
         };
-
-        // START
-        console.log("System gotowy do gry.");
     </script>
 </body>
 </html>

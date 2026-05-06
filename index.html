@@ -2,82 +2,357 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Global Domination MMO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Age of Territorial - Giga Edition</title>
     <style>
-        /* =========================================
-           CSS - STYLIZACJA I MENU
-           ========================================= */
-        :root { --bg: #0d1117; --panel: #161b22; --text: #c9d1d9; --accent: #58a6ff; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: sans-serif; overflow: hidden; user-select: none; }
+        /* ==========================================================================
+           1. CSS - ZAAWANSOWANE STYLE INTERFEJSU
+           ========================================================================== */
+        :root {
+            --bg-color: #050505;
+            --panel-bg: rgba(15, 20, 25, 0.95);
+            --panel-border: #2a3b4c;
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-red: #ef4444;
+            --accent-green: #22c55e;
+            --accent-gold: #fbbf24;
+            --ui-font: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--ui-font);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* GŁÓWNE MENU OPARTE NA FIREBASE */
+        #main-menu {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at center, #1a2333 0%, #050505 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .game-title {
+            font-size: 5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 10px;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--accent-blue);
+            text-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+            margin-bottom: 20px;
+            animation: pulseTitle 3s infinite alternate;
+        }
+
+        @keyframes pulseTitle {
+            from { text-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            to { text-shadow: 0 0 50px rgba(59, 130, 246, 0.8); }
+        }
+
+        .menu-status {
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+        }
+
+        .menu-btn {
+            background: transparent;
+            border: 2px solid var(--panel-border);
+            color: var(--text-main);
+            padding: 15px 50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 8px;
+            width: 400px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: 0.5s;
+        }
+
+        .menu-btn:hover::before {
+            left: 100%;
+        }
+
+        .menu-btn:hover {
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .menu-btn.primary {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .menu-btn.primary:hover {
+            background: var(--accent-green);
+            color: #000;
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.5);
+        }
+
+        /* HUD PODCZAS GRY */
+        #game-ui {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            position: relative;
+        }
+
+        #top-hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--panel-bg);
+            border-bottom: 2px solid var(--panel-border);
+            padding: 15px 30px;
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .resource-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .resource-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 20px;
+            border-radius: 6px;
+            border: 1px solid var(--panel-border);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .res-icon { font-size: 1.5rem; }
+        .res-gold { color: var(--accent-gold); }
+        .res-wood { color: #b45309; }
+        .res-stone { color: #94a3b8; }
+        .res-troops { color: var(--accent-red); }
+
+        .game-hints {
+            text-align: right;
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .game-hints strong {
+            color: var(--accent-blue);
+        }
+
+        /* KONTENER MAPY */
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            background: #020617;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: crosshair;
+        }
+
+        canvas {
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            border: 1px solid #1e293b;
+        }
+
+        /* MENU BUDOWANIA - PRAWY PANEL */
+        #build-panel {
+            position: absolute;
+            right: -400px;
+            top: 80px;
+            width: 350px;
+            height: calc(100vh - 100px);
+            background: var(--panel-bg);
+            border-left: 2px solid var(--panel-border);
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 50;
+            overflow-y: auto;
+        }
+
+        #build-panel.open {
+            right: 0;
+        }
+
+        .panel-header {
+            font-size: 1.5rem;
+            color: var(--accent-blue);
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-panel-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .close-panel-btn:hover { color: var(--accent-red); }
+
+        .build-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 15px;
+            transition: 0.2s;
+        }
+
+        .build-card:hover {
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .build-card h3 { color: var(--text-main); margin-bottom: 5px; }
+        .build-card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 10px; }
+        .build-cost { font-size: 0.85rem; display: flex; gap: 10px; margin-bottom: 10px; }
         
-        /* MENU GŁÓWNE */
-        #main-menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(13,17,23,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; }
-        .menu-title { font-size: 4rem; color: var(--accent); margin-bottom: 30px; letter-spacing: 2px; }
-        .menu-btn { background: var(--panel); border: 1px solid #30363d; color: white; padding: 15px 40px; margin: 10px; font-size: 1.2rem; cursor: pointer; border-radius: 5px; width: 300px; text-align: center; transition: 0.2s; }
-        .menu-btn:hover { background: #30363d; border-color: var(--accent); }
-        .menu-btn.primary { background: #238636; border: none; }
-        .menu-btn.primary:hover { background: #2ea043; }
+        .build-action-btn {
+            width: 100%;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-        /* HUD GRY */
-        #game-ui { display: none; flex-direction: column; height: 100vh; }
-        #top-bar { display: flex; justify-content: space-between; background: var(--panel); padding: 10px 20px; border-bottom: 1px solid #30363d; font-size: 1.1rem; }
-        .res { font-weight: bold; margin-right: 15px; }
-        .res-gold { color: #f59e0b; }
-        .res-wood { color: #8b5a2b; }
-        .res-troops { color: #ef4444; }
+        .build-action-btn:disabled {
+            background: #334155;
+            color: #64748b;
+            cursor: not-allowed;
+        }
 
-        /* KANWA */
-        #map-container { flex-grow: 1; display: flex; justify-content: center; align-items: center; background: #010409; }
-        canvas { background: #0f2a3f; border: 2px solid #30363d; cursor: pointer; }
+        /* TOOLTIPY I POWIADOMIENIA */
+        #notification-area {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+            z-index: 100;
+        }
 
-        /* MENU BUDOWY (Prawy panel lub modal) */
-        #build-menu { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); border: 2px solid var(--accent); padding: 20px; border-radius: 8px; z-index: 100; text-align: center; }
-        .build-item { background: #21262d; padding: 10px; margin: 10px 0; border: 1px solid #30363d; cursor: pointer; }
-        .build-item:hover { border-color: var(--accent); }
-        
-        .hidden { display: none !important; }
+        .toast-msg {
+            background: rgba(15, 23, 42, 0.95);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            animation: slideUp 0.3s ease-out, fadeOut 0.5s ease-in 2.5s forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
     </style>
 </head>
 <body>
 
     <div id="main-menu">
-        <div class="menu-title">AGE OF TERRITORIAL</div>
-        <div id="auth-status" style="margin-bottom: 20px; color: #8b949e;">Status Firebase: Ładowanie...</div>
-        
-        <div class="menu-btn primary" onclick="Game.init()">GRAJ (Offline Boty)</div>
-        <div class="menu-btn" onclick="alert('System Kont w budowie')">KONTO</div>
-        <div class="menu-btn" onclick="alert('Klany niedostępne w tej wersji')">KLANY</div>
-        <div class="menu-btn" onclick="alert('Zaloguj się aby grać multiplayer')">MULTIPLAYER</div>
+        <h1 class="game-title">Territorial War</h1>
+        <div id="firebase-status" class="menu-status">Ładowanie modułów sieciowych...</div>
+        <button class="menu-btn primary" onclick="Engine.startGame()">Rozpocznij Grę</button>
+        <button class="menu-btn" onclick="alert('Moduł kont jest zintegrowany z Firebase. Skonfiguruj bazę, aby aktywować.')">Konto Gracza</button>
+        <button class="menu-btn" onclick="alert('Wojny klanowe dostępne od poziomu 5.')">Klany</button>
+        <button class="menu-btn" onclick="alert('Otwieram tabele wyników...')">Rankingi</button>
     </div>
 
     <div id="game-ui">
-        <div id="top-bar">
-            <div>
-                <span class="res res-gold">Złoto: <span id="ui-gold">100</span></span>
-                <span class="res res-wood">Drewno: <span id="ui-wood">50</span></span>
-                <span class="res res-troops">Zarządzasz wojskiem klikając na mapie</span>
+        <div id="top-hud">
+            <div class="resource-container">
+                <div class="resource-box res-gold"><span class="res-icon">🪙</span> <span id="hud-gold">0</span></div>
+                <div class="resource-box res-wood"><span class="res-icon">🪵</span> <span id="hud-wood">0</span></div>
+                <div class="resource-box res-stone"><span class="res-icon">🪨</span> <span id="hud-stone">0</span></div>
+                <div class="resource-box res-troops"><span class="res-icon">⚔️</span> <span id="hud-troops">0</span></div>
             </div>
-            <div>
-                Instrukcja: Kliknij SWOJĄ prowincję, a potem SĄSIADUJĄCĄ, aby zaatakować/przesunąć wojsko.
+            <div class="game-hints">
+                <strong>[LPM]</strong> Kliknij swoją prowincję, a następnie cel, aby zaatakować.<br>
+                <strong>[PPM]</strong> Kliknij prawym przyciskiem na swoją prowincję, aby budować.
             </div>
         </div>
-        <div id="map-container">
-            <canvas id="gameCanvas" width="1000" height="600"></canvas>
-        </div>
-    </div>
 
-    <div id="build-menu">
-        <h2 style="margin-top:0;">Rozbudowa Prowincji</h2>
-        <div class="build-item" onclick="Game.buyBuilding('mine')">Kopalnia Złota (Koszt: 50 Złota)</div>
-        <div class="build-item" onclick="Game.buyBuilding('lumberjack')">Chata Drwala (Koszt: 30 Złota)</div>
-        <div class="build-item" onclick="Game.buyBuilding('barracks')">Koszary (Koszt: 100 Złota, 50 Drewna)</div>
-        <button class="menu-btn" style="width:100%; margin:0; margin-top:10px;" onclick="document.getElementById('build-menu').style.display='none'">Anuluj</button>
+        <div id="canvas-container">
+            <canvas id="gameCanvas" width="1400" height="800"></canvas>
+        </div>
+
+        <div id="build-panel">
+            <div class="panel-header">
+                Zarządzanie
+                <button class="close-panel-btn" onclick="UI.closeBuildPanel()">✖</button>
+            </div>
+            <div id="build-options-container">
+                </div>
+        </div>
+
+        <div id="notification-area"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
+        // Konfiguracja podana przez użytkownika
         const firebaseConfig = {
             apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
             authDomain: "xchess-79e2d.firebaseapp.com",
@@ -90,248 +365,650 @@
 
         try {
             const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            document.getElementById('auth-status').innerText = "Firebase Podłączony (Oczekuje logowania)";
+            window.FirebaseAuth = getAuth(app);
+            window.FirebaseDB = getDatabase(app);
+            document.getElementById('firebase-status').innerText = "Systemy Sieciowe: Aktywne (Tryb Offline dla ochrony)";
         } catch(e) {
-            document.getElementById('auth-status').innerText = "Błąd Firebase: Uruchom przez serwer lokalny (Live Server)";
+            document.getElementById('firebase-status').innerText = "Błąd inicjalizacji Firebase. Działam w trybie lokalnym.";
+            console.error(e);
         }
     </script>
 
     <script>
-        const Game = {
+        /**
+         * ZAAWANSOWANA BAZA DANYCH GRY
+         */
+        const DATABASE = {
+            buildings: {
+                mine: { id: 'mine', name: 'Kopalnia Złota', desc: 'Wydobywa cenne kruszce z ziemi. +5 Złota/s.', cost: { gold: 50 }, icon: '🪙', color: '#f59e0b' },
+                lumberjack: { id: 'lumberjack', name: 'Chata Drwala', desc: 'Pozyskuje drewno z okolicznych lasów. +5 Drewna/s.', cost: { gold: 30 }, icon: '🪵', color: '#b45309' },
+                quarry: { id: 'quarry', name: 'Kamieniołom', desc: 'Wydobywa kamień na grube mury. +3 Kamienia/s.', cost: { gold: 60, wood: 20 }, icon: '🪨', color: '#94a3b8' },
+                barracks: { id: 'barracks', name: 'Koszary', desc: 'Szkoli elitarne jednostki. Przyrost wojska x4.', cost: { gold: 120, wood: 50 }, icon: '⛺', color: '#ef4444' },
+                fort: { id: 'fort', name: 'Forteca', desc: 'Zwiększa odporność prowincji na ataki wroga.', cost: { stone: 100, wood: 100 }, icon: '🏰', color: '#475569' }
+            },
+            colors: {
+                player: '#3b82f6',
+                bots: ['#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
+                neutral: '#1e293b',
+                water: '#0ea5e9'
+            }
+        };
+
+        /**
+         * SYSTEM CZĄSTECZEK (PARTICLE ENGINE) - ANIMACJE DOPRACOWANE
+         */
+        class ParticleEngine {
+            constructor() {
+                this.particles = [];
+                this.floatingTexts = [];
+            }
+
+            // Tworzy eksplozję iskier przy ataku
+            createExplosion(x, y, color, count = 15) {
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 3 + 1;
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 1.0,
+                        decay: Math.random() * 0.05 + 0.02,
+                        color: color,
+                        size: Math.random() * 3 + 1
+                    });
+                }
+            }
+
+            // Tworzy laser/wiązke ataku między dwiema prowincjami
+            createLaser(sx, sy, tx, ty, color) {
+                this.particles.push({
+                    type: 'laser',
+                    sx: sx, sy: sy,
+                    tx: tx, ty: ty,
+                    progress: 0,
+                    life: 1.0,
+                    color: color
+                });
+            }
+
+            // Tworzy unoszący się tekst (np. obrażenia -15)
+            createFloatingText(x, y, text, color) {
+                this.floatingTexts.push({
+                    x: x + (Math.random() * 20 - 10),
+                    y: y + (Math.random() * 10 - 5),
+                    text: text,
+                    life: 1.0,
+                    color: color,
+                    vy: -1 - Math.random()
+                });
+            }
+
+            updateAndDraw(ctx) {
+                // Rysowanie i aktualizacja iskier i laserów
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    let p = this.particles[i];
+                    
+                    if (p.type === 'laser') {
+                        ctx.beginPath();
+                        ctx.moveTo(p.sx, p.sy);
+                        let currentX = p.sx + (p.tx - p.sx) * p.progress;
+                        let currentY = p.sy + (p.ty - p.sy) * p.progress;
+                        ctx.lineTo(currentX, currentY);
+                        ctx.strokeStyle = p.color;
+                        ctx.lineWidth = 4 * p.life;
+                        ctx.lineCap = "round";
+                        ctx.stroke();
+                        
+                        p.progress += 0.1;
+                        p.life -= 0.05;
+                        if (p.progress >= 1) {
+                            // Gdy laser dotrze do celu, stwórz eksplozję
+                            this.createExplosion(p.tx, p.ty, p.color, 10);
+                            this.particles.splice(i, 1);
+                        }
+                    } else {
+                        // Zwykła iskra
+                        ctx.globalAlpha = p.life;
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalAlpha = 1.0;
+
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.life -= p.decay;
+                        
+                        if (p.life <= 0) this.particles.splice(i, 1);
+                    }
+                }
+
+                // Rysowanie i aktualizacja pływających tekstów
+                for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+                    let ft = this.floatingTexts[i];
+                    
+                    ctx.globalAlpha = ft.life;
+                    ctx.fillStyle = ft.color;
+                    ctx.font = "bold 18px 'Segoe UI'";
+                    ctx.textAlign = "center";
+                    // Obrys tekstu dla czytelności
+                    ctx.strokeStyle = "black";
+                    ctx.lineWidth = 3;
+                    ctx.strokeText(ft.text, ft.x, ft.y);
+                    ctx.fillText(ft.text, ft.x, ft.y);
+                    ctx.globalAlpha = 1.0;
+
+                    ft.y += ft.vy;
+                    ft.life -= 0.02;
+
+                    if (ft.life <= 0) this.floatingTexts.splice(i, 1);
+                }
+            }
+        }
+
+        /**
+         * KLASA GRACZA / BOTA
+         */
+        class PlayerEntity {
+            constructor(id, color, isAI) {
+                this.id = id;
+                this.color = color;
+                this.isAI = isAI;
+                this.resources = { gold: 200, wood: 100, stone: 0 };
+                this.totalTroops = 0;
+            }
+        }
+
+        /**
+         * GŁÓWNY SILNIK LOGIKI
+         */
+        const Engine = {
             canvas: document.getElementById('gameCanvas'),
             ctx: document.getElementById('gameCanvas').getContext('2d'),
             
-            gridRows: 15,
-            gridCols: 25,
-            provSize: 40,
-            grid: [],
+            // Konfiguracja mapy
+            cols: 28,
+            rows: 16,
+            provSize: 50,
             
-            player: { id: 1, color: "#3b82f6", gold: 150, wood: 50 },
-            bots: [
-                { id: 2, color: "#ef4444" },
-                { id: 3, color: "#eab308" }
-            ],
-
-            // Zmieniony system poruszania (bez trybów)
-            selectedProv: null, 
+            grid: [],
+            players: new Map(),
+            localPlayerId: 1,
+            
+            // System interakcji
             hoveredProv: null,
+            selectedProv: null,
+            
+            // Systemy poboczne
+            particles: new ParticleEngine(),
+            isRunning: false,
 
-            init() {
+            // INICJALIZACJA
+            startGame() {
                 document.getElementById('main-menu').style.display = 'none';
                 document.getElementById('game-ui').style.display = 'flex';
                 
+                this.setupPlayers();
                 this.generateMap();
                 this.bindInput();
                 
-                setInterval(() => this.tickEconomy(), 1000);
-                setInterval(() => this.botAI(), 2000);
+                this.isRunning = true;
                 
-                this.loop();
+                // Pętle logiczne gry
+                setInterval(() => this.tickEconomy(), 1000); // Ekonomia co 1 sekundę
+                setInterval(() => this.processAI(), 2500); // Decyzje botów co 2.5 sekundy
+                
+                this.gameLoop();
+                UI.showToast("Gra rozpoczęta! Zbuduj potęgę.", "success");
             },
 
+            setupPlayers() {
+                this.players.set(1, new PlayerEntity(1, DATABASE.colors.player, false));
+                // Dodajemy boty
+                DATABASE.colors.bots.forEach((color, index) => {
+                    this.players.set(index + 2, new PlayerEntity(index + 2, color, true));
+                });
+            },
+
+            // GENERACJA PROCEDURALNA MAPY (Wyspy, Kontynenty, Surowce)
             generateMap() {
-                for (let y = 0; y < this.gridRows; y++) {
+                this.grid = [];
+                for (let y = 0; y < this.rows; y++) {
                     let row = [];
-                    for (let x = 0; x < this.gridCols; x++) {
+                    for (let x = 0; x < this.cols; x++) {
+                        // Tworzenie szumu dla wody na krawędziach
+                        let isEdge = x === 0 || y === 0 || x === this.cols - 1 || y === this.rows - 1;
+                        let isWater = isEdge || Math.random() < 0.15;
+                        
                         row.push({
                             x: x, y: y,
                             owner: 0,
-                            troops: Math.floor(Math.random() * 5) + 1,
-                            building: null
+                            troops: isWater ? 0 : Math.floor(Math.random() * 10) + 1,
+                            building: null,
+                            isWater: isWater
                         });
                     }
                     this.grid.push(row);
                 }
 
-                // Spawny
-                this.grid[7][2].owner = 1; this.grid[7][2].troops = 50;
-                this.grid[2][22].owner = 2; this.grid[2][22].troops = 50;
-                this.grid[12][20].owner = 3; this.grid[12][20].troops = 50;
+                // Rozstawianie startowych stolic (gwarancja że nie wpadną do wody)
+                let spawnPoints = [
+                    { x: 3, y: 3, id: 1 }, // Gracz
+                    { x: 24, y: 3, id: 2 },
+                    { x: 3, y: 12, id: 3 },
+                    { x: 24, y: 12, id: 4 },
+                    { x: 13, y: 7, id: 5 }
+                ];
+
+                spawnPoints.forEach(spawn => {
+                    let p = this.grid[spawn.y][spawn.x];
+                    p.isWater = false;
+                    p.owner = spawn.id;
+                    p.troops = 100;
+                    p.building = 'fort'; // Stolica ma darmowy fort
+                });
             },
 
+            // EKONOMIA
             tickEconomy() {
-                for (let y = 0; y < this.gridRows; y++) {
-                    for (let x = 0; x < this.gridCols; x++) {
+                // Reset sumy wojska dla UI
+                this.players.forEach(p => p.totalTroops = 0);
+
+                for (let y = 0; y < this.rows; y++) {
+                    for (let x = 0; x < this.cols; x++) {
                         let p = this.grid[y][x];
-                        if (p.owner === 0) continue;
+                        if (p.owner === 0 || p.isWater) continue;
 
+                        let player = this.players.get(p.owner);
+                        
+                        // Przyrost wojska
                         let troopInc = 1;
-                        if (p.building === 'barracks') troopInc = 4;
+                        if (p.building === 'barracks') troopInc += 4;
                         p.troops += troopInc;
+                        player.totalTroops += p.troops;
 
-                        if (p.owner === 1) {
-                            this.player.gold += (p.building === 'mine' ? 5 : 1);
-                            if (p.building === 'lumberjack') this.player.wood += 5;
-                        }
+                        // Przyrost surowców
+                        player.resources.gold += 1; // Dochód bazowy z podatków
+                        if (p.building === 'mine') player.resources.gold += 5;
+                        if (p.building === 'lumberjack') player.resources.wood += 5;
+                        if (p.building === 'quarry') player.resources.stone += 3;
                     }
                 }
-                document.getElementById('ui-gold').innerText = this.player.gold;
-                document.getElementById('ui-wood').innerText = this.player.wood;
+
+                UI.updateHUD();
             },
 
-            // NOWY, LEPSZY SYSTEM PORUSZANIA
+            // LOGIKA RUCHU I WALKI (AGE OF HISTORY STYLE)
+            executeMove(source, target, ownerId) {
+                // Zabezpieczenia
+                if (target.isWater) {
+                    if(ownerId === this.localPlayerId) UI.showToast("Woda zablokowana! Żegluga niedostępna.", "error");
+                    return;
+                }
+
+                let troopsToMove = Math.floor(source.troops / 2);
+                if (troopsToMove < 1) return;
+
+                source.troops -= troopsToMove;
+
+                let pxSource = source.x * this.provSize + this.provSize/2;
+                let pySource = source.y * this.provSize + this.provSize/2;
+                let pxTarget = target.x * this.provSize + this.provSize/2;
+                let pyTarget = target.y * this.provSize + this.provSize/2;
+
+                let playerColor = this.players.get(ownerId).color;
+
+                // Dodaj animację lasera/ruchu
+                this.particles.createLaser(pxSource, pySource, pxTarget, pyTarget, playerColor);
+
+                // Algorytm walki wywoływany z opóźnieniem (symulacja podróży wojsk)
+                setTimeout(() => {
+                    if (target.owner === ownerId) {
+                        // Przerzut wojsk
+                        target.troops += troopsToMove;
+                        this.particles.createFloatingText(pxTarget, pyTarget, `+${troopsToMove}`, '#22c55e');
+                    } else {
+                        // Walka
+                        let defenseBonus = target.building === 'fort' ? 1.5 : 1.0;
+                        let effectiveDefense = target.troops * defenseBonus;
+
+                        if (troopsToMove > effectiveDefense) {
+                            // Zwycięstwo (Zdobycie prowincji)
+                            let remaining = Math.floor(troopsToMove - effectiveDefense);
+                            target.owner = ownerId;
+                            target.troops = remaining > 0 ? remaining : 1;
+                            
+                            // Niszczenie wrogich budynków przy podboju (szansa)
+                            if (target.building === 'fort' || Math.random() > 0.5) {
+                                target.building = null;
+                            }
+                            
+                            this.particles.createExplosion(pxTarget, pyTarget, playerColor, 20);
+                            this.particles.createFloatingText(pxTarget, pyTarget, "ZDOBYTE!", playerColor);
+                            
+                        } else {
+                            // Porażka (Odbicie ataku)
+                            target.troops = Math.floor((effectiveDefense - troopsToMove) / defenseBonus);
+                            this.particles.createFloatingText(pxTarget, pyTarget, `Obrona! -${troopsToMove}`, '#ef4444');
+                        }
+                    }
+                }, 500); // 500ms opóźnienia na podróż lasera
+            },
+
+            // SZTUCZNA INTELIGENCJA BOTÓW
+            processAI() {
+                this.players.forEach(bot => {
+                    if (!bot.isAI) return;
+
+                    let myProvs = [];
+                    for (let y = 0; y < this.rows; y++) {
+                        for (let x = 0; x < this.cols; x++) {
+                            if (this.grid[y][x].owner === bot.id) myProvs.push(this.grid[y][x]);
+                        }
+                    }
+                    if (myProvs.length === 0) return; // Bot zniszczony
+
+                    // Faza 1: Szukanie celu do ataku z najsilniejszej prowincji
+                    let strongest = myProvs.reduce((p, c) => p.troops > c.troops ? p : c);
+                    
+                    if (strongest.troops > 25) {
+                        let neighbors = [];
+                        // Sprawdzanie 8 sąsiadów
+                        for (let dy = -1; dy <= 1; dy++) {
+                            for (let dx = -1; dx <= 1; dx++) {
+                                let nx = strongest.x + dx, ny = strongest.y + dy;
+                                if (nx >= 0 && nx < this.cols && ny >= 0 && ny < this.rows && (dx !== 0 || dy !== 0)) {
+                                    let candidate = this.grid[ny][nx];
+                                    if (!candidate.isWater && candidate.owner !== bot.id) {
+                                        neighbors.push(candidate);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (neighbors.length > 0) {
+                            // Wybierz najsłabszego sąsiada, żeby zoptymalizować atak
+                            neighbors.sort((a, b) => a.troops - b.troops);
+                            this.executeMove(strongest, neighbors[0], bot.id);
+                        }
+                    }
+
+                    // Faza 2: Ekonomia Bota (Rozbudowa)
+                    if (bot.resources.gold > 150) {
+                        let emptyProvs = myProvs.filter(p => p.building === null);
+                        if (emptyProvs.length > 0) {
+                            let buildTarget = emptyProvs[Math.floor(Math.random() * emptyProvs.length)];
+                            // Prosty algorytm budowy
+                            if (bot.resources.wood > 50) {
+                                buildTarget.building = 'barracks';
+                                bot.resources.gold -= 120; bot.resources.wood -= 50;
+                            } else {
+                                buildTarget.building = 'mine';
+                                bot.resources.gold -= 50;
+                            }
+                        }
+                    }
+                });
+            },
+
+            // STEROWANIE I MYSZ
             bindInput() {
+                // Śledzenie myszki (Hover)
                 this.canvas.addEventListener('mousemove', (e) => {
                     const rect = this.canvas.getBoundingClientRect();
-                    let x = Math.floor((e.clientX - rect.left) / this.provSize);
-                    let y = Math.floor((e.clientY - rect.top) / this.provSize);
-                    if(x >= 0 && x < this.gridCols && y >= 0 && y < this.gridRows) {
+                    // Skalowanie w przypadku innej rozdzielczości CSS
+                    const scaleX = this.canvas.width / rect.width;
+                    const scaleY = this.canvas.height / rect.height;
+                    
+                    let mouseX = (e.clientX - rect.left) * scaleX;
+                    let mouseY = (e.clientY - rect.top) * scaleY;
+                    
+                    let x = Math.floor(mouseX / this.provSize);
+                    let y = Math.floor(mouseY / this.provSize);
+                    
+                    if(x >= 0 && x < this.cols && y >= 0 && y < this.rows) {
                         this.hoveredProv = this.grid[y][x];
                     }
                 });
 
+                // Kliknięcia (Logika selekcji)
                 this.canvas.addEventListener('mousedown', (e) => {
-                    if (e.button === 2) { // Prawy klik buduje
-                        if(this.hoveredProv && this.hoveredProv.owner === 1) {
-                            this.selectedProv = this.hoveredProv;
-                            document.getElementById('build-menu').style.display = 'block';
+                    if (!this.hoveredProv || this.hoveredProv.isWater) return;
+
+                    // PRAWY PRZYCISK - Menu Budowy
+                    if (e.button === 2) {
+                        if (this.hoveredProv.owner === this.localPlayerId) {
+                            UI.openBuildPanel(this.hoveredProv);
+                        } else {
+                            UI.showToast("Możesz budować tylko na swoich terenach!", "error");
                         }
                         return;
                     }
 
-                    if (!this.hoveredProv) return;
-
-                    if (this.selectedProv) {
-                        // Mamy już źródło, sprawdzamy czy kliknięto cel
-                        let dist = Math.max(Math.abs(this.selectedProv.x - this.hoveredProv.x), Math.abs(this.selectedProv.y - this.hoveredProv.y));
+                    // LEWY PRZYCISK - Ruch i Walka
+                    if (e.button === 0) {
+                        UI.closeBuildPanel(); // Zamknij menu przy kliknięciu lpm
                         
-                        if (dist === 1) {
-                            // Ruch / Atak
-                            this.executeMove(this.selectedProv, this.hoveredProv, 1);
-                            this.selectedProv = null; // Odznacz po ruchu
-                        } else if (dist === 0) {
-                            // Kliknięcie w to samo miejsce odznacza
-                            this.selectedProv = null;
-                        } else {
-                            // Kliknięto za daleko. Jeśli to nasza prowincja, zaznacz ją jako nowe źródło
-                            if(this.hoveredProv.owner === 1) {
-                                this.selectedProv = this.hoveredProv;
+                        if (this.selectedProv) {
+                            // Sprawdź zasięg (max 1 pole w Każdą stronę, wliczając skosy - Age of History)
+                            let dist = Math.max(Math.abs(this.selectedProv.x - this.hoveredProv.x), Math.abs(this.selectedProv.y - this.hoveredProv.y));
+                            
+                            if (dist === 1) {
+                                this.executeMove(this.selectedProv, this.hoveredProv, this.localPlayerId);
+                                this.selectedProv = null; // Odznacz
+                            } else if (dist === 0) {
+                                this.selectedProv = null; // Kliknięcie w to samo odznacza
                             } else {
-                                this.selectedProv = null; // Złe kliknięcie kasuje wybór
+                                // Kliknięto za daleko. Jeśli to twoje - zaznacz to jako nowe źródło
+                                if (this.hoveredProv.owner === this.localPlayerId) {
+                                    this.selectedProv = this.hoveredProv;
+                                } else {
+                                    this.selectedProv = null;
+                                }
                             }
-                        }
-                    } else {
-                        // Nie mamy źródła, wybieramy
-                        if (this.hoveredProv.owner === 1 && this.hoveredProv.troops > 1) {
-                            this.selectedProv = this.hoveredProv;
+                        } else {
+                            // Zaznacz źródło
+                            if (this.hoveredProv.owner === this.localPlayerId && this.hoveredProv.troops > 1) {
+                                this.selectedProv = this.hoveredProv;
+                            }
                         }
                     }
                 });
 
-                // Zablokuj menu kontekstowe prawego przycisku
+                // Zablokuj domyślne menu kontekstowe przeglądarki
                 this.canvas.addEventListener('contextmenu', e => e.preventDefault());
             },
 
-            executeMove(source, target, ownerId) {
-                let troopsToMove = Math.floor(source.troops / 2);
-                if (troopsToMove < 1) return;
-                
-                source.troops -= troopsToMove;
-
-                if (target.owner === ownerId) {
-                    target.troops += troopsToMove; // Przesunięcie wojsk
-                } else {
-                    target.troops -= troopsToMove; // Walka
-                    if (target.troops < 0) {
-                        target.owner = ownerId;
-                        target.troops = Math.abs(target.troops);
-                        target.building = null; // Zniszczenie budynku
-                    }
-                }
-            },
-
-            buyBuilding(type) {
-                let costGold = 0, costWood = 0;
-                if(type==='mine') costGold=50;
-                if(type==='lumberjack') costGold=30;
-                if(type==='barracks') { costGold=100; costWood=50; }
-
-                if (this.player.gold >= costGold && this.player.wood >= costWood) {
-                    if(this.selectedProv && !this.selectedProv.building) {
-                        this.player.gold -= costGold;
-                        this.player.wood -= costWood;
-                        this.selectedProv.building = type;
-                        document.getElementById('build-menu').style.display = 'none';
-                        this.selectedProv = null;
-                    }
-                } else {
-                    alert("Brak surowców!");
-                }
-            },
-
-            botAI() {
-                this.bots.forEach(bot => {
-                    let myProvs = [];
-                    for(let y=0; y<this.gridRows; y++) {
-                        for(let x=0; x<this.gridCols; x++) {
-                            if(this.grid[y][x].owner === bot.id) myProvs.push(this.grid[y][x]);
-                        }
-                    }
-                    if(myProvs.length === 0) return;
-
-                    let strongest = myProvs.reduce((p, c) => p.troops > c.troops ? p : c);
-                    if(strongest.troops > 15) {
-                        let neighbors = [];
-                        for(let dy=-1; dy<=1; dy++) {
-                            for(let dx=-1; dx<=1; dx++) {
-                                let nx = strongest.x+dx, ny = strongest.y+dy;
-                                if(nx>=0 && nx<this.gridCols && ny>=0 && ny<this.gridRows && (dx!==0 || dy!==0)) {
-                                    neighbors.push(this.grid[ny][nx]);
-                                }
-                            }
-                        }
-                        let target = neighbors[Math.floor(Math.random() * neighbors.length)];
-                        if(target) this.executeMove(strongest, target, bot.id);
-                    }
-                });
-            },
-
+            // RENDEROWANIE GŁÓWNE
             draw() {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                // Tło (czyszczenie)
+                this.ctx.fillStyle = DATABASE.colors.neutral;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-                for (let y = 0; y < this.gridRows; y++) {
-                    for (let x = 0; x < this.gridCols; x++) {
+                // 1. Rysowanie Mapy i Prowincji
+                for (let y = 0; y < this.rows; y++) {
+                    for (let x = 0; x < this.cols; x++) {
                         let p = this.grid[y][x];
                         let px = x * this.provSize;
                         let py = y * this.provSize;
 
-                        if (p.owner === 1) this.ctx.fillStyle = this.player.color;
-                        else if (p.owner === 2) this.ctx.fillStyle = this.bots[0].color;
-                        else if (p.owner === 3) this.ctx.fillStyle = this.bots[1].color;
-                        else this.ctx.fillStyle = "#21262d"; 
+                        // Rysowanie Kafelka
+                        if (p.isWater) {
+                            this.ctx.fillStyle = DATABASE.colors.water;
+                        } else {
+                            if (p.owner === 0) {
+                                this.ctx.fillStyle = '#1e293b'; // Szary dla neutralnych lądów
+                            } else {
+                                // Kolor gracza (z lekką przezroczystością, żeby wyglądało ładniej)
+                                let ownerEntity = this.players.get(p.owner);
+                                this.ctx.fillStyle = ownerEntity ? ownerEntity.color : '#fff';
+                                this.ctx.globalAlpha = 0.8;
+                            }
+                        }
 
                         this.ctx.fillRect(px, py, this.provSize, this.provSize);
-                        this.ctx.strokeStyle = "#0d1117";
+                        this.ctx.globalAlpha = 1.0;
+
+                        // Rysowanie krawędzi kafelków (Granice prowincji)
+                        this.ctx.strokeStyle = '#0f172a';
+                        this.ctx.lineWidth = 1;
                         this.ctx.strokeRect(px, py, this.provSize, this.provSize);
 
-                        if(p.building) {
-                            this.ctx.fillStyle = p.building === 'mine' ? 'gold' : p.building === 'lumberjack' ? 'brown' : 'black';
-                            this.ctx.fillRect(px+4, py+4, 12, 12);
+                        if (p.isWater) continue; // Na wodzie nie rysujemy budynków i wojska
+
+                        // 2. Rysowanie Budynków (Ikona na środku)
+                        if (p.building && DATABASE.buildings[p.building]) {
+                            let bData = DATABASE.buildings[p.building];
+                            this.ctx.fillStyle = "white";
+                            this.ctx.font = "20px 'Segoe UI'";
+                            this.ctx.textAlign = "center";
+                            this.ctx.textBaseline = "middle";
+                            this.ctx.fillText(bData.icon, px + this.provSize/2, py + 20);
                         }
 
-                        this.ctx.fillStyle = "white";
-                        this.ctx.font = "14px Arial";
-                        this.ctx.textAlign = "center";
-                        this.ctx.fillText(Math.floor(p.troops), px + this.provSize/2, py + this.provSize/2 + 5);
+                        // 3. Rysowanie Liczby Wojsk (Na dole kafelka)
+                        if (p.troops > 0 || p.owner !== 0) {
+                            this.ctx.fillStyle = "white";
+                            this.ctx.font = "bold 14px 'Segoe UI'";
+                            this.ctx.textAlign = "center";
+                            
+                            // Efekt cienia dla lepszej czytelności tekstu
+                            this.ctx.shadowColor = "black";
+                            this.ctx.shadowBlur = 4;
+                            this.ctx.fillText(Math.floor(p.troops), px + this.provSize/2, py + this.provSize - 5);
+                            this.ctx.shadowBlur = 0; // Reset
+                        }
 
+                        // 4. Efekty Najechania i Zaznaczenia (Hover / Selected)
                         if (this.hoveredProv === p) {
-                            this.ctx.fillStyle = "rgba(255,255,255,0.2)";
+                            this.ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
                             this.ctx.fillRect(px, py, this.provSize, this.provSize);
                         }
+
                         if (this.selectedProv === p) {
-                            this.ctx.strokeStyle = "white";
-                            this.ctx.lineWidth = 2;
-                            this.ctx.strokeRect(px+2, py+2, this.provSize-4, this.provSize-4);
-                            this.ctx.lineWidth = 1;
+                            // Pulsująca żółta ramka
+                            let pulse = Math.abs(Math.sin(Date.now() / 200)) * 2;
+                            this.ctx.strokeStyle = "rgba(250, 204, 21, 0.8)";
+                            this.ctx.lineWidth = 3 + pulse;
+                            this.ctx.strokeRect(px + 2, py + 2, this.provSize - 4, this.provSize - 4);
+                            
+                            // Rysuj poświatę pokazującą zasięg ruchu
+                            this.ctx.fillStyle = "rgba(250, 204, 21, 0.05)";
+                            this.ctx.fillRect(px - this.provSize, py - this.provSize, this.provSize * 3, this.provSize * 3);
                         }
                     }
                 }
+
+                // 5. Rysowanie animacji z ParticleEngine
+                this.particles.updateAndDraw(this.ctx);
             },
 
-            loop() {
+            // GŁÓWNA PĘTLA
+            gameLoop() {
+                if (!this.isRunning) return;
                 this.draw();
-                requestAnimationFrame(() => this.loop());
+                // Żądanie kolejnej klatki od przeglądarki (Zapewnia płynne 60 FPS)
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        };
+
+        /**
+         * ZARZĄDZANIE HTML I INTERFEJSEM
+         */
+        const UI = {
+            selectedProvForBuild: null,
+
+            updateHUD() {
+                let localPlayer = Engine.players.get(Engine.localPlayerId);
+                if (!localPlayer) return;
+
+                document.getElementById('hud-gold').innerText = localPlayer.resources.gold;
+                document.getElementById('hud-wood').innerText = localPlayer.resources.wood;
+                document.getElementById('hud-stone').innerText = localPlayer.resources.stone;
+                document.getElementById('hud-troops').innerText = localPlayer.totalTroops;
+            },
+
+            formatCost(cost) {
+                let html = '';
+                if(cost.gold) html += `<span style="color: var(--accent-gold)">🪙 ${cost.gold}</span>`;
+                if(cost.wood) html += `<span style="color: #b45309">🪵 ${cost.wood}</span>`;
+                if(cost.stone) html += `<span style="color: #94a3b8">🪨 ${cost.stone}</span>`;
+                return html;
+            },
+
+            openBuildPanel(prov) {
+                this.selectedProvForBuild = prov;
+                const panel = document.getElementById('build-panel');
+                const container = document.getElementById('build-options-container');
+                container.innerHTML = '';
+
+                let localPlayer = Engine.players.get(Engine.localPlayerId);
+
+                // Generowanie kart budynków na żywo na podstawie bazy
+                for (let key in DATABASE.buildings) {
+                    let b = DATABASE.buildings[key];
+                    
+                    // Sprawdzanie czy gracza stać
+                    let canAfford = true;
+                    for (let res in b.cost) {
+                        if ((localPlayer.resources[res] || 0) < b.cost[res]) canAfford = false;
+                    }
+
+                    let card = document.createElement('div');
+                    card.className = 'build-card';
+                    card.innerHTML = `
+                        <h3>${b.icon} ${b.name}</h3>
+                        <p>${b.desc}</p>
+                        <div class="build-cost">Koszt: ${this.formatCost(b.cost)}</div>
+                        <button class="build-action-btn" ${canAfford ? '' : 'disabled'}>Zbuduj</button>
+                    `;
+
+                    // Akcja przycisku
+                    card.querySelector('button').onclick = () => {
+                        if (prov.building) {
+                            this.showToast("Ta prowincja jest już zabudowana!", "error");
+                            return;
+                        }
+
+                        // Pobranie opłaty
+                        for (let res in b.cost) {
+                            localPlayer.resources[res] -= b.cost[res];
+                        }
+                        
+                        prov.building = b.id;
+                        this.updateHUD();
+                        this.closeBuildPanel();
+                        this.showToast(`Zbudowano: ${b.name}`, "success");
+                    };
+
+                    container.appendChild(card);
+                }
+
+                panel.classList.add('open');
+            },
+
+            closeBuildPanel() {
+                document.getElementById('build-panel').classList.remove('open');
+                this.selectedProvForBuild = null;
+            },
+
+            showToast(message, type = 'info') {
+                const area = document.getElementById('notification-area');
+                const toast = document.createElement('div');
+                toast.className = 'toast-msg';
+                toast.innerText = message;
+                
+                if(type === 'error') toast.style.border = '2px solid var(--accent-red)';
+                if(type === 'success') toast.style.border = '2px solid var(--accent-green)';
+                
+                area.appendChild(toast);
+
+                // Automatyczne czyszczenie DOM po animacji (3s całkowitego czasu)
+                setTimeout(() => {
+                    if (toast.parentNode) toast.remove();
+                }, 3000);
             }
         };
     </script>

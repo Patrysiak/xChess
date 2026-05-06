@@ -2,224 +2,311 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Territorial MMO Engine</title>
+    <title>Territorial Giga Edition</title>
     <style>
-        :root { --bg: #111; --panel: #222; --text: #eee; --accent: #e67e22; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        :root { --bg: #0f0f0f; --panel: #1a1a1a; --text: #eee; --accent: #e67e22; --accent-hover: #d35400; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* UI HUD */
-        #hud { display: flex; justify-content: space-between; background: var(--panel); padding: 15px 30px; border-bottom: 2px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3); z-index: 10; }
+        /* GŁÓWNE MENU */
+        #main-menu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; transition: opacity 0.5s; }
+        #main-menu h1 { font-size: 4rem; margin-bottom: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 20px rgba(230, 126, 34, 0.5); }
+        #main-menu p { font-size: 1.2rem; margin-bottom: 40px; color: #aaa; }
+        .menu-btn { background: var(--panel); border: 2px solid var(--accent); color: white; padding: 15px 40px; font-size: 1.5rem; margin: 10px; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; width: 300px; text-transform: uppercase; }
+        .menu-btn:hover { background: var(--accent); transform: scale(1.05); box-shadow: 0 0 15px var(--accent); }
+        
+        /* HUD GRY */
+        #hud { display: none; justify-content: space-between; background: var(--panel); padding: 15px 30px; border-bottom: 2px solid #333; z-index: 10; }
         .hud-section { display: flex; gap: 20px; align-items: center; }
-        .stat-box { background: #000; padding: 5px 15px; border-radius: 5px; font-weight: bold; border: 1px solid #444; }
-        .clan-tag { color: #f1c40f; }
-        button { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:hover { background: #d35400; }
-
-        /* Game Area */
-        #game-wrapper { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
-        canvas { border: 2px solid #444; box-shadow: 0 0 20px rgba(0,0,0,0.5); cursor: crosshair; }
+        .stat-box { background: #000; padding: 8px 15px; border-radius: 5px; font-weight: bold; border: 1px solid #444; font-size: 1.1rem; }
+        .player-color { display: inline-block; width: 15px; height: 15px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
         
-        /* Ukryty canvas do czytania mapy (maski kolizji) */
-        #collisionCanvas { display: none; }
+        /* KANWA GRY */
+        #game-wrapper { flex-grow: 1; display: none; justify-content: center; align-items: center; position: relative; background: #051923; }
+        canvas { box-shadow: 0 0 30px rgba(0,0,0,0.8); cursor: crosshair; }
+        
+        /* KLASY POMOCNICZE */
+        .hidden { display: none !important; opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
 
+    <div id="main-menu">
+        <h1>TERRITORIAL.js</h1>
+        <p>Giga Pixel Edition</p>
+        <button class="menu-btn" onclick="Game.startGame('island')">Graj: Wyspa</button>
+        <button class="menu-btn" onclick="Game.startGame('continents')">Graj: Kontynenty</button>
+    </div>
+
     <div id="hud">
         <div class="hud-section">
-            <div class="stat-box">Gracz: <span class="clan-tag">[DEV]</span> <span id="ui-name">Admin</span></div>
-            <div class="stat-box">Terytorium: <span id="ui-score">0</span> px</div>
+            <div class="stat-box"><span class="player-color" style="background: #3498db;"></span> Ty: <span id="score-player">0</span></div>
+            <div class="stat-box"><span class="player-color" style="background: #e74c3c;"></span> Bot: <span id="score-bot">0</span></div>
         </div>
         <div class="hud-section">
-            <button onclick="Engine.changeMap('poland')">Mapa Polski</button>
-            <button onclick="Engine.changeMap('world')">Mapa Świata</button>
-            <button id="btn-login" style="background: #2980b9;">Połącz z Firebase</button>
+            <button class="menu-btn" style="padding: 10px 20px; font-size: 1rem; width: auto; margin: 0;" onclick="Game.exitToMenu()">Zakończ</button>
         </div>
     </div>
 
     <div id="game-wrapper">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
-        <canvas id="collisionCanvas" width="800" height="600"></canvas>
     </div>
 
     <script>
         /**
-         * KLASY DANYCH (Przygotowane pod Firebase)
+         * MAPY Z PIKSELI W KODZIE
+         * 0 = Woda, 1 = Ląd
+         * Każdy znak to jeden "kafelek" na mapie. Z nich budujemy świat.
          */
-        class Player {
-            constructor(id, name, clan, color) {
-                this.id = id;
-                this.name = name;
-                this.clan = clan;
-                this.color = color;
-                this.pixelsOwned = 0;
-            }
-        }
+        const Maps = {
+            island: [
+                "0000000000000000000000000000000000000000",
+                "0000000000000011111100000000000000000000",
+                "0000000000111111111111100000000000000000",
+                "0000000011111111111111111000000000000000",
+                "0000000111111111111111111100000000000000",
+                "0000001111111111111111111110000000000000",
+                "0000001111111111111111111111000000000000",
+                "0000000111111111111111111110000000000000",
+                "0000000011111111111111111100000000000000",
+                "0000000000111111111111110000000000000000",
+                "0000000000001111111111000000000000000000",
+                "0000000000000001110000000000000000000000",
+                "0000000000000000000000000000000000000000"
+            ],
+            continents: [
+                "0000000000000000000000000000000000000000",
+                "0011111000000000000000000111111000000000",
+                "0111111110000000000000011111111110000000",
+                "0111111111000000000000111111111111000000",
+                "0011111110000000000000011111111110000000",
+                "0001111100000000000000001111111100000000",
+                "0000111000000000000000000011110000000000",
+                "0000000000000000000000000000000000000000",
+                "0000000000111111000000000000000000000000",
+                "0000000011111111110000000000000000000000",
+                "0000000011111111111000000000000000000000",
+                "0000000000111111100000000000000000000000",
+                "0000000000001110000000000000000000000000"
+            ]
+        };
 
+        /**
+         * STRUKTURA DANYCH
+         */
         class Cell {
-            constructor(x, y) {
+            constructor(x, y, isLand) {
                 this.x = x;
                 this.y = y;
-                this.ownerId = null; // Kto posiada piksel
-                this.defense = 0;    // Siła obrony
+                this.isLand = isLand;
+                this.owner = null; // null = wolne, 1 = gracz, 2 = bot
             }
         }
 
         /**
          * GŁÓWNY SILNIK GRY
          */
-        const Engine = {
+        const Game = {
             canvas: document.getElementById('gameCanvas'),
             ctx: document.getElementById('gameCanvas').getContext('2d'),
-            colCanvas: document.getElementById('collisionCanvas'),
-            colCtx: document.getElementById('collisionCanvas').getContext('2d', { willReadFrequently: true }),
             
-            width: 800,
-            height: 600,
-            gridSize: 5, // Wielkość jednego terytorium (5x5 pikseli)
+            gridSize: 20, // Rozmiar kafelka w pikselach
+            cols: 40,
+            rows: 13,
             
-            mapData: null, // Dane o kolorach maski (ląd vs woda)
-            grid: [],      // Tablica stanu gry
-            players: {},   // Lista graczy (docelowo z Firebase)
-            myPlayerId: 'user_1', // Moje tymczasowe ID
+            grid: [],
+            players: {
+                1: { color: "#3498db", score: 0 },
+                2: { color: "#e74c3c", score: 0 }
+            },
+            
+            isRunning: false,
+            botInterval: null,
 
-            init() {
-                this.setupGrid();
-                this.createLocalPlayer();
+            // INICJALIZACJA GRY
+            startGame(mapName) {
+                document.getElementById('main-menu').classList.add('hidden');
+                document.getElementById('hud').style.display = 'flex';
+                document.getElementById('game-wrapper').style.display = 'flex';
+                
+                this.loadMap(Maps[mapName]);
+                this.setupSpawns();
                 this.bindEvents();
-                // Domyślnie ładujemy testową maskę (czarne tło = ląd, np. na całości)
-                this.loadMapMask(''); 
+                
+                this.isRunning = true;
+                this.players[1].score = 1;
+                this.players[2].score = 1;
+                this.updateScore();
+                
+                // Bot wykonuje ruch co 150ms
+                if(this.botInterval) clearInterval(this.botInterval);
+                this.botInterval = setInterval(() => this.botMove(), 150);
+                
                 this.gameLoop();
             },
 
-            setupGrid() {
-                const cols = Math.floor(this.width / this.gridSize);
-                const rows = Math.floor(this.height / this.gridSize);
-                for (let y = 0; y < rows; y++) {
+            exitToMenu() {
+                this.isRunning = false;
+                clearInterval(this.botInterval);
+                document.getElementById('main-menu').classList.remove('hidden');
+                document.getElementById('hud').style.display = 'none';
+                document.getElementById('game-wrapper').style.display = 'none';
+            },
+
+            // PARSOWANIE MAPY STRINGOWEJ
+            loadMap(mapArray) {
+                this.grid = [];
+                this.rows = mapArray.length;
+                this.cols = mapArray[0].length;
+                this.canvas.width = this.cols * this.gridSize;
+                this.canvas.height = this.rows * this.gridSize;
+
+                for (let y = 0; y < this.rows; y++) {
                     let row = [];
-                    for (let x = 0; x < cols; x++) {
-                        row.push(new Cell(x, y));
+                    for (let x = 0; x < this.cols; x++) {
+                        let isLand = mapArray[y][x] === "1";
+                        row.push(new Cell(x, y, isLand));
                     }
                     this.grid.push(row);
                 }
             },
 
-            createLocalPlayer() {
-                this.players[this.myPlayerId] = new Player(this.myPlayerId, "Admin", "DEV", "#e74c3c");
+            // LOSOWANIE POCZĄTKOWYCH POZYCJI
+            setupSpawns() {
+                let landCells = [];
+                for(let y=0; y<this.rows; y++) {
+                    for(let x=0; x<this.cols; x++) {
+                        if(this.grid[y][x].isLand) landCells.push(this.grid[y][x]);
+                    }
+                }
+                
+                // Spawn Gracza
+                let p1Spawn = landCells[Math.floor(Math.random() * landCells.length)];
+                p1Spawn.owner = 1;
+                
+                // Spawn Bota (musi być inny niż gracz)
+                let p2Spawn;
+                do {
+                    p2Spawn = landCells[Math.floor(Math.random() * landCells.length)];
+                } while (p2Spawn === p1Spawn);
+                p2Spawn.owner = 2;
             },
 
-            loadMapMask(imageUrl) {
-                // W prawdziwej grze imageUrl to link do czarno-białej mapy (np. kontur Polski)
-                // Używamy ukrytego canvasa, by narysować tam mapę i zczytać gdzie jest czarny kolor
+            // LOGIKA ZAJMOWANIA (Czy styka się z moim polem?)
+            canClaim(x, y, ownerId) {
+                if (!this.grid[y][x].isLand || this.grid[y][x].owner !== null) return false;
                 
-                // SYMULACJA MAPY: Rysujemy białe tło (woda) i czarną wyspę na środku (ląd)
-                this.colCtx.fillStyle = "#ffffff"; // Woda
-                this.colCtx.fillRect(0, 0, this.width, this.height);
-                
-                this.colCtx.fillStyle = "#000000"; // Ląd
-                this.colCtx.beginPath();
-                this.colCtx.arc(this.width/2, this.height/2, 200, 0, Math.PI * 2);
-                this.colCtx.fill();
-
-                // Zapisujemy mapę kolizji do pamięci RAM dla wydajności
-                this.mapData = this.colCtx.getImageData(0, 0, this.width, this.height).data;
-                console.log("Mapa kolizji załadowana pomyślnie.");
-            },
-
-            isLand(x, y) {
-                // Obliczamy indeks w tablicy pikseli [R, G, B, A]
-                const index = (y * this.width + x) * 4;
-                const r = this.mapData[index];
-                // Jeśli czerwony kanał to 0 (czarny), to znaczy że to ląd
-                return r < 128; 
-            },
-
-            bindEvents() {
-                let isDragging = false;
-                
-                this.canvas.addEventListener('mousedown', () => isDragging = true);
-                this.canvas.addEventListener('mouseup', () => isDragging = false);
-                this.canvas.addEventListener('mousemove', (e) => {
-                    if(isDragging) this.handleInteraction(e);
+                const neighbors = [[-1,0], [1,0], [0,-1], [0,1]];
+                return neighbors.some(([dx, dy]) => {
+                    let nx = x + dx, ny = y + dy;
+                    return nx >= 0 && nx < this.cols && ny >= 0 && ny < this.rows && this.grid[ny][nx].owner === ownerId;
                 });
-                this.canvas.addEventListener('click', (e) => this.handleInteraction(e));
+            },
+
+            // STEROWANIE GRACZA (MYSZKA)
+            bindEvents() {
+                // Usuwamy stare eventy (żeby nie klonować przy restarcie)
+                this.canvas.onmousedown = null;
+                this.canvas.onmousemove = null;
+                
+                let isDragging = false;
+                this.canvas.onmousedown = () => isDragging = true;
+                window.onmouseup = () => isDragging = false;
+                
+                this.canvas.onmousemove = (e) => { if(isDragging) this.handleInteraction(e); };
+                this.canvas.onclick = (e) => this.handleInteraction(e);
             },
 
             handleInteraction(e) {
+                if(!this.isRunning) return;
                 const rect = this.canvas.getBoundingClientRect();
-                const mouseX = Math.floor(e.clientX - rect.left);
-                const mouseY = Math.floor(e.clientY - rect.top);
-                
-                // Czy kliknięto w wodę czy ląd na maskach?
-                if (!this.isLand(mouseX, mouseY)) return; // To woda, ignoruj!
+                const x = Math.floor((e.clientX - rect.left) / this.gridSize);
+                const y = Math.floor((e.clientY - rect.top) / this.gridSize);
 
-                // Konwersja pikseli na kordynaty siatki (Grid)
-                const gridX = Math.floor(mouseX / this.gridSize);
-                const gridY = Math.floor(mouseY / this.gridSize);
-
-                this.attemptCapture(gridX, gridY, this.myPlayerId);
-            },
-
-            attemptCapture(gx, gy, playerId) {
-                if (gx < 0 || gy < 0 || gy >= this.grid.length || gx >= this.grid[0].length) return;
-                
-                let cell = this.grid[gy][gx];
-                
-                // Reguła: zajmij tylko jeśli jest puste lub słabsze (tu uproszczone do po prostu zajęcia)
-                if (cell.ownerId !== playerId) {
-                    // TUTAJ BĘDZIE WYSYŁKA DO FIREBASE:
-                    // FirebaseDB.ref('map/' + gx + '_' + gy).set({ owner: playerId });
-                    
-                    if (cell.ownerId) this.players[cell.ownerId].pixelsOwned--; // Zabierz poprzedniemu
-                    
-                    cell.ownerId = playerId;
-                    this.players[playerId].pixelsOwned++;
-                    this.updateUI();
+                if (x >= 0 && x < this.cols && y >= 0 && y < this.rows) {
+                    if (this.canClaim(x, y, 1)) {
+                        this.grid[y][x].owner = 1;
+                        this.players[1].score++;
+                        this.updateScore();
+                    }
                 }
             },
 
-            updateUI() {
-                const me = this.players[this.myPlayerId];
-                document.getElementById('ui-score').innerText = me.pixelsOwned;
+            // INTELIGENCJA BOTA (AI)
+            botMove() {
+                if(!this.isRunning) return;
+                let possibleMoves = [];
+                
+                // Szukaj wszystkich wolnych pól obok terytorium bota
+                for (let y = 0; y < this.rows; y++) {
+                    for (let x = 0; x < this.cols; x++) {
+                        if (this.canClaim(x, y, 2)) {
+                            possibleMoves.push({x, y});
+                        }
+                    }
+                }
+                
+                // Zajmij losowe możliwe terytorium
+                if (possibleMoves.length > 0) {
+                    // Bot wykonuje na raz od 1 do 3 ruchów, żeby być trudniejszym
+                    let movesCount = Math.floor(Math.random() * 3) + 1;
+                    for(let i=0; i<movesCount; i++) {
+                        if(possibleMoves.length > 0) {
+                            let idx = Math.floor(Math.random() * possibleMoves.length);
+                            let move = possibleMoves[idx];
+                            this.grid[move.y][move.x].owner = 2;
+                            this.players[2].score++;
+                            possibleMoves.splice(idx, 1); // Usuń z listy po zajęciu
+                        }
+                    }
+                    this.updateScore();
+                }
             },
 
+            updateScore() {
+                document.getElementById('score-player').innerText = this.players[1].score;
+                document.getElementById('score-bot').innerText = this.players[2].score;
+            },
+
+            // RYSOWANIE GRAFIKI
             draw() {
-                // Tło (Woda)
-                this.ctx.fillStyle = "#1e3743"; 
-                this.ctx.fillRect(0, 0, this.width, this.height);
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-                // Rysowanie Lądu (Ciemny Szary) na podstawie ukrytego canvasu kolizji
-                this.ctx.drawImage(this.colCanvas, 0, 0); // W wersji ostatecznej trzeba to zoptymalizować
-                // Półprzezroczysty czarny, żeby ląd wyglądał fajnie
-                this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-                this.ctx.fillRect(0,0, this.width, this.height);
-
-                // Rysowanie siatki posiadanej przez graczy
-                for (let y = 0; y < this.grid.length; y++) {
-                    for (let x = 0; x < this.grid[y].length; x++) {
+                for (let y = 0; y < this.rows; y++) {
+                    for (let x = 0; x < this.cols; x++) {
                         let cell = this.grid[y][x];
-                        if (cell.ownerId) {
-                            this.ctx.fillStyle = this.players[cell.ownerId].color;
-                            this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
+                        
+                        // Rysowanie Lądu vs Wody
+                        if (cell.isLand) {
+                            this.ctx.fillStyle = "#2c3e50"; // Szary ląd
+                        } else {
+                            this.ctx.fillStyle = "#051923"; // Woda (zgodnie z tłem)
+                        }
+                        
+                        // Rysowanie posiadacza
+                        if (cell.owner === 1) {
+                            this.ctx.fillStyle = this.players[1].color;
+                        } else if (cell.owner === 2) {
+                            this.ctx.fillStyle = this.players[2].color;
+                        }
+
+                        this.ctx.fillRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
+                        
+                        // Cienka siatka tylko dla lądu
+                        if(cell.isLand) {
+                            this.ctx.strokeStyle = "rgba(0,0,0,0.2)";
+                            this.ctx.strokeRect(x * this.gridSize, y * this.gridSize, this.gridSize, this.gridSize);
                         }
                     }
                 }
             },
 
             gameLoop() {
-                this.draw();
-                // Renderowanie ok. 60 klatek na sekundę
-                requestAnimationFrame(() => this.gameLoop());
-            },
-
-            changeMap(mapName) {
-                alert(`Przygotowanie zmiany mapy na: ${mapName}. \nWymaga to wczytania pliku maski PNG przez Firebase Storage.`);
+                if(this.isRunning) {
+                    this.draw();
+                    requestAnimationFrame(() => this.gameLoop());
+                }
             }
         };
-
-        // Uruchom silnik po załadowaniu
-        window.onload = () => Engine.init();
-
     </script>
 </body>
 </html>

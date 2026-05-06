@@ -1,546 +1,1749 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Age of Territorial: Ultimate MMO</title>
-<style>
-    /* ================== CSS & DESIGN ================== */
-    :root {
-        --bg: #020617; --panel: rgba(15, 23, 42, 0.85); --border: rgba(51, 65, 85, 0.8);
-        --blue: #3b82f6; --red: #ef4444; --green: #10b981; --gold: #f59e0b;
-        --wood: #b45309; --stone: #64748b; --text: #f8fafc;
-        --glow: 0 0 20px rgba(59, 130, 246, 0.5);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', system-ui, sans-serif; }
-    body { background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; height: 100vh; width: 100vw; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#020617">
+    <title>Age of Territorial: Giga MMO</title>
     
-    .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; background: radial-gradient(circle at top, #0f172a, #020617); z-index: 10; backdrop-filter: blur(10px); }
-    .active { display: flex; }
-    
-    .box { background: var(--panel); padding: 40px; border-radius: 20px; border: 1px solid var(--border); text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); backdrop-filter: blur(15px); }
-    .title { font-size: 4rem; color: var(--text); margin-bottom: 25px; font-weight: 900; letter-spacing: 2px; text-shadow: var(--glow); }
-    .title span { color: var(--blue); }
-    
-    .btn { background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: white; padding: 15px 30px; margin: 10px; font-size: 1.2rem; cursor: pointer; border-radius: 12px; width: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-weight: bold; position: relative; overflow: hidden; }
-    .btn:hover { border-color: var(--blue); box-shadow: var(--glow); transform: translateY(-2px); background: rgba(59, 130, 246, 0.1); }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; border-color: #333; }
-    .btn-green { border-color: var(--green); color: var(--green); } .btn-green:hover { background: var(--green); color: #000; box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
-    .btn-red { border-color: var(--red); color: var(--red); } .btn-red:hover { background: var(--red); color: #fff; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
-    
-    .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
+    <style>
+        /* --- ZMIENNE GLOBALNE --- */
+        :root {
+            --bg-base: #020617;
+            --bg-surface: #0f172a;
+            --bg-surface-light: #1e293b;
+            --border-main: rgba(51, 65, 85, 0.8);
+            --border-light: rgba(148, 163, 184, 0.3);
+            
+            --color-primary: #3b82f6;
+            --color-primary-hover: #2563eb;
+            --color-danger: #ef4444;
+            --color-danger-hover: #dc2626;
+            --color-success: #10b981;
+            --color-success-hover: #059669;
+            --color-warning: #f59e0b;
+            
+            --res-gold: #fbbf24;
+            --res-wood: #b45309;
+            --res-stone: #94a3b8;
+            --res-troops: #f87171;
+            
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dark: #0f172a;
+            
+            --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            --glow-primary: 0 0 25px rgba(59, 130, 246, 0.5);
+            --glow-success: 0 0 25px rgba(16, 185, 129, 0.5);
+            --glow-danger: 0 0 25px rgba(239, 68, 68, 0.5);
+            
+            --z-bg: 0;
+            --z-canvas: 10;
+            --z-ui: 20;
+            --z-modal: 100;
+            --z-toast: 200;
+        }
 
-    /* UI GRY */
-    #game-ui { z-index: 5; background: #000; display: none; flex-direction: column; height: 100%; width: 100%; }
-    .hud { display: flex; justify-content: space-between; align-items: center; background: var(--panel); padding: 15px 30px; border-bottom: 1px solid var(--border); z-index: 20; backdrop-filter: blur(10px); }
-    .res-bar { display: flex; gap: 20px; font-weight: bold; font-size: 1.2rem; }
-    .res-item { background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
-    .hint { color: var(--text-muted); font-size: 0.9rem; } .hint b { color: var(--blue); }
-    
-    #map-container { flex-grow: 1; display: flex; justify-content: center; align-items: center; overflow: hidden; background: #020617; }
-    canvas { border: 1px solid var(--border); box-shadow: 0 0 60px rgba(0,0,0,0.9); cursor: crosshair; }
+        /* --- RESET & BAZA --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
 
-    /* MODALE */
-    .modal-overlay { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 99; backdrop-filter: blur(3px); }
-    .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); border: 1px solid var(--blue); padding: 30px; border-radius: 16px; flex-direction: column; width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.9); }
-    .modal h2 { text-align: center; color: var(--text); margin-bottom: 20px; font-weight: 800; }
-    
-    input[type="range"] { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 4px; background: #1e293b; outline: none; margin: 25px 0; cursor: pointer; }
-    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 10px var(--blue); transition: 0.2s; }
-    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-    
-    .build-list { display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding-right: 5px; }
-    .build-item { background: rgba(0,0,0,0.4); padding: 15px; border: 1px solid var(--border); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; cursor: pointer; }
-    .build-item:hover { border-color: var(--gold); background: rgba(245, 158, 11, 0.1); }
-    .btn-row { display: flex; gap: 15px; margin-top: 15px; }
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
-    /* TOASTY */
-    #toast-box { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 10px; pointer-events: none; z-index: 200; }
-    .toast { background: rgba(15,23,42,0.95); padding: 12px 25px; border-radius: 30px; border: 1px solid var(--border); font-weight: bold; color: white; animation: slideUp 0.3s ease-out, fadeOut 0.5s ease-in 2.5s forwards; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-</style>
+        /* --- CUSTOMOWE PASKI PRZEWIJANIA --- */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-base);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-surface-light);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--color-primary);
+        }
+
+        /* --- SYSTEM EKRANÓW (STATE MACHINE) --- */
+        .screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at top center, var(--bg-surface), var(--bg-base));
+            z-index: var(--z-ui);
+            animation: fadeIn 0.4s ease-out;
+        }
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* --- WSPÓLNE KOMPONENTY UI --- */
+        .panel-box {
+            background: rgba(15, 23, 42, 0.7);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid var(--border-main);
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .main-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--text-main);
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+            line-height: 1.1;
+        }
+        .main-title span {
+            color: var(--color-primary);
+            text-shadow: var(--glow-primary);
+        }
+
+        /* --- SYSTEM PRZYCISKÓW --- */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-main);
+            color: var(--text-main);
+            padding: 16px 32px;
+            margin: 12px 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 12px;
+            width: 100%;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: 0.5s;
+        }
+        .btn:hover::before { left: 100%; }
+        .btn:hover {
+            border-color: var(--color-primary);
+            box-shadow: var(--glow-primary);
+            transform: translateY(-2px);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .btn:active { transform: translateY(0); }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            border-color: var(--border-main);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-green { border-color: var(--color-success); color: var(--color-success); }
+        .btn-green:hover { background: var(--color-success); color: var(--bg-base); box-shadow: var(--glow-success); }
+        .btn-red { border-color: var(--color-danger); color: var(--color-danger); }
+        .btn-red:hover { background: var(--color-danger); color: var(--text-main); box-shadow: var(--glow-danger); }
+
+        /* --- ANIMACJE I WSKAŹNIKI --- */
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border-light);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- INTERFEJS GRY WŁAŚCIWEJ (HUD) --- */
+        #game-layout {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.85);
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border-main);
+            backdrop-filter: blur(10px);
+            z-index: var(--z-ui);
+        }
+
+        .resource-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .resource-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-main);
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .r-gold { color: var(--res-gold); }
+        .r-wood { color: var(--res-wood); }
+        .r-stone { color: var(--res-stone); }
+        .r-troops { color: var(--res-troops); }
+
+        .game-controls-hint {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .game-controls-hint kbd {
+            background: var(--bg-surface-light);
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: var(--color-primary);
+            font-family: monospace;
+            border: 1px solid var(--border-main);
+        }
+
+        /* --- MAPA I KANWA --- */
+        #main-view {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #canvas-wrapper {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            cursor: crosshair;
+        }
+        
+        #gameCanvas {
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.9);
+            border: 2px solid var(--border-main);
+            image-rendering: pixelated;
+        }
+
+        /* --- MODAŁY (OKNA WYSKAKUJĄCE) --- */
+        #modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            z-index: var(--z-modal);
+        }
+
+        .modal-window {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-main);
+            border-top: 4px solid var(--color-primary);
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            flex-direction: column;
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: translate(-50%, -40%) scale(0.9); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .modal-header {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+            text-align: center;
+            color: var(--text-main);
+        }
+        
+        .modal-subheader {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        /* --- SUWAK (RANGE SLIDER) --- */
+        .range-wrap {
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .range-value {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--color-danger);
+            text-align: center;
+            text-shadow: var(--glow-danger);
+            margin-bottom: 10px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 12px;
+            background: var(--bg-base);
+            border-radius: 6px;
+            outline: none;
+            border: 1px solid var(--border-main);
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            border: 2px solid var(--text-main);
+            transition: transform 0.1s;
+        }
+        input[type="range"]::-webkit-slider-thumb:active {
+            transform: scale(1.2);
+        }
+
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+
+        /* --- LISTA BUDYNKÓW W MODALU --- */
+        .build-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 20px;
+        }
+
+        .build-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-main);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .build-card:hover {
+            border-color: var(--color-warning);
+            background: rgba(245, 158, 11, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .build-info h4 { font-size: 1.2rem; color: var(--color-primary); margin-bottom: 4px; }
+        .build-info p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
+        .build-cost { font-size: 0.9rem; font-weight: bold; color: var(--color-warning); display: flex; gap: 8px; }
+
+        .btn-flex-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* --- SYSTEM POWIADOMIEŃ (TOAST) --- */
+        #toast-manager {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: var(--z-toast);
+            pointer-events: none;
+        }
+
+        .toast-msg {
+            background: rgba(15, 23, 42, 0.95);
+            color: var(--text-main);
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: 1px solid var(--border-main);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+            animation: slideUpToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), fadeOutToast 0.4s ease-in 2.6s forwards;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes slideUpToast {
+            from { opacity: 0; transform: translateY(30px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes fadeOutToast {
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+
+        /* --- GLOBALNY CZAT --- */
+        #chat-sidebar {
+            width: 320px;
+            background: var(--bg-surface);
+            border-left: 1px solid var(--border-main);
+            display: flex;
+            flex-direction: column;
+            z-index: var(--z-ui);
+            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .chat-header {
+            padding: 15px;
+            background: rgba(0,0,0,0.4);
+            border-bottom: 1px solid var(--border-main);
+            text-align: center;
+            font-weight: 800;
+            color: var(--color-warning);
+            letter-spacing: 1px;
+        }
+
+        #chat-log {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-message {
+            background: rgba(255,255,255,0.03);
+            padding: 10px 14px;
+            border-radius: 12px;
+            border-bottom-left-radius: 2px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            border-left: 3px solid var(--color-primary);
+        }
+        .chat-message.system { border-left-color: var(--color-warning); color: var(--color-warning); font-style: italic; }
+        .chat-message.me { border-left: none; border-right: 3px solid var(--color-success); border-radius: 12px; border-bottom-right-radius: 2px; background: rgba(16, 185, 129, 0.05); text-align: right; }
+        .chat-message b { color: var(--color-warning); }
+        .chat-message.me b { color: var(--color-success); }
+
+        .chat-input-area {
+            padding: 15px;
+            border-top: 1px solid var(--border-main);
+            display: flex;
+            gap: 10px;
+            background: rgba(0,0,0,0.2);
+        }
+        
+        .chat-input-area input {
+            flex-grow: 1;
+            background: var(--bg-base);
+            border: 1px solid var(--border-main);
+            color: var(--text-main);
+            padding: 10px 15px;
+            border-radius: 20px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .chat-input-area input:focus { border-color: var(--color-primary); }
+        
+        .chat-send-btn {
+            background: var(--color-primary);
+            border: none;
+            color: white;
+            width: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .chat-send-btn:hover { background: var(--color-primary-hover); transform: scale(1.1); }
+    </style>
 </head>
 <body>
 
-<div class="screen active" id="screen-main">
-    <div class="box">
-        <h1 class="title">Age of <span>Territorial</span></h1>
-        <p style="margin-bottom: 5px;">Zalogowano: <strong id="player-nick" style="color: var(--gold);">Gość</strong></p>
-        <p id="db-status" style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.9rem;">Oczekiwanie na serwer Firebase...</p>
-        
-        <button id="btn-login" class="btn" style="border-color: #DB4437; color: #DB4437;">Zaloguj przez Google</button>
-        <button id="btn-anon" class="btn" style="border-color: #94a3b8; color: #94a3b8;">Graj jako Gość (Anonim)</button>
-        <button id="btn-logout" class="btn btn-red" style="display:none;">Wyloguj</button>
-        
-        <hr style="border-color: var(--border); margin: 20px 0;">
-        
-        <div style="display: flex; gap: 10px;">
-            <button id="btn-host" class="btn btn-green" disabled>Stwórz Grę</button>
-            <button id="btn-join" class="btn" disabled>Dołącz do Gry</button>
-        </div>
-    </div>
-</div>
-
-<div class="screen" id="screen-lobby">
-    <div class="box">
-        <h2 style="color: var(--gold); margin-bottom: 15px; font-size: 2.5rem;">Oczekiwanie...</h2>
-        <p id="lobby-status" style="color: var(--text-muted); font-size: 1.2rem;">Szukanie przeciwnika w sieci</p>
-        <div class="loader"></div>
-        <button id="btn-cancel-lobby" class="btn btn-red" style="margin-top: 20px;">Przerwij</button>
-    </div>
-</div>
-
-<div id="game-ui">
-    <div class="hud">
-        <div class="res-bar">
-            <div class="res-item" style="color: var(--gold)">🪙 <span id="r-gold">0</span></div>
-            <div class="res-item" style="color: var(--wood)">🪵 <span id="r-wood">0</span></div>
-            <div class="res-item" style="color: var(--stone)">🪨 <span id="r-stone">0</span></div>
-            <div class="res-item" style="color: var(--red)">⚔️ <span id="r-troops">0</span></div>
-        </div>
-        <div class="hint"><b>[LPM]</b> Start -> <b>[LPMx2]</b> Atak | <b>[PPM]</b> Menu Budowy</div>
-    </div>
-    <div id="map-container">
-        <canvas id="gameCanvas" width="1300" height="750"></canvas>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-overlay">
-    
-    <div class="modal" id="modal-move">
-        <h2>Wyślij Jednostki</h2>
-        <p id="move-desc" style="color: var(--text-muted); text-align: center; margin-bottom: 10px;">Cel Ataku</p>
-        <div id="move-val" style="font-size: 3rem; color: var(--red); text-align: center; font-weight: 900; text-shadow: 0 0 10px rgba(239,68,68,0.4);">10</div>
-        <input type="range" id="move-slider" min="1" max="100" value="10">
-        <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.9rem;">
-            <span>Min: 1</span><span>Max: <b id="move-max">100</b></span>
-        </div>
-        <div class="btn-row">
-            <button class="btn btn-red" style="padding: 10px;" id="btn-cancel-move">Anuluj</button>
-            <button class="btn btn-green" style="padding: 10px;" id="btn-confirm-move">Rozkaz!</button>
+    <div id="screen-main" class="screen active">
+        <div class="panel-box">
+            <h1 class="main-title">Age of<br><span>Territorial</span></h1>
+            
+            <div style="margin-bottom: 25px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid var(--border-main);">
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 5px;">Zalogowano jako:</p>
+                <p id="player-nick" style="font-size: 1.4rem; font-weight: 800; color: var(--color-warning);">Gość</p>
+                <p id="sys-status" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">Oczekuję na silnik Firebase...</p>
+            </div>
+            
+            <button id="btn-login-google" class="btn" style="border-color: #ea4335; color: #ea4335;">
+                <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Zaloguj przez Google
+            </button>
+            <button id="btn-login-anon" class="btn" style="border-color: var(--text-muted); color: var(--text-muted);">
+                Graj jako Anonim
+            </button>
+            <button id="btn-logout" class="btn btn-red" style="display:none;">
+                Wyloguj się
+            </button>
+            
+            <hr style="border-color: var(--border-main); margin: 25px 0;">
+            
+            <button id="btn-host-game" class="btn btn-green" disabled>Utwórz Pokój (Host)</button>
+            <button id="btn-join-game" class="btn" disabled>Szybki Mecz (Dołącz)</button>
         </div>
     </div>
 
-    <div class="modal" id="modal-build" style="width: 450px;">
-        <h2>Rozbudowa Prowincji</h2>
-        <div class="build-list" id="build-list"></div>
-        <button class="btn btn-red" style="padding: 10px; margin-top: 15px;" id="btn-cancel-build">Zamknij</button>
+    <div id="screen-lobby" class="screen">
+        <div class="panel-box">
+            <h2 class="main-title" style="font-size: 3rem; color: var(--color-warning);">Oczekiwanie...</h2>
+            <p id="lobby-text" style="color: var(--text-muted); font-size: 1.2rem; margin-bottom: 10px;">
+                Trwa synchronizacja z serwerem bazodanowym.
+            </p>
+            <div class="spinner"></div>
+            <button id="btn-cancel-lobby" class="btn btn-red" style="margin-top: 30px;">Przerwij wyszukiwanie</button>
+        </div>
     </div>
-    
-</div>
 
-<div id="toast-box"></div>
+    <div id="screen-game" class="screen" style="background: var(--bg-base); display: none;">
+        <div id="game-layout">
+            
+            <div id="hud-top">
+                <div class="resource-group">
+                    <div class="resource-badge r-gold" title="Złoto (Utrzymanie i Budowa)">
+                        🪙 <span id="val-g">0</span>
+                    </div>
+                    <div class="resource-badge r-wood" title="Drewno (Konstrukcje)">
+                        🪵 <span id="val-w">0</span>
+                    </div>
+                    <div class="resource-badge r-stone" title="Kamień (Obrona)">
+                        🪨 <span id="val-s">0</span>
+                    </div>
+                    <div class="resource-badge r-troops" title="Całkowita populacja wojska">
+                        ⚔️ <span id="val-t">0</span>
+                    </div>
+                </div>
+                <div class="game-controls-hint">
+                    <span><kbd>LPM</kbd> Wybór Startu</span>
+                    <span><kbd>LPM x2</kbd> Atak/Ruch</span>
+                    <span><kbd>PPM</kbd> Menu Budowy</span>
+                </div>
+            </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getDatabase, ref, set, onValue, get, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+            <div id="main-view">
+                <div id="canvas-wrapper">
+                    <canvas id="worldCanvas" width="1000" height="650"></canvas>
+                </div>
+                
+                <div id="chat-sidebar">
+                    <div class="chat-header">🌐 CZAT GLOBALNY</div>
+                    <div id="chat-log">
+                        <div class="chat-message system">Witaj w Age of Territorial. Łączenie z kanałem...</div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="Wiadomość..." maxlength="60">
+                        <button id="btn-send-chat" class="chat-send-btn">➤</button>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
 
-    const config = {
-        apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
-        authDomain: "xchess-79e2d.firebaseapp.com",
-        projectId: "xchess-79e2d",
-        storageBucket: "xchess-79e2d.firebasestorage.app",
-        messagingSenderId: "382071993193",
-        appId: "1:382071993193:web:86dbe5211f2151cb5383f8"
-    };
-
-    const app = initializeApp(config);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-    const provider = new GoogleAuthProvider();
-
-    window.API = { db, uid: null, online: false, room: 'global_room_1' };
-
-    // Logowanie
-    document.getElementById('btn-login').onclick = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
-    document.getElementById('btn-anon').onclick = () => signInAnonymously(auth).catch(e => alert(e.message));
-    document.getElementById('btn-logout').onclick = () => signOut(auth);
-
-    onAuthStateChanged(auth, user => {
-        const st = document.getElementById('db-status');
-        const nk = document.getElementById('player-nick');
-        if(user) {
-            window.API.uid = user.uid; window.API.online = true;
-            nk.innerText = user.displayName || "Anonim"; nk.style.color = "var(--green)";
-            st.innerText = "Połączono z serwerem pomyślnie."; st.style.color = "var(--green)";
-            document.getElementById('btn-login').style.display = "none";
-            document.getElementById('btn-anon').style.display = "none";
-            document.getElementById('btn-logout').style.display = "block";
-            document.getElementById('btn-host').disabled = false;
-            document.getElementById('btn-join').disabled = false;
-        } else {
-            window.API.uid = null; window.API.online = false;
-            nk.innerText = "Gość"; nk.style.color = "var(--gold)";
-            st.innerText = "Wymagane logowanie do gry online."; st.style.color = "var(--text-muted)";
-            document.getElementById('btn-login').style.display = "block";
-            document.getElementById('btn-anon').style.display = "block";
-            document.getElementById('btn-logout').style.display = "none";
-            document.getElementById('btn-host').disabled = true;
-            document.getElementById('btn-join').disabled = true;
-        }
-    });
-</script>
-
-<script>
-    // --- DANE BUDYNKÓW ---
-    const B_DB = {
-        mine: { id: 'mine', n: 'Kopalnia', c: { gold: 50 }, i: '🪙', d: '+5 Złota / s' },
-        wood: { id: 'wood', n: 'Drwal', c: { gold: 30 }, i: '🪵', d: '+5 Drewna / s' },
-        quarry: { id: 'quarry', n: 'Kamieniołom', c: { gold: 80, wood: 20 }, i: '🪨', d: '+3 Kamienia / s' },
-        barracks: { id: 'barracks', n: 'Koszary', c: { gold: 120, wood: 50 }, i: '⛺', d: 'Zwiększony pobór wojska' },
-        fort: { id: 'fort', n: 'Twierdza', c: { stone: 100, wood: 50 }, i: '🏰', d: 'Podwaja siłę obrony prowincji' }
-    };
-
-    // --- INTERFEJS ---
-    const UI = {
-        show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); },
-        toast(msg, err=false) {
-            const b = document.getElementById('toast-box');
-            const t = document.createElement('div'); t.className = 'toast'; t.innerText = msg;
-            t.style.borderColor = err ? 'var(--red)' : 'var(--green)';
-            b.appendChild(t); setTimeout(() => { if(t.parentNode) t.remove(); }, 3000);
-        },
-        updateRes(g, w, s, t) {
-            document.getElementById('r-gold').innerText = Math.floor(g);
-            document.getElementById('r-wood').innerText = Math.floor(w);
-            document.getElementById('r-stone').innerText = Math.floor(s);
-            document.getElementById('r-troops').innerText = Math.floor(t);
-        },
-        closeModals() {
-            document.getElementById('modal-overlay').style.display = 'none';
-            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-            Engine.tgt = null;
-        }
-    };
-
-    // --- SYSTEM CZĄSTECZEK (ANIMACJE) ---
-    class Particles {
-        constructor() { this.p = []; }
-        fireLaser(sx, sy, tx, ty, col) { this.p.push({ type: 'L', sx, sy, tx, ty, p: 0, l: 1, c: col }); }
-        fireExplosion(x, y, col) {
-            for(let i=0; i<20; i++) {
-                let a = Math.random() * Math.PI * 2, s = Math.random() * 5 + 1;
-                this.p.push({ type: 'S', x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s, l: 1, d: Math.random()*0.05+0.02, c: col, sz: Math.random()*4+2 });
-            }
-        }
-        fireText(x, y, txt, col) { this.p.push({ type: 'T', x: x+(Math.random()*20-10), y: y+(Math.random()*10-5), txt, l: 1, c: col, vy: -1.5 }); }
+    <div id="modal-backdrop">
         
-        render(ctx) {
-            for(let i = this.p.length-1; i >= 0; i--) {
-                let pt = this.p[i];
-                if(pt.type === 'L') {
-                    ctx.beginPath(); ctx.moveTo(pt.sx, pt.sy);
-                    let cx = pt.sx + (pt.tx - pt.sx) * pt.p; let cy = pt.sy + (pt.ty - pt.sy) * pt.p;
-                    ctx.lineTo(cx, cy); ctx.strokeStyle = pt.c; ctx.lineWidth = 6 * pt.l; ctx.lineCap = "round"; ctx.stroke();
-                    pt.p += 0.15; pt.l -= 0.04;
-                    if(pt.p >= 1) { this.fireExplosion(pt.tx, pt.ty, pt.c); this.p.splice(i, 1); }
-                } else if(pt.type === 'S') {
-                    ctx.globalAlpha = pt.l; ctx.fillStyle = pt.c; ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.sz, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1;
-                    pt.x += pt.vx; pt.y += pt.vy; pt.l -= pt.d;
-                    if(pt.l <= 0) this.p.splice(i, 1);
-                } else if(pt.type === 'T') {
-                    ctx.globalAlpha = pt.l; ctx.fillStyle = pt.c; ctx.font = "900 24px 'Segoe UI'"; ctx.textAlign = "center";
-                    ctx.strokeStyle = "black"; ctx.lineWidth = 4; ctx.strokeText(pt.txt, pt.x, pt.y); ctx.fillText(pt.txt, pt.x, pt.y); ctx.globalAlpha = 1;
-                    pt.y += pt.vy; pt.l -= 0.02;
-                    if(pt.l <= 0) this.p.splice(i, 1);
+        <div id="modal-move" class="modal-window">
+            <h2 class="modal-header">Rozkazy Wymarszu</h2>
+            <p class="modal-subheader" id="move-details">Z Prowincji A do Prowincji B</p>
+            
+            <div class="range-wrap">
+                <div class="range-value" id="slider-val-display">10</div>
+                <input type="range" id="troop-slider" min="1" max="100" value="10">
+                <div class="range-labels">
+                    <span>MIN: 1</span>
+                    <span>MAX: <span id="slider-max-display">100</span></span>
+                </div>
+            </div>
+            
+            <div class="btn-flex-row">
+                <button class="btn-act btn-no" id="btn-move-cancel">Anuluj</button>
+                <button class="btn-act btn-ok" id="btn-move-confirm">Wykonaj Rozkaz</button>
+            </div>
+        </div>
+
+        <div id="modal-build" class="modal-window" style="max-width: 500px;">
+            <h2 class="modal-header">Inżynieria i Rozbudowa</h2>
+            <p class="modal-subheader">Wybierz strukturę do wzniesienia</p>
+            
+            <div class="build-list-container" id="build-list-dynamic">
+                </div>
+            
+            <button class="btn-act btn-no" style="width: 100%; margin-top: 10px;" id="btn-build-close">Zamknij Panel</button>
+        </div>
+
+    </div>
+
+    <div id="toast-manager"></div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getDatabase, ref, set, onValue, get, update, push, onChildAdded, onDisconnect } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        // Konfiguracja Firebase dostarczona przez Ciebie
+        const firebaseConfig = {
+            apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
+            authDomain: "xchess-79e2d.firebaseapp.com",
+            projectId: "xchess-79e2d",
+            storageBucket: "xchess-79e2d.firebasestorage.app",
+            messagingSenderId: "382071993193",
+            appId: "1:382071993193:web:86dbe5211f2151cb5383f8",
+            measurementId: "G-E8RJF7LKLE"
+        };
+
+        // Inicjalizacja usług
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+        const provider = new GoogleAuthProvider();
+
+        // Globalny obiekt do komunikacji między modułami a silnikiem gry
+        window.CoreAPI = {
+            db: db,
+            uid: null,
+            playerName: "Nieznany",
+            isOnline: false,
+            currentRoom: 'global_mmo_room_1' // Domyślny pokój gry
+        };
+
+        // ==========================================
+        // OBSŁUGA LOGOWANIA I AUTORYZACJI
+        // ==========================================
+        
+        document.getElementById('btn-login-google').onclick = () => {
+            document.getElementById('sys-status').innerText = "Trwa logowanie przez Google...";
+            signInWithPopup(auth, provider).catch(error => {
+                alert("Błąd logowania Google: " + error.message);
+                document.getElementById('sys-status').innerText = "Logowanie przerwane.";
+            });
+        };
+
+        document.getElementById('btn-login-anon').onclick = () => {
+            document.getElementById('sys-status').innerText = "Generowanie sesji gościa...";
+            signInAnonymously(auth).catch(error => {
+                alert("Błąd logowania anonimowego: " + error.message);
+            });
+        };
+
+        document.getElementById('btn-logout').onclick = () => {
+            signOut(auth).then(() => {
+                console.log("Pomyślnie wylogowano.");
+            });
+        };
+
+        // Nasłuchiwanie zmian stanu sesji gracza
+        onAuthStateChanged(auth, (user) => {
+            const statusEl = document.getElementById('sys-status');
+            const nickEl = document.getElementById('player-nick');
+            
+            const btnGoogle = document.getElementById('btn-login-google');
+            const btnAnon = document.getElementById('btn-login-anon');
+            const btnLogout = document.getElementById('btn-logout');
+            
+            const btnHost = document.getElementById('btn-host-game');
+            const btnJoin = document.getElementById('btn-join-game');
+
+            if (user) {
+                // Gracz jest zalogowany
+                window.CoreAPI.uid = user.uid;
+                window.CoreAPI.isOnline = true;
+                
+                // Ustalanie nicku (z Google lub losowy dla gościa)
+                if (user.displayName) {
+                    window.CoreAPI.playerName = user.displayName;
+                } else {
+                    window.CoreAPI.playerName = "Gracz_" + Math.floor(Math.random() * 9999);
                 }
-            }
-        }
-    }
 
-    // --- SILNIK GŁÓWNY ---
-    const Engine = {
-        cvs: document.getElementById('gameCanvas'),
-        ctx: document.getElementById('gameCanvas').getContext('2d'),
-        cols: 32, rows: 18, sz: 40, grid: [], uid: null, res: { g: 200, w: 100, s: 0 },
-        run: false, pt: new Particles(), hov: null, src: null, tgt: null, lastClk: 0, isHost: false,
-        colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
-
-        start(asHost) {
-            this.uid = window.API.uid; this.isHost = asHost;
-            UI.show('screen-lobby');
-            
-            const db = window.API.db;
-            const rRef = window.ref(db, `rooms/${window.API.room}`);
-            
-            if(asHost) {
-                this.generateMap();
-                let flatMap = {};
-                for(let y=0; y<this.rows; y++) for(let x=0; x<this.cols; x++) flatMap[`${x}_${y}`] = this.grid[y][x];
+                nickEl.innerText = window.CoreAPI.playerName;
+                nickEl.style.color = "var(--color-success)";
                 
-                window.set(rRef, { status: 'waiting', map: flatMap });
-                window.onDisconnect(rRef).remove();
+                statusEl.innerText = "Połączono z serwerem. Gotowy do gry.";
+                statusEl.style.color = "var(--color-success)";
                 
-                document.getElementById('lobby-status').innerText = "Oczekuję na dołączenie drugiego gracza...";
+                // Przełączanie widoczności przycisków
+                btnGoogle.style.display = "none";
+                btnAnon.style.display = "none";
+                btnLogout.style.display = "flex";
                 
-                window.onValue(window.ref(db, `rooms/${window.API.room}/status`), snap => {
-                    if(snap.val() === 'playing') this.beginGame();
-                });
+                btnHost.disabled = false;
+                btnJoin.disabled = false;
             } else {
-                document.getElementById('lobby-status').innerText = "Łączenie z aktywnym pokojem...";
-                window.get(window.ref(db, `rooms/${window.API.room}/status`)).then(snap => {
-                    if(snap.exists() && snap.val() === 'waiting') {
-                        window.update(rRef, { status: 'playing' });
-                        this.beginGame();
-                    } else {
-                        UI.toast("Brak wolnego pokoju! Stwórz nowy.", true);
-                        UI.show('screen-main');
-                    }
-                });
+                // Gracz jest wylogowany
+                window.CoreAPI.uid = null;
+                window.CoreAPI.isOnline = false;
+                
+                nickEl.innerText = "Niezalogowany";
+                nickEl.style.color = "var(--color-warning)";
+                
+                statusEl.innerText = "Wymagane logowanie, aby grać online.";
+                statusEl.style.color = "var(--text-muted)";
+                
+                btnGoogle.style.display = "flex";
+                btnAnon.style.display = "flex";
+                btnLogout.style.display = "none";
+                
+                btnHost.disabled = true;
+                btnJoin.disabled = true;
             }
-        },
+        });
 
-        beginGame() {
-            document.getElementById('game-ui').style.display = 'flex';
-            UI.show('game-ui');
+        // ==========================================
+        // BAZA DANYCH - METODY WYSTAWIONE DLA SILNIKA
+        // ==========================================
+        
+        window.DBManager = {
+            // Bezpieczne aktualizowanie wybranej ścieżki
+            updateData(path, dataObj) {
+                if (window.CoreAPI.isOnline) {
+                    update(ref(db, path), dataObj);
+                }
+            },
             
-            window.get(window.ref(window.API.db, `rooms/${window.API.room}/map`)).then(snap => {
-                let data = snap.val();
-                this.grid = [];
-                for(let y=0; y<this.rows; y++) {
-                    let r = [];
-                    for(let x=0; x<this.cols; x++) r.push(data[`${x}_${y}`]);
-                    this.grid.push(r);
+            // Nadpisywanie całej ścieżki
+            setData(path, dataObj) {
+                if (window.CoreAPI.isOnline) {
+                    set(ref(db, path), dataObj);
                 }
-                this.spawn();
-                this.bindInput();
-                
-                window.onValue(window.ref(window.API.db, `rooms/${window.API.room}/map`), snap => {
-                    let nd = snap.val();
-                    if(nd) {
-                        for(let y=0; y<this.rows; y++) {
-                            for(let x=0; x<this.cols; x++) {
-                                let c = nd[`${x}_${y}`];
-                                this.grid[y][x].own = c.own;
-                                this.grid[y][x].t = c.t;
-                                this.grid[y][x].b = c.b;
-                            }
-                        }
-                    }
+            },
+            
+            // Pobieranie jednorazowe
+            getData(path, callback) {
+                get(ref(db, path)).then(snapshot => {
+                    callback(snapshot);
                 });
+            },
+            
+            // Nasłuchiwanie na zmiany w czasie rzeczywistym
+            listenData(path, callback) {
+                onValue(ref(db, path), snapshot => {
+                    callback(snapshot);
+                });
+            },
+            
+            // Usuwanie danych przy rozłączeniu (przydatne do czyszczenia lobby)
+            setDisconnectAction(path) {
+                return onDisconnect(ref(db, path));
+            },
+
+            // --- SYSTEM CZATU GLOBALNEGO ---
+            sendMessage(messageText) {
+                if (!window.CoreAPI.isOnline || messageText.trim() === '') return;
                 
-                setInterval(() => this.processEconomy(), 1000);
-                this.run = true; this.loop();
-                UI.toast("Bitwa rozpoczęta!", false);
-            });
-        },
+                const chatRef = ref(db, `chat/${window.CoreAPI.currentRoom}`);
+                push(chatRef, {
+                    author: window.CoreAPI.playerName,
+                    text: messageText,
+                    timestamp: Date.now()
+                });
+            },
 
-        generateMap() {
-            this.grid = [];
-            for(let y=0; y<this.rows; y++) {
-                let r = [];
-                for(let x=0; x<this.cols; x++) {
-                    let w = (x===0 || y===0 || x===this.cols-1 || y===this.rows-1 || Math.random()<0.15);
-                    r.push({ x: x, y: y, own: 0, t: w ? 0 : Math.floor(Math.random()*4), w: w, b: null });
-                }
-                this.grid.push(r);
-            }
-        },
-
-        spawn() {
-            let lands = [];
-            for(let y=0; y<this.rows; y++) for(let x=0; x<this.cols; x++) if(!this.grid[y][x].w && this.grid[y][x].own === 0) lands.push(this.grid[y][x]);
-            if(lands.length > 0) {
-                let s = lands[Math.floor(Math.random()*lands.length)];
-                s.own = this.uid; s.t = 100;
-                window.update(window.ref(window.API.db, `rooms/${window.API.room}/map/${s.x}_${s.y}`), { own: this.uid, t: 100 });
-            }
-        },
-
-        processEconomy() {
-            let totT = 0, alive = false;
-            for(let y=0; y<this.rows; y++) {
-                for(let x=0; x<this.cols; x++) {
-                    let p = this.grid[y][x];
-                    if(p.own === this.uid) {
-                        alive = true;
-                        p.t += (p.b === 'barracks' ? 5 : 1);
-                        totT += p.t;
-                        this.res.g += 1;
-                        if(p.b === 'mine') this.res.g += 5;
-                        if(p.b === 'wood') this.res.w += 5;
-                        if(p.b === 'quarry') this.res.s += 3;
-                        window.update(window.ref(window.API.db, `rooms/${window.API.room}/map/${x}_${y}`), { t: p.t });
-                    }
-                }
-            }
-            if(!alive) UI.toast("Zostałeś zniszczony!", true);
-            UI.updateRes(this.res.g, this.res.w, this.res.s, totT);
-        },
-
-        bindInput() {
-            this.cvs.addEventListener('contextmenu', e => e.preventDefault());
-            this.cvs.addEventListener('mousemove', e => {
-                const r = this.cvs.getBoundingClientRect();
-                const sx = this.cvs.width / r.width, sy = this.cvs.height / r.height;
-                const x = Math.floor(((e.clientX - r.left)*sx)/this.sz), y = Math.floor(((e.clientY - r.top)*sy)/this.sz);
-                if(x>=0 && x<this.cols && y>=0 && y<this.rows) this.hov = this.grid[y][x];
-            });
-
-            this.cvs.addEventListener('mousedown', e => {
-                if(!this.hov || this.hov.w) { this.src = null; return; }
+            listenToChat() {
+                const chatLog = document.getElementById('chat-log');
+                const chatRef = ref(db, `chat/${window.CoreAPI.currentRoom}`);
                 
-                // BUDOWANIE (PPM)
-                if(e.button === 2) {
-                    if(this.hov.own === this.uid) {
-                        if(!this.hov.b) {
-                            let list = document.getElementById('build-list'); list.innerHTML = '';
-                            for(let k in B_DB) {
-                                let b = B_DB[k], ok = true, cStr = '';
-                                if(b.c.gold) { cStr += `🪙${b.c.gold} `; if(this.res.g < b.c.gold) ok=false; }
-                                if(b.c.wood) { cStr += `🪵${b.c.wood} `; if(this.res.w < b.c.wood) ok=false; }
-                                if(b.c.stone) { cStr += `🪨${b.c.stone} `; if(this.res.s < b.c.stone) ok=false; }
-                                
-                                let item = document.createElement('div'); item.className = 'build-item';
-                                item.innerHTML = `<div><div style="font-weight:900; color:var(--blue); font-size:1.1rem;">${b.i} ${b.n}</div><div style="color:var(--text-muted); font-size:0.8rem; margin: 3px 0;">${b.d}</div><div style="color:var(--gold); font-size:0.85rem; font-weight:bold;">${cStr}</div></div><button class="btn ${ok?'btn-green':'btn-red'}" style="width: auto; padding: 10px 20px;" ${ok?'':'disabled'}>Wznieś</button>`;
-                                
-                                item.querySelector('button').onclick = () => {
-                                    if(b.c.gold) this.res.g -= b.c.gold;
-                                    if(b.c.wood) this.res.w -= b.c.wood;
-                                    if(b.c.stone) this.res.s -= b.c.stone;
-                                    this.hov.b = k;
-                                    window.update(window.ref(window.API.db, `rooms/${window.API.room}/map/${this.hov.x}_${this.hov.y}`), { b: k });
-                                    UI.closeModals(); UI.toast("Zbudowano " + b.n, false);
-                                };
-                                list.appendChild(item);
-                            }
-                            document.getElementById('modal-overlay').style.display = 'block';
-                            document.getElementById('modal-build').style.display = 'flex';
-                        } else UI.toast("Prowincja jest zajęta!", true);
+                onChildAdded(chatRef, (snapshot) => {
+                    const msgData = snapshot.val();
+                    const isMe = msgData.author === window.CoreAPI.playerName;
+                    
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = `chat-message ${isMe ? 'me' : ''}`;
+                    msgDiv.innerHTML = `<b>${msgData.author}:</b> ${msgData.text}`;
+                    
+                    chatLog.appendChild(msgDiv);
+                    
+                    // Automatyczne przewijanie do najnowszej wiadomości
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                });
+            }
+        };
+    </script>
+
+    <script>
+        // --- PREDEFINIOWANA BAZA BUDYNKÓW W GRZE ---
+        const BUILDINGS_DB = {
+            mine: { 
+                id: 'mine', 
+                name: 'Kopalnia Złota', 
+                cost: { gold: 50 }, 
+                icon: '🪙', 
+                desc: '+5 Złota / s. Podstawa każdej gospodarki.' 
+            },
+            lumberjack: { 
+                id: 'lumberjack', 
+                name: 'Chata Drwala', 
+                cost: { gold: 30 }, 
+                icon: '🪵', 
+                desc: '+5 Drewna / s. Wymagane do konstrukcji.' 
+            },
+            quarry: { 
+                id: 'quarry', 
+                name: 'Kamieniołom', 
+                cost: { gold: 80, wood: 20 }, 
+                icon: '🪨', 
+                desc: '+3 Kamienia / s. Fundament fortyfikacji.' 
+            },
+            farm: { 
+                id: 'farm', 
+                name: 'Farma Pszenicy', 
+                cost: { wood: 50, stone: 20 }, 
+                icon: '🌾', 
+                desc: 'Żywi armię, generuje +10 Złota / s z podatków.' 
+            },
+            barracks: { 
+                id: 'barracks', 
+                name: 'Koszary', 
+                cost: { gold: 150, wood: 100 }, 
+                icon: '⛺', 
+                desc: 'Zwiększa tempo szkolenia wojska (+5 / s).' 
+            },
+            fort: { 
+                id: 'fort', 
+                name: 'Drewniany Fort', 
+                cost: { stone: 100, wood: 150 }, 
+                icon: '🛡️', 
+                desc: 'Podwaja siłę obrony prowincji (x2).' 
+            },
+            castle: { 
+                id: 'castle', 
+                name: 'Kamienny Zamek', 
+                cost: { gold: 300, stone: 250 }, 
+                icon: '🏰', 
+                desc: 'Potraja siłę obrony. Twierdza nie do zdobycia (x3).' 
+            }
+        };
+
+        // --- ZARZĄDZANIE INTERFEJSEM UŻYTKOWNIKA ---
+        const UIManager = {
+            // Przełączanie głównych ekranów
+            switchScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(s => {
+                    s.classList.remove('active');
+                });
+                document.getElementById(screenId).classList.add('active');
+            },
+
+            // System powiadomień typu Toast
+            showToast(message, isError = false) {
+                const toastContainer = document.getElementById('toast-manager');
+                const toastEl = document.createElement('div');
+                toastEl.className = 'toast-msg';
+                
+                // Ikona zależna od typu
+                let icon = isError ? '❌' : '✅';
+                toastEl.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+                
+                if (isError) {
+                    toastEl.style.borderColor = 'var(--color-danger)';
+                    toastEl.style.color = '#fecaca'; // Lekko czerwony tekst
+                } else {
+                    toastEl.style.borderColor = 'var(--color-success)';
+                    toastEl.style.color = '#a7f3d0'; // Lekko zielony tekst
+                }
+                
+                toastContainer.appendChild(toastEl);
+                
+                // Usunięcie z DOM po zakończeniu animacji
+                setTimeout(() => { 
+                    if (toastEl.parentNode) {
+                        toastEl.remove(); 
                     }
+                }, 3000);
+            },
+
+            // Aktualizacja surowców na górnym pasku
+            updateResources(gold, wood, stone, troops) {
+                document.getElementById('val-g').innerText = Math.floor(gold);
+                document.getElementById('val-w').innerText = Math.floor(wood);
+                document.getElementById('val-s').innerText = Math.floor(stone);
+                document.getElementById('val-t').innerText = Math.floor(troops);
+            },
+
+            // Zamykanie wszystkich okien modalnych
+            closeAllModals() {
+                document.getElementById('modal-backdrop').style.display = 'none';
+                document.getElementById('modal-move').style.display = 'none';
+                document.getElementById('modal-build').style.display = 'none';
+                
+                // Reset celu w silniku, jeśli anulowano
+                if (window.GameEngine) {
+                    window.GameEngine.targetProv = null;
+                }
+            }
+        };
+        
+        // Obsługa zamykania modali kliknięciem w tło
+        document.getElementById('modal-backdrop').addEventListener('mousedown', function(e) {
+            if (e.target === this) {
+                UIManager.closeAllModals();
+            }
+        });
+        // ==========================================
+        // ZARZĄDZANIE STANEM APLIKACJI (MENU FLOW)
+        // ==========================================
+        window.AppManager = {
+            state: {
+                isOnlineMode: false,
+                isCustomMap: false
+            },
+            
+            showScreen(screenId) {
+                document.querySelectorAll('.screen').forEach(s => {
+                    s.classList.remove('active');
+                });
+                document.getElementById(screenId).classList.add('active');
+            },
+
+            selectNetworkMode(isOnline) {
+                this.state.isOnlineMode = isOnline;
+                this.showScreen('screen-mode');
+            },
+
+            startNormalGame() {
+                this.state.isCustomMap = false;
+                let generatedMap = window.MapEditor.createRandomMatrix();
+
+                if (this.state.isOnlineMode) {
+                    this.showScreen('screen-lobby');
+                    window.DBManager.hostLobbyMap(generatedMap, false);
+                    
+                    window.DBManager.listenForOpponent(() => {
+                        window.UIManager.showToast("Przeciwnik dołączył!", false);
+                        window.GameEngine.initializeGame(generatedMap);
+                    });
+                } else {
+                    // Tryb Offline
+                    window.GameEngine.initializeGame(generatedMap);
+                }
+            },
+
+            joinCustomGame() {
+                if (!this.state.isOnlineMode) {
+                    window.UIManager.showToast("Musisz być w trybie Online!", true);
                     return;
                 }
-
-                // ATAK (LPM - DOUBLE CLICK)
-                if(e.button === 0) {
-                    const now = Date.now();
-                    if(now - this.lastClk < 400 && this.src) {
-                        let maxD = Math.max(Math.abs(this.src.x - this.hov.x), Math.abs(this.src.y - this.hov.y));
-                        if(maxD === 1) {
-                            if(this.src.t > 1) {
-                                this.tgt = this.hov;
-                                let s = document.getElementById('move-slider');
-                                let mx = Math.max(1, this.src.t - 1);
-                                s.min = 1; s.max = mx; s.value = Math.floor(mx/2);
-                                document.getElementById('move-val').innerText = s.value;
-                                document.getElementById('move-max').innerText = mx;
-                                document.getElementById('move-desc').innerText = `Z [${this.src.x},${this.src.y}] do [${this.tgt.x},${this.tgt.y}]`;
-                                document.getElementById('modal-overlay').style.display = 'block';
-                                document.getElementById('modal-move').style.display = 'flex';
-                            } else UI.toast("Za mało wojska na atak!", true);
-                        } else if(maxD > 1) UI.toast("Cel za daleko!", true);
-                    } else {
-                        if(this.hov.own === this.uid) this.src = this.hov;
-                        else this.src = null;
-                    }
-                    this.lastClk = now;
-                }
-            });
-
-            document.getElementById('move-slider').oninput = function() { document.getElementById('move-val').innerText = this.value; };
-            document.getElementById('btn-cancel-move').onclick = () => { UI.closeModals(); this.tgt = null; };
-            document.getElementById('btn-cancel-build').onclick = () => UI.closeModals();
-            document.getElementById('btn-confirm-move').onclick = () => this.executeMove();
-        },
-
-        executeMove() {
-            if(!this.src || !this.tgt) return;
-            let amt = parseInt(document.getElementById('move-slider').value);
-            if(this.src.t <= amt) return;
-            
-            this.src.t -= amt;
-            let pxS = this.src.x * this.sz + this.sz/2, pyS = this.src.y * this.sz + this.sz/2;
-            let pxT = this.tgt.x * this.sz + this.sz/2, pyT = this.tgt.y * this.sz + this.sz/2;
-            
-            let cs = 0; for(let i=0; i<this.uid.length; i++) cs += this.uid.charCodeAt(i);
-            let col = this.colors[cs % this.colors.length];
-            
-            this.pt.fireLaser(pxS, pyS, pxT, pyT, col);
-            
-            setTimeout(() => {
-                if(this.tgt.own === this.uid) {
-                    this.tgt.t += amt; this.pt.fireText(pxT, pyT, `+${amt}`, 'var(--green)');
-                } else {
-                    let defB = this.tgt.b === 'fort' ? 2 : 1;
-                    let effDef = this.tgt.t * defB;
-                    if(amt > effDef) {
-                        this.tgt.own = this.uid; this.tgt.t = Math.floor(amt - effDef);
-                        if(this.tgt.b === 'fort') this.tgt.b = null;
-                        UI.toast("Prowincja podbita!", false); this.pt.fireText(pxT, pyT, "WIN", col);
-                    } else {
-                        this.tgt.t = Math.floor((effDef - amt)/defB);
-                        UI.toast("Atak odparty.", true); this.pt.fireText(pxT, pyT, `-${amt}`, 'var(--red)');
-                    }
-                }
                 
-                let updObj = {};
-                updObj[`${this.src.x}_${this.src.y}/t`] = this.src.t;
-                updObj[`${this.tgt.x}_${this.tgt.y}/own`] = this.tgt.own;
-                updObj[`${this.tgt.x}_${this.tgt.y}/t`] = this.tgt.t;
-                updObj[`${this.tgt.x}_${this.tgt.y}/b`] = this.tgt.b;
-                window.update(window.ref(window.API.db, `rooms/${window.API.room}/map`), updObj);
-            }, 400);
+                this.showScreen('screen-lobby');
+                
+                window.DBManager.joinLobbyMap((wasFound, mapData) => {
+                    if (wasFound) {
+                        window.UIManager.showToast("Dołączono do pokoju!", false);
+                        window.GameEngine.initializeGame(mapData);
+                    } else {
+                        window.UIManager.showToast("Brak hostowanych map w lobby.", true);
+                        this.showScreen('screen-custom');
+                    }
+                });
+            },
 
-            UI.closeModals(); this.src = null;
-        },
-
-        render() {
-            this.ctx.fillStyle = '#020617'; this.ctx.fillRect(0, 0, this.cvs.width, this.cvs.height);
-            for(let y=0; y<this.rows; y++) {
-                for(let x=0; x<this.cols; x++) {
-                    let p = this.grid[y][x], px = x * this.sz, py = y * this.sz;
+            hostEditedMap() {
+                let editedMap = window.MapEditor.getMapData();
+                
+                if (this.state.isOnlineMode) {
+                    this.showScreen('screen-lobby');
+                    window.DBManager.hostLobbyMap(editedMap, true);
                     
-                    if(p.w) this.ctx.fillStyle = '#0ea5e9';
-                    else {
-                        if(p.own === 0) this.ctx.fillStyle = '#1e293b';
-                        else {
-                            let cs = 0, oStr = String(p.own); for(let i=0; i<oStr.length; i++) cs += oStr.charCodeAt(i);
-                            this.ctx.fillStyle = this.colors[cs % this.colors.length];
+                    window.DBManager.listenForOpponent(() => {
+                        window.GameEngine.initializeGame(editedMap);
+                    });
+                } else {
+                    window.GameEngine.initializeGame(editedMap);
+                }
+            },
+
+            cancelLobby() {
+                this.showScreen('screen-main');
+            }
+        };
+
+        // ==========================================
+        // SYSTEM CZĄSTECZEK (PARTICLE ENGINE)
+        // ==========================================
+        class ParticleEngine {
+            constructor() {
+                this.particles = [];
+            }
+
+            spawnExplosion(x, y, color) {
+                for (let i = 0; i < 20; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 5 + 1;
+                    this.particles.push({
+                        type: 'spark',
+                        x: x, y: y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 1.0,
+                        decay: Math.random() * 0.05 + 0.02,
+                        color: color,
+                        size: Math.random() * 4 + 2
+                    });
+                }
+            }
+
+            spawnText(x, y, text, color) {
+                this.particles.push({
+                    type: 'text',
+                    x: x + (Math.random() * 20 - 10),
+                    y: y + (Math.random() * 10 - 5),
+                    text: text,
+                    life: 1.0,
+                    color: color,
+                    vy: -1.5
+                });
+            }
+
+            spawnLaser(sx, sy, tx, ty, color) {
+                this.particles.push({
+                    type: 'laser',
+                    sx: sx, sy: sy, tx: tx, ty: ty,
+                    progress: 0,
+                    life: 1.0,
+                    color: color
+                });
+            }
+
+            updateAndRender(ctx) {
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    let p = this.particles[i];
+                    
+                    if (p.type === 'laser') {
+                        ctx.beginPath();
+                        ctx.moveTo(p.sx, p.sy);
+                        let cx = p.sx + (p.tx - p.sx) * p.progress;
+                        let cy = p.sy + (p.ty - p.sy) * p.progress;
+                        ctx.lineTo(cx, cy);
+                        
+                        ctx.strokeStyle = p.color;
+                        ctx.lineWidth = 6 * p.life;
+                        ctx.lineCap = "round";
+                        ctx.stroke();
+                        
+                        p.progress += 0.12;
+                        p.life -= 0.04;
+                        
+                        if (p.progress >= 1) {
+                            this.spawnExplosion(p.tx, p.ty, p.color);
+                            this.particles.splice(i, 1);
                         }
-                    }
-                    this.ctx.fillRect(px, py, this.sz, this.sz);
-                    this.ctx.strokeStyle = 'rgba(0,0,0,0.5)'; this.ctx.lineWidth = 1; this.ctx.strokeRect(px, py, this.sz, this.sz);
-                    
-                    if(p.b && B_DB[p.b]) {
-                        this.ctx.fillStyle = "white"; this.ctx.font = "20px 'Segoe UI'"; this.ctx.textAlign = "center";
-                        this.ctx.fillText(B_DB[p.b].i, px+this.sz/2, py+24);
-                    }
-                    
-                    if(!p.w && (p.t>0 || p.own!==0)) {
-                        this.ctx.fillStyle = "white"; this.ctx.font = "900 15px 'Segoe UI'"; this.ctx.textAlign = "center";
-                        this.ctx.shadowColor = "black"; this.ctx.shadowBlur = 4;
-                        this.ctx.fillText(Math.floor(p.t), px+this.sz/2, py+this.sz-4);
-                        this.ctx.shadowBlur = 0;
-                    }
-                    
-                    if(this.hov === p && !p.w) {
-                        this.ctx.fillStyle = "rgba(255,255,255,0.2)"; this.ctx.fillRect(px, py, this.sz, this.sz);
-                    }
-                    
-                    if(this.src === p) {
-                        let pls = Math.abs(Math.sin(Date.now()/200))*2;
-                        this.ctx.strokeStyle = "rgba(245,158,11,0.9)"; this.ctx.lineWidth = 3+pls;
-                        this.ctx.strokeRect(px+2, py+2, this.sz-4, this.sz-4); this.ctx.lineWidth = 1;
+                    } else if (p.type === 'spark') {
+                        ctx.globalAlpha = p.life;
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.globalAlpha = 1.0;
+
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.life -= p.decay;
+                        
+                        if (p.life <= 0) this.particles.splice(i, 1);
+                    } else if (p.type === 'text') {
+                        ctx.globalAlpha = p.life;
+                        ctx.fillStyle = p.color;
+                        ctx.font = "900 22px 'Segoe UI'";
+                        ctx.textAlign = "center";
+                        
+                        ctx.strokeStyle = "black";
+                        ctx.lineWidth = 4;
+                        ctx.strokeText(p.text, p.x, p.y);
+                        ctx.fillText(p.text, p.x, p.y);
+                        
+                        ctx.globalAlpha = 1.0;
+
+                        p.y += p.vy;
+                        p.life -= 0.02;
+
+                        if (p.life <= 0) this.particles.splice(i, 1);
                     }
                 }
             }
-            this.pt.render(this.ctx);
-        },
+        }
 
-        loop() { if(this.run) { this.render(); requestAnimationFrame(() => this.loop()); } }
-    };
+        // ==========================================
+        // EDYTOR MAP (CUSTOM MAPS)
+        // ==========================================
+        window.MapEditor = {
+            canvas: document.getElementById('editorCanvas'),
+            ctx: null,
+            cols: 25,
+            rows: 14,
+            cellSize: 40,
+            grid: [],
 
-    // --- PRZYPISANIA BUTTONÓW ---
-    document.getElementById('btn-host').onclick = () => Engine.start(true);
-    document.getElementById('btn-join').onclick = () => Engine.start(false);
-    document.getElementById('btn-cancel-lobby').onclick = () => {
-        UI.show('screen-main');
-        if(Engine.isHost) window.set(window.ref(window.API.db, `rooms/${window.API.room}`), null);
-    };
+            initialize() {
+                this.canvas = document.getElementById('editorCanvas');
+                if (!this.canvas) return;
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.grid = [];
+                for (let y = 0; y < this.rows; y++) {
+                    let row = [];
+                    for (let x = 0; x < this.cols; x++) {
+                        row.push(1); // 1 = Woda
+                    }
+                    this.grid.push(row);
+                }
 
-</script>
+                let isDrawing = false;
+                let drawValue = 0; 
+
+                this.canvas.addEventListener('contextmenu', e => e.preventDefault());
+                
+                this.canvas.addEventListener('mousedown', e => {
+                    isDrawing = true;
+                    drawValue = (e.button === 0) ? 0 : 1; // LPM = Ląd, PPM = Woda
+                    this.paintCell(e, drawValue);
+                });
+
+                window.addEventListener('mouseup', () => {
+                    isDrawing = false;
+                });
+
+                this.canvas.addEventListener('mousemove', e => {
+                    if (isDrawing) {
+                        this.paintCell(e, drawValue);
+                    }
+                });
+
+                this.editorLoop();
+            },
+
+            paintCell(e, value) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = Math.floor((e.clientX - rect.left) / this.cellSize);
+                const y = Math.floor((e.clientY - rect.top) / this.cellSize);
+                
+                if (x >= 0 && x < this.cols && y >= 0 && y < this.rows) {
+                    this.grid[y][x] = value;
+                }
+            },
+
+            render() {
+                if (!this.ctx) return;
+                for (let y = 0; y < this.rows; y++) {
+                    for (let x = 0; x < this.cols; x++) {
+                        let isWater = this.grid[y][x] === 1;
+                        
+                        this.ctx.fillStyle = isWater ? '#0ea5e9' : '#1e293b';
+                        this.ctx.fillRect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
+                        
+                        this.ctx.strokeStyle = '#000000';
+                        this.ctx.lineWidth = 1;
+                        this.ctx.strokeRect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
+                    }
+                }
+            },
+
+            editorLoop() {
+                const edScreen = document.getElementById('screen-editor');
+                if (edScreen && edScreen.classList.contains('active')) {
+                    this.render();
+                }
+                requestAnimationFrame(() => this.editorLoop());
+            },
+
+            getMapData() {
+                return this.grid;
+            },
+
+            createRandomMatrix() {
+                let matrix = [];
+                for (let y = 0; y < 16; y++) { // Główne wymiary gry: 16x25
+                    let row = [];
+                    for (let x = 0; x < 25; x++) { 
+                        let isEdge = (x === 0 || y === 0 || x === 24 || y === 15);
+                        let isWater = isEdge || Math.random() < 0.15;
+                        row.push(isWater ? 1 : 0);
+                    }
+                    matrix.push(row);
+                }
+                return matrix;
+            }
+        };
+        
+        // Uruchamianie edytora po wczytaniu DOM
+        document.addEventListener('DOMContentLoaded', () => {
+            if(document.getElementById('editorCanvas')) {
+                window.MapEditor.initialize();
+            }
+        });
+
+        // ==========================================
+        // GLOBALNY CZAT LOGIKA
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnSend = document.getElementById('btn-send-chat');
+            const chatInput = document.getElementById('chat-input');
+            
+            if (btnSend && chatInput) {
+                btnSend.onclick = () => {
+                    if (chatInput.value.trim() !== '') {
+                        window.DBManager.sendMessage(chatInput.value.trim());
+                        chatInput.value = '';
+                    }
+                };
+
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') btnSend.click();
+                });
+            }
+        });
+        // ==========================================
+        // GŁÓWNY SILNIK GRY (GAME ENGINE)
+        // ==========================================
+        window.GameEngine = {
+            canvas: document.getElementById('worldCanvas'),
+            ctx: null,
+            
+            gridCols: 25,
+            gridRows: 16,
+            cellSize: 40,
+            
+            mapGrid: [],
+            playerId: null,
+            
+            resources: {
+                gold: 250,
+                wood: 150,
+                stone: 50
+            },
+            
+            isRunning: false,
+            particles: new ParticleEngine(),
+            
+            // Stan interakcji myszy
+            hoveredProv: null,
+            sourceProv: null,
+            targetProv: null,
+            lastClickTimestamp: 0,
+            lastClickedProv: null,
+
+            initializeGame(mapMatrix) {
+                this.ctx = this.canvas.getContext('2d');
+                
+                // Konfiguracja gracza
+                if (window.AppManager.state.isOnlineMode && window.CoreAPI.isOnline) {
+                    this.playerId = window.CoreAPI.uid;
+                } else {
+                    this.playerId = "PLAYER_" + Math.floor(Math.random() * 9999);
+                }
+
+                // Przepisanie macierzy [0/1] na obiekty logiczne
+                this.mapGrid = [];
+                this.gridRows = mapMatrix.length;
+                this.gridCols = mapMatrix[0].length;
+                
+                // Dostosowanie wielkości płótna
+                this.canvas.width = this.gridCols * this.cellSize;
+                this.canvas.height = this.gridRows * this.cellSize;
+
+                for (let y = 0; y < this.gridRows; y++) {
+                    let row = [];
+                    for (let x = 0; x < this.gridCols; x++) {
+                        let isWater = mapMatrix[y][x] === 1;
+                        row.push({
+                            x: x, 
+                            y: y,
+                            owner: 0,
+                            troops: isWater ? 0 : Math.floor(Math.random() * 4),
+                            isWater: isWater,
+                            building: null
+                        });
+                    }
+                    this.mapGrid.push(row);
+                }
+
+                window.AppManager.showScreen('screen-game');
+                this.setupSpawns();
+                this.setupInputHandlers();
+                
+                // Podpięcie pod Firebase jeśli online
+                if (window.AppManager.state.isOnlineMode) {
+                    window.DBManager.listenToChat();
+                    window.DBManager.listenToGameState((firebaseData) => {
+                        this.synchronizeState(firebaseData);
+                    });
+                }
+                
+                // Pętla ekonomii
+                setInterval(() => this.processEconomyTick(), 1000);
+                
+                this.isRunning = true;
+                this.mainLoop();
+                
+                window.UIManager.showToast("Wojna o terytorium rozpoczęta!", false);
+            },
+
+            setupSpawns() {
+                let availableLands = [];
+                
+                for (let y = 0; y < this.gridRows; y++) {
+                    for (let x = 0; x < this.gridCols; x++) {
+                        if (!this.mapGrid[y][x].isWater && this.mapGrid[y][x].owner === 0) {
+                            availableLands.push(this.mapGrid[y][x]);
+                        }
+                    }
+                }
+
+                if (availableLands.length > 0) {
+                    let spawnCell = availableLands[Math.floor(Math.random() * availableLands.length)];
+                    spawnCell.owner = this.playerId;
+                    spawnCell.troops = 100;
+                    spawnCell.building = 'fort'; // Darmowy fort na start
+                    
+                    if (window.AppManager.state.isOnlineMode) {
+                        window.DBManager.updateData(`active_game/map/${spawnCell.x}_${spawnCell.y}`, {
+                            owner: spawnCell.owner,
+                            troops: spawnCell.troops,
+                            building: spawnCell.building
+                        });
+                    }
+                }
+            },
+
+            synchronizeState(dataObj) {
+                for (let key in dataObj) {
+                    let parts = key.split('_');
+                    let x = parseInt(parts[0]);
+                    let y = parseInt(parts[1]);
+                    
+                    if (this.mapGrid[y] && this.mapGrid[y][x]) {
+                        this.mapGrid[y][x].owner = dataObj[key].owner;
+                        this.mapGrid[y][x].troops = dataObj[key].troops;
+                        if (dataObj[key].building !== undefined) {
+                            this.mapGrid[y][x].building = dataObj[key].building;
+                        }
+                    }
+                }
+            },
+
+            processEconomyTick() {
+                let currentTroopsCount = 0;
+                let playerStillAlive = false;
+
+                for (let y = 0; y < this.gridRows; y++) {
+                    for (let x = 0; x < this.gridCols; x++) {
+                        let prov = this.mapGrid[y][x];
+                        
+                        if (prov.owner === this.playerId) {
+                            playerStillAlive = true;
+                            
+                            let troopIncome = 1;
+                            if (prov.building === 'barracks') troopIncome = 5;
+                            
+                            prov.troops += troopIncome;
+                            currentTroopsCount += prov.troops;
+                            
+                            let goldIncome = 1;
+                            if (prov.building === 'market') goldIncome += 2;
+                            if (prov.building === 'farm') goldIncome += 10;
+                            if (prov.building === 'mine') goldIncome += 5;
+                            
+                            this.resources.gold += goldIncome;
+                            
+                            if (prov.building === 'lumberjack') this.resources.wood += 5;
+                            if (prov.building === 'quarry') this.resources.stone += 3;
+
+                            if (window.AppManager.state.isOnlineMode) {
+                                window.DBManager.updateData(`active_game/map/${x}_${y}`, { troops: prov.troops });
+                            }
+                        }
+                    }
+                }
+
+                if (!playerStillAlive && this.isRunning) {
+                    window.UIManager.showToast("Zostałeś zniszczony!", true);
+                }
+
+                window.UIManager.updateResources(
+                    this.resources.gold,
+                    this.resources.wood,
+                    this.resources.stone,
+                    currentTroopsCount
+                );
+            },
+
+            setupInputHandlers() {
+                this.canvas.addEventListener('contextmenu', e => e.preventDefault());
+                
+                this.canvas.addEventListener('mousemove', e => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const scaleX = this.canvas.width / rect.width;
+                    const scaleY = this.canvas.height / rect.height;
+                    
+                    const x = Math.floor(((e.clientX - rect.left) * scaleX) / this.cellSize);
+                    const y = Math.floor(((e.clientY - rect.top) * scaleY) / this.cellSize);
+                    
+                    if (x >= 0 && x < this.gridCols && y >= 0 && y < this.gridRows) {
+                        this.hoveredProv = this.mapGrid[y][x];
+                    }
+                });
+
+                this.canvas.addEventListener('mousedown', e => {
+                    if (!this.hoveredProv) return;
+
+                    // Odrzucenie wody
+                    if (this.hoveredProv.isWater) {
+                        this.sourceProv = null;
+                        return;
+                    }
+
+                    // PRAWY PRZYCISK: Budowanie
+                    if (e.button === 2) {
+                        if (this.hoveredProv.owner === this.playerId) {
+                            if (!this.hoveredProv.building) {
+                                this.openBuildMenuForProvince(this.hoveredProv);
+                            } else {
+                                window.UIManager.showToast("Prowincja jest już w pełni zabudowana!", true);
+                            }
+                        }
+                        return;
+                    }
+
+                    // LEWY PRZYCISK: Ruch i Walka (Double Click)
+                    if (e.button === 0) {
+                        const now = Date.now();
+                        const timeDiff = now - this.lastClickTimestamp;
+                        
+                        if (timeDiff < 400 && this.lastClickedProv === this.hoveredProv) {
+                            
+                            if (this.sourceProv) {
+                                let distanceX = Math.abs(this.sourceProv.x - this.hoveredProv.x);
+                                let distanceY = Math.abs(this.sourceProv.y - this.hoveredProv.y);
+                                let maxDistance = Math.max(distanceX, distanceY);
+                                
+                                if (maxDistance === 1) {
+                                    if (this.sourceProv.troops > 1) {
+                                        this.targetProv = this.hoveredProv;
+                                        this.openTroopSlider(this.sourceProv, this.targetProv);
+                                    } else {
+                                        window.UIManager.showToast("Zbyt mało jednostek by wykonać wymarsz!", true);
+                                    }
+                                } else if (maxDistance > 1) {
+                                    window.UIManager.showToast("Cel za daleko! Maksymalny zasięg to 1.", true);
+                                }
+                            }
+                            
+                        } else {
+                            if (this.hoveredProv.owner === this.playerId) {
+                                this.sourceProv = this.hoveredProv;
+                            } else {
+                                this.sourceProv = null;
+                            }
+                        }
+                        
+                        this.lastClickTimestamp = now;
+                        this.lastClickedProv = this.hoveredProv;
+                    }
+                });
+            },
+
+            openTroopSlider(source, target) {
+                const modal = document.getElementById('modal-move');
+                const backdrop = document.getElementById('modal-backdrop');
+                const slider = document.getElementById('troop-slider');
+                const display = document.getElementById('slider-val-display');
+                const maxDisplay = document.getElementById('slider-max-display');
+
+                const maxTroops = Math.max(1, Math.floor(source.troops - 1));
+                
+                slider.min = 1;
+                slider.max = maxTroops;
+                slider.value = Math.max(1, Math.floor(maxTroops / 2));
+                
+                display.innerText = slider.value;
+                maxDisplay.innerText = maxTroops;
+
+                slider.oninput = function() { display.innerText = this.value; };
+                
+                document.getElementById('move-details').innerText = `Z koordynatów [${source.x},${source.y}] do [${target.x},${target.y}]`;
+                
+                backdrop.style.display = 'block';
+                modal.style.display = 'flex';
+            },
+
+            openBuildMenuForProvince(prov) {
+                const listContainer = document.getElementById('build-list-dynamic');
+                listContainer.innerHTML = '';
+                
+                for (let key in BUILDINGS_DB) {
+                    let b = BUILDINGS_DB[key];
+                    let canAfford = true;
+                    let costString = '';
+                    
+                    if (b.cost.gold) { costString += `🪙${b.cost.gold} `; if (this.resources.gold < b.cost.gold) canAfford = false; }
+                    if (b.cost.wood) { costString += `🪵${b.cost.wood} `; if (this.resources.wood < b.cost.wood) canAfford = false; }
+                    if (b.cost.stone) { costString += `🪨${b.cost.stone} `; if (this.resources.stone < b.cost.stone) canAfford = false; }
+
+                    let card = document.createElement('div');
+                    card.className = 'build-card';
+                    card.innerHTML = `
+                        <div class="build-info">
+                            <h4>${b.icon} ${b.name}</h4>
+                            <p>${b.desc}</p>
+                            <div class="build-cost">Koszt: <span style="color:#f8fafc">${costString}</span></div>
+                        </div>
+                        <button class="btn-act btn-ok" style="flex: 0 0 auto; padding: 10px 20px;" ${canAfford ? '' : 'disabled'}>
+                            Wznieś
+                        </button>
+                    `;
+
+                    card.querySelector('button').onclick = () => {
+                        this.purchaseBuilding(prov, key, b.cost);
+                    };
+
+                    listContainer.appendChild(card);
+                }
+                
+                document.getElementById('modal-backdrop').style.display = 'block';
+                document.getElementById('modal-build').style.display = 'flex';
+            },
+
+            purchaseBuilding(prov, buildKey, costs) {
+                if (costs.gold) this.resources.gold -= costs.gold;
+                if (costs.wood) this.resources.wood -= costs.wood;
+                if (costs.stone) this.resources.stone -= costs.stone;
+
+                prov.building = buildKey;
+                
+                if (window.AppManager.state.isOnlineMode) {
+                    window.DBManager.updateData(`active_game/map/${prov.x}_${prov.y}`, { building: buildKey });
+                }
+
+                window.UIManager.closeAllModals();
+                window.UIManager.showToast(`Zbudowano ${BUILDINGS_DB[buildKey].name}!`, false);
+            },
+
+            confirmMove() {
+                if (!this.sourceProv || !this.targetProv) return;
+                
+                const unitsToMove = parseInt(document.getElementById('troop-slider').value);
+                if (this.sourceProv.troops <= unitsToMove) return;
+
+                this.sourceProv.troops -= unitsToMove;
+
+                let pxS = this.sourceProv.x * this.cellSize + this.cellSize / 2;
+                let pyS = this.sourceProv.y * this.cellSize + this.cellSize / 2;
+                let pxT = this.targetProv.x * this.cellSize + this.cellSize / 2;
+                let pyT = this.targetProv.y * this.cellSize + this.cellSize / 2;
+
+                // Generowanie unikalnego koloru dla animacji na podstawie nazwy gracza
+                let charSum = 0;
+                for(let i=0; i<this.playerId.length; i++) charSum += this.playerId.charCodeAt(i);
+                let pColor = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'][charSum % 6];
+
+                this.particles.spawnLaser(pxS, pyS, pxT, pyT, pColor);
+
+                setTimeout(() => {
+                    if (this.targetProv.owner === this.playerId) {
+                        // Transfer wojsk na własne terytorium
+                        this.targetProv.troops += unitsToMove;
+                        this.particles.spawnText(pxT, pyT, `+${unitsToMove}`, '#10b981');
+                    } else {
+                        // Atak na wroga
+                        let defenseMultiplier = 1.0;
+                        if (this.targetProv.building === 'fort') defenseMultiplier = 2.0;
+                        if (this.targetProv.building === 'castle') defenseMultiplier = 3.0;
+                        
+                        let effectiveDefense = this.targetProv.troops * defenseMultiplier;
+
+                        if (unitsToMove > effectiveDefense) {
+                            // Wygrana
+                            this.targetProv.owner = this.playerId;
+                            this.targetProv.troops = Math.floor(unitsToMove - effectiveDefense);
+                            if (['fort', 'castle'].includes(this.targetProv.building)) {
+                                this.targetProv.building = null; // Burzenie fortyfikacji przy przejęciu
+                            }
+                            window.UIManager.showToast(`Prowincja zdobyta!`, false);
+                            this.particles.spawnText(pxT, pyT, "ZDOBYTE", pColor);
+                        } else {
+                            // Przegrana
+                            this.targetProv.troops = Math.floor((effectiveDefense - unitsToMove) / defenseMultiplier);
+                            window.UIManager.showToast("Atak został odparty przez obrońców.", true);
+                            this.particles.spawnText(pxT, pyT, `-${unitsToMove}`, '#ef4444');
+                        }
+                    }
+
+                    if (window.AppManager.state.isOnlineMode) {
+                        window.DBManager.updateData(`active_game/map/${this.sourceProv.x}_${this.sourceProv.y}`, { troops: this.sourceProv.troops });
+                        window.DBManager.updateData(`active_game/map/${this.targetProv.x}_${this.targetProv.y}`, { 
+                            owner: this.targetProv.owner, 
+                            troops: this.targetProv.troops,
+                            building: this.targetProv.building
+                        });
+                    }
+
+                }, 400); // 400ms opóźnienia na podróż lasera
+
+                window.UIManager.closeAllModals();
+                this.sourceProv = null;
+            },
+
+            renderGraphics() {
+                this.ctx.fillStyle = '#020617';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                const palette = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+
+                for (let y = 0; y < this.gridRows; y++) {
+                    for (let x = 0; x < this.gridCols; x++) {
+                        let prov = this.mapGrid[y][x];
+                        let px = x * this.cellSize;
+                        let py = y * this.cellSize;
+
+                        // Rysowanie tła terytorium
+                        if (prov.isWater) {
+                            this.ctx.fillStyle = '#0ea5e9'; // Niebieski woda
+                        } else {
+                            if (prov.owner === 0) {
+                                this.ctx.fillStyle = '#1e293b'; // Szary neutralny
+                            } else {
+                                let sum = 0;
+                                let ownStr = String(prov.owner);
+                                for(let i=0; i<ownStr.length; i++) sum += ownStr.charCodeAt(i);
+                                this.ctx.fillStyle = palette[sum % palette.length];
+                            }
+                        }
+
+                        this.ctx.fillRect(px, py, this.cellSize, this.cellSize);
+
+                        // Siatka i granice
+                        this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+                        this.ctx.lineWidth = 1;
+                        this.ctx.strokeRect(px, py, this.cellSize, this.cellSize);
+
+                        // Rysowanie budynków
+                        if (prov.building && BUILDINGS_DB[prov.building]) {
+                            this.ctx.fillStyle = "white";
+                            this.ctx.font = "20px 'Segoe UI'";
+                            this.ctx.textAlign = "center";
+                            this.ctx.fillText(BUILDINGS_DB[prov.building].icon, px + this.cellSize/2, py + 22);
+                        }
+
+                        // Rysowanie ilości żołnierzy
+                        if (!prov.isWater && (prov.troops > 0 || prov.owner !== 0)) {
+                            this.ctx.fillStyle = "white";
+                            this.ctx.font = "900 14px 'Segoe UI'";
+                            this.ctx.textAlign = "center";
+                            this.ctx.shadowColor = "black";
+                            this.ctx.shadowBlur = 4;
+                            this.ctx.fillText(Math.floor(prov.troops), px + this.cellSize/2, py + this.cellSize - 5);
+                            this.ctx.shadowBlur = 0;
+                        }
+
+                        // Podświetlenie hover
+                        if (this.hoveredProv === prov && !prov.isWater) {
+                            this.ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+                            this.ctx.fillRect(px, py, this.cellSize, this.cellSize);
+                        }
+
+                        // Zaznaczenie wybranej prowincji
+                        if (this.sourceProv === prov) {
+                            let pulse = Math.abs(Math.sin(Date.now() / 200)) * 2;
+                            this.ctx.strokeStyle = "rgba(250, 204, 21, 0.9)";
+                            this.ctx.lineWidth = 3 + pulse;
+                            this.ctx.strokeRect(px + 2, py + 2, this.cellSize - 4, this.cellSize - 4);
+                            this.ctx.lineWidth = 1;
+                        }
+                    }
+                }
+
+                // Renderowanie animacji laserów i cząsteczek nad mapą
+                this.particles.updateAndRender(this.ctx);
+            },
+
+            mainLoop() {
+                if (this.isRunning) {
+                    this.renderGraphics();
+                    requestAnimationFrame(() => this.mainLoop());
+                }
+            }
+        };
+
+        // ==========================================
+        // PRZYPISANIE ZDARZEŃ PO ZAŁADOWANIU DOKUMENTU
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Przypisanie zdarzeń Modali
+            document.getElementById('btn-move-cancel').onclick = () => window.UIManager.closeAllModals();
+            document.getElementById('btn-build-close').onclick = () => window.UIManager.closeAllModals();
+            document.getElementById('btn-move-confirm').onclick = () => window.GameEngine.confirmMove();
+            
+            // Suwak aktualizacja tekstowa
+            document.getElementById('troop-slider').addEventListener('input', function() {
+                document.getElementById('slider-val-display').innerText = this.value;
+            });
+        });
+
+    </script>
 </body>
 </html>

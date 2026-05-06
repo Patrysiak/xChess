@@ -3,17 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vulkan Cards - Casino Update</title>
+    <title>Vulkan Connect - Discord x Messenger x Firebase</title>
     
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --discord-dark: #313338;
+            --discord-side: #2b2d31;
+            --messenger-blue: #0084ff;
+            --vulcan-red: #9e0000;
+            --vulcan-glow: #ff4500;
+            --text-main: #dbdee1;
+            --bg-input: #383a40;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #050000;
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* EKRAN LOGOWANIA */
+        #login-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle, #1a0000 0%, #050000 100%);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .login-card {
+            background: rgba(43, 45, 49, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid var(--vulcan-glow);
+            box-shadow: 0 0 30px rgba(255, 69, 0, 0.3);
+        }
+
+        .google-btn {
+            background: #DB4437;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        .google-btn:hover { background: #c53727; transform: scale(1.05); }
+
+        /* GŁÓWNY INTERFEJS */
+        .sidebar {
+            width: 320px;
+            background-color: var(--discord-side);
+            border-right: 1px solid #1e1f22;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-profile-bar {
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #1e1f22;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid var(--vulcan-glow);
+        }
+
+        .user-info h4 { margin: 0; font-size: 14px; color: white; }
+        .user-info p { margin: 0; font-size: 11px; color: gold; font-weight: bold; }
+
+        .chat-list { flex: 1; overflow-y: auto; }
+        .chat-item {
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .chat-item:hover { background-color: #3f4147; }
+
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--discord-dark); }
+        .chat-header {
+            height: 60px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #1e1f22;
+        }
+
+        .messages { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+        .message { max-width: 70%; padding: 10px 15px; border-radius: 18px; font-size: 14px; }
+        .msg-received { background: #4e5058; align-self: flex-start; }
+        .msg-sent { background: var(--messenger-blue); align-self: flex-end; color: white; }
+
+        .input-area { padding: 20px; }
+        .input-wrapper { background: var(--bg-input); border-radius: 8px; padding: 12px; display: flex; }
+        input { background: none; border: none; color: white; width: 100%; outline: none; }
+
+        .logout-btn {
+            background: none;
+            border: 1px solid #555;
+            color: #888;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div class="login-card">
+            <h1 style="color: white; margin-bottom: 10px;">Vulkan <span style="color:var(--vulcan-glow)">Connect</span></h1>
+            <p style="color: #aaa; margin-bottom: 30px;">Zaloguj się, aby połączyć się z serwerem kart.</p>
+            <button class="google-btn" onclick="loginWithGoogle()">ZALOGUJ PRZEZ GOOGLE</button>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="user-profile-bar">
+            <img id="my-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=fallback" class="user-avatar">
+            <div class="user-info">
+                <h4 id="my-nick">Ładowanie...</h4>
+                <p>🏆 ELO: <span id="my-elo">0</span> | $ <span id="my-coins">0</span></p>
+            </div>
+            <button class="logout-btn" onclick="logout()">Wyjdź</button>
+        </div>
+
+        <div class="chat-list" id="friends-list">
+            <div style="padding: 20px; color: #888; font-size: 13px; text-align: center;">Ładowanie znajomych...</div>
+        </div>
+    </div>
+
+    <div class="chat-area">
+        <div class="chat-header">
+            <div><span style="color: #80848e">#</span> Czat Ogólny</div>
+            <button class="google-btn" style="padding: 8px 15px; font-size: 12px;" onclick="location.reload()">GRAJ W KARTY</button>
+        </div>
+        
+        <div class="messages" id="chat-box">
+            <div class="message msg-received">Witaj w Vulkan Connect! Zaloguj się, aby pisać.</div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input type="text" id="msg-input" placeholder="Napisz coś...">
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, onSnapshot, getDoc, setDoc, orderBy, limit, arrayUnion, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // TWOJA BAZA FIREBASE
+        // TWOJA KONFIGURACJA Z PROMPTA
         const firebaseConfig = {
             apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
             authDomain: "xchess-79e2d.firebaseapp.com",
@@ -28,789 +192,65 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        window.db = db; window.auth = auth; window.currentUserData = null; window.globalVolume = 0.5;
-
-        // BAZA PRZEDMIOTÓW (KARTY)
-        window.GAME_ITEMS = {
-            tables: {
-                default: { name: "Klasyczna Zieleń", price: 0, type: "tables", color: "#006400", rarity: "common" },
-                casino: { name: "Kasyno Bordo", price: 100, type: "tables", color: "#800000", rarity: "common" },
-                ocean: { name: "Głębia Oceanu", price: 150, type: "tables", color: "#004080", rarity: "rare" },
-                magma: { name: "Lawa Vulkan", price: 200, type: "tables", color: "#8B0000", rarity: "rare" },
-                neon: { name: "Cyber Neon", price: 300, type: "tables", color: "#800080", rarity: "epic" },
-                galaxy: { name: "Galaktyka", price: 450, type: "tables", color: "#1a0033", rarity: "legendary" },
-                gold: { name: "VIP Złoto", price: 800, type: "tables", color: "#b38600", rarity: "legendary" }
-            },
-            cardBacks: {
-                standardRed: { name: "Klasyczne Czerwone", price: 0, type: "cardBacks", url: "https://upload.wikimedia.org/wikipedia/commons/d/d4/Card_back_01.svg" },
-                standardBlue: { name: "Klasyczne Niebieskie", price: 100, type: "cardBacks", url: "https://upload.wikimedia.org/wikipedia/commons/a/ae/Card_back_05.svg" },
-                dragon: { name: "Smoczy Wzór", price: 250, type: "cardBacks", url: "https://upload.wikimedia.org/wikipedia/commons/2/22/Card_back_06.svg" },
-                gold: { name: "Złota Edycja", price: 500, type: "cardBacks", url: "https://upload.wikimedia.org/wikipedia/commons/1/1b/Card_back_12.svg" }
-            },
-            sounds: {
-                default: { name: "Klasyczne Karty", price: 0, type: "sounds", move: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_73bb2b2cb4.mp3', cap: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_73bb2b2cb4.mp3' },
-                chips: { name: "Żetony Kasyna", price: 150, type: "sounds", move: 'https://cdn.pixabay.com/download/audio/2021/08/04/audio_3d1a89c3ab.mp3', cap: 'https://cdn.pixabay.com/download/audio/2021/08/04/audio_3d1a89c3ab.mp3' },
-                retro: { name: "Retro 8-Bit", price: 250, type: "sounds", move: 'https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/retro/move-self.mp3', cap: 'https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/retro/capture.mp3' }
-            }
-        };
-
-        window.gameEndSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-end.mp3');
-        window.hoverSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/premove.mp3'); 
-        window.updateVolume = function(val) { window.globalVolume = val; window.gameEndSound.volume = val; window.hoverSound.volume = val * 0.5; if(window.moveSound) window.moveSound.volume = val; if(window.captureSound) window.captureSound.volume = val; };
-
-        // --- TYTUŁY (RANGI ELO) ---
-        window.getRankTitle = function(elo) {
-            if(elo < 1100) return "<span style='color:#a0a0a0'>[Płotka]</span>";
-            if(elo < 1300) return "<span style='color:#80d4ff'>[Krupier]</span>";
-            if(elo < 1600) return "<span style='color:#28a745'>[Szuler]</span>";
-            if(elo < 2000) return "<span style='color:#d9b3ff'>[Rekin]</span>";
-            if(elo < 2400) return "<span style='color:#ff4500'>[Mistrz Kasyna]</span>";
-            return "<span style='color:gold; text-shadow:0 0 5px gold;'>[Legenda Vulkan]</span>";
-        };
-
-        // --- LOGOWANIE I INICJALIZACJA PROFILU ---
-        window.loginWithGoogle = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
+        // Funkcje globalne dla przycisków HTML
+        window.loginWithGoogle = () => signInWithPopup(auth, provider);
         window.logout = () => signOut(auth);
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const docSnap = await getDoc(doc(db, 'users', user.uid));
+                const docRef = doc(db, 'users', user.uid);
+                const docSnap = await getDoc(docRef);
+
+                let userData;
                 if (!docSnap.exists()) {
-                    document.getElementById('nick-input').value = user.displayName;
-                    document.getElementById('preview-avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`;
-                    showScreen('setup-screen');
+                    // Rejestracja nowego gracza (Twoja logika)
+                    userData = {
+                        uid: user.uid,
+                        displayName: user.displayName,
+                        avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
+                        elo: 1000,
+                        coins: 200,
+                        friends: []
+                    };
+                    await setDoc(docRef, userData);
                 } else {
-                    let data = docSnap.data();
-                    if(data.banned) { alert("Masz BANA."); signOut(auth); return; }
-                    
-                    let needsUpdate = false;
-                    // Waluta to teraz DOLLARY ($) pod nazwą coins w bazie
-                    if(data.coins === undefined) { data.coins = 100; needsUpdate = true; }
-                    if(data.lastDaily === undefined) { data.lastDaily = 0; needsUpdate = true; }
-                    if(!data.inventory) { data.inventory = { tables: ['default'], cardBacks: ['standardRed'], sounds: ['default'] }; needsUpdate = true; }
-                    if(!data.equipped) { data.equipped = { table: 'default', cardBacks: 'standardRed', sounds: 'default' }; needsUpdate = true; }
-                    if(!data.friends) { data.friends = []; needsUpdate = true; }
-                    if(data.stats === undefined) { data.stats = { wins: 0, losses: 0, draws: 0 }; needsUpdate = true; }
-                    if(data.ytClaimed === undefined) { data.ytClaimed = false; needsUpdate = true; }
-                    
-                    if(needsUpdate) await updateDoc(doc(db, 'users', user.uid), data);
-                    
-                    window.currentUserData = data; 
-                    updateProfileUI(user.email); 
-                    applyEquippedItems(); 
-                    window.updateVolume(0.5);
-                    listenToMailbox();
-                    document.getElementById('sidebar-toggle-btn').style.display = 'block';
+                    userData = docSnap.data();
                 }
+
+                // Ukryj logowanie, pokaż UI
+                document.getElementById('login-overlay').style.display = 'none';
+                updateUI(userData);
+                loadMockFriends(userData.friends);
             } else {
-                window.currentUserData = null;
-                document.getElementById('login-section').style.display = 'block';
-                document.getElementById('profile-section').style.display = 'none';
-                document.getElementById('wallet-ui').style.display = 'none';
-                document.getElementById('sidebar-toggle-btn').style.display = 'none';
+                document.getElementById('login-overlay').style.display = 'flex';
             }
         });
 
-        // --- ZAPIS PROFILU ---
-        window.editProfile = () => {
-            document.getElementById('nick-input').value = window.currentUserData.displayName;
-            document.getElementById('preview-avatar').src = window.currentUserData.avatar;
-            showScreen('setup-screen');
-        };
-
-        document.getElementById('avatar-upload').addEventListener('change', function(e) {
-            if (e.target.files[0]) {
-                const reader = new FileReader();
-                reader.onload = event => document.getElementById('preview-avatar').src = event.target.result;
-                reader.readAsDataURL(e.target.files[0]);
-            }
-        });
-
-        window.saveProfile = async () => {
-            try {
-                if (!auth.currentUser) return;
-                const nick = document.getElementById('nick-input').value.trim(); 
-                if (!nick) return alert("Musisz podać nick!");
-
-                document.getElementById('setup-btn').innerText = "Zapisywanie...";
-                const fileInput = document.getElementById('avatar-upload'); 
-                let finalAvatar = document.getElementById('preview-avatar').src;
-
-                if (fileInput.files && fileInput.files[0]) {
-                    finalAvatar = await new Promise((resolve) => {
-                        const reader = new FileReader(); 
-                        reader.onload = e => resolve(e.target.result); 
-                        reader.readAsDataURL(fileInput.files[0]);
-                    });
-                }
-
-                if(!window.currentUserData) window.currentUserData = {};
-
-                const newProfile = {
-                    uid: auth.currentUser.uid, 
-                    displayName: nick, 
-                    avatar: finalAvatar,
-                    elo: window.currentUserData.elo || 1000,
-                    banned: window.currentUserData.banned || false,
-                    friends: window.currentUserData.friends || [],
-                    coins: window.currentUserData.coins || 200,
-                    lastDaily: window.currentUserData.lastDaily || 0,
-                    inventory: window.currentUserData.inventory || { tables: ['default'], cardBacks: ['standardRed'], sounds: ['default'] },
-                    equipped: window.currentUserData.equipped || { table: 'default', cardBacks: 'standardRed', sounds: 'default' },
-                    stats: window.currentUserData.stats || { wins: 0, losses: 0, draws: 0 },
-                    ytClaimed: window.currentUserData.ytClaimed || false
-                };
-
-                await setDoc(doc(db, 'users', auth.currentUser.uid), newProfile);
-                window.currentUserData = newProfile; 
-                updateProfileUI(auth.currentUser.email); 
-                document.getElementById('setup-btn').innerText = "Zapisz profil"; 
-                showScreen('menu-screen');
-            } catch (err) {
-                console.error(err);
-                alert("Wystąpił błąd! Upewnij się, że zdjęcie nie jest zbyt duże.");
-                document.getElementById('setup-btn').innerText = "Zapisz profil"; 
-            }
-        };
-
-        function updateProfileUI(email) {
-            document.getElementById('profile-img').src = window.currentUserData.avatar;
-            document.getElementById('player-nick').innerHTML = `${window.getRankTitle(window.currentUserData.elo)} ${window.currentUserData.displayName}`;
-            document.getElementById('player-elo').innerText = window.currentUserData.elo;
-            document.getElementById('player-coins').innerText = window.currentUserData.coins;
-            
-            const st = window.currentUserData.stats;
-            document.getElementById('stat-wins').innerText = st.wins; document.getElementById('stat-losses').innerText = st.losses; document.getElementById('stat-draws').innerText = st.draws; document.getElementById('stat-total').innerText = st.wins + st.losses + st.draws;
-            document.getElementById('login-section').style.display = 'none'; document.getElementById('profile-section').style.display = 'flex'; document.getElementById('wallet-ui').style.display = 'block';
-            
-            if(window.currentUserData.ytClaimed) {
-                document.getElementById('yt-btn').style.display = 'none';
-            } else {
-                document.getElementById('yt-btn').style.display = 'block';
-            }
+        function updateUI(data) {
+            document.getElementById('my-avatar').src = data.avatar;
+            document.getElementById('my-nick').innerText = data.displayName;
+            document.getElementById('my-elo').innerText = data.elo;
+            document.getElementById('my-coins').innerText = data.coins;
         }
 
-        // --- NAGRODA ZA YOUTUBE ---
-        window.claimYTReward = function() {
-            if(window.currentUserData.ytClaimed) return;
-            window.open('https://www.youtube.com/@xPatrysiakGames?sub_confirmation=1', '_blank');
-            const btn = document.getElementById('yt-btn');
-            btn.innerText = "Sprawdzanie subskrypcji...";
-            btn.disabled = true;
-
-            setTimeout(async () => {
-                window.currentUserData.coins += 500;
-                window.currentUserData.ytClaimed = true;
-                await updateDoc(doc(db, 'users', auth.currentUser.uid), { coins: window.currentUserData.coins, ytClaimed: true });
-                updateProfileUI(auth.currentUser.email);
-                confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 }, colors: ['#ff0000', '#ffffff', '#ffd700'] });
-                alert("Dziękujemy za zasubskrybowanie kanału xPatrysiakGames! Otrzymujesz $500 Vulkan Dollars!");
-            }, 5000);
-        };
-
-        // --- SKLEP I EKWIPUNEK ---
-        window.applyEquippedItems = function() {
-            const eq = window.currentUserData.equipped;
-            const t = window.GAME_ITEMS.tables[eq.table];
-            document.documentElement.style.setProperty('--table-color', t.color);
-            
-            const s = window.GAME_ITEMS.sounds[eq.sounds];
-            window.moveSound = new Audio(s.move); window.moveSound.volume = window.globalVolume;
-            window.captureSound = new Audio(s.cap); window.captureSound.volume = window.globalVolume;
-
-            const b = window.GAME_ITEMS.cardBacks[eq.cardBacks];
-            document.documentElement.style.setProperty('--card-back-url', `url(${b.url})`);
-        };
-
-        window.openShop = function() { showScreen('shop-screen'); renderItemsUI('shop'); };
-        window.openInventory = function() { showScreen('inventory-screen'); renderItemsUI('inventory'); };
-
-        function renderItemsUI(mode) { 
-            const categories = ['tables', 'cardBacks', 'sounds'];
-            categories.forEach(type => {
-                const container = document.getElementById(`${mode}-${type}-list`); container.innerHTML = "";
-                const owned = window.currentUserData.inventory[type] || ['default'];
-                const equipped = window.currentUserData.equipped[type === 'tables' ? 'table' : type];
-
-                Object.keys(window.GAME_ITEMS[type]).forEach(key => {
-                    const item = window.GAME_ITEMS[type][key];
-                    const isOwned = owned.includes(key); const isEq = equipped === key;
-                    if(mode === 'inventory' && !isOwned) return; 
-
-                    let btnHtml = "";
-                    if(mode === 'shop') {
-                        if(isOwned) btnHtml = `<button class="btn shop-btn" style="background:#444; color:#888;" disabled>Posiadasz</button>`;
-                        else btnHtml = `<button class="btn shop-btn" onclick="window.buyItem('${type}', '${key}', ${item.price})">Kup ($ ${item.price})</button>`;
-                    } else {
-                        if(isEq) btnHtml = `<button class="btn shop-btn" style="background:#28a745; color:white;" disabled>Wyposażono</button>`;
-                        else btnHtml = `<button class="btn shop-btn" style="background:#0059b3; color:white;" onclick="window.equipItem('${type}', '${key}')">Użyj</button>`;
-                    }
-                    
-                    let rarityColor = "#fff";
-                    if(item.rarity === 'rare') rarityColor = "#80d4ff"; if(item.rarity === 'epic') rarityColor = "#d9b3ff"; if(item.rarity === 'legendary') rarityColor = "#ffd700";
-
-                    let previewHtml = "";
-                    if(type === 'tables') previewHtml = `<div style="width:50px;height:50px; border-radius:5px; background: ${item.color}; border:2px solid ${rarityColor}"></div>`;
-                    if(type === 'cardBacks') previewHtml = `<img src="${item.url}" style="width:35px; height:50px; filter:drop-shadow(0 0 2px #fff); border-radius:4px;">`;
-                    if(type === 'sounds') previewHtml = `<div style="font-size:35px;">🎵</div>`;
-
-                    container.innerHTML += `
-                    <div class="shop-card" style="border-top: 3px solid ${rarityColor}; ${isEq ? 'box-shadow: 0 0 20px rgba(40,167,69,0.5); border-color:#28a745;' : ''}">
-                        ${previewHtml}<h4 style="margin:10px 0 5px 0; color:${rarityColor}; font-size:14px; text-align:center;">${item.name}</h4>
-                        ${mode==='shop' ? `<p style="margin:0 0 10px 0; font-size:12px; color:#aaa;">${isOwned ? 'Zdobyto' : '$ ' + item.price}</p>` : '<br>'}
-                        ${btnHtml}
-                    </div>`;
+        function loadMockFriends(friends) {
+            const list = document.getElementById('friends-list');
+            list.innerHTML = "";
+            if (friends && friends.length > 0) {
+                friends.forEach(f => {
+                    list.innerHTML += `
+                        <div class="chat-item">
+                            <img src="${f.avatar}" class="user-avatar" style="width:35px; height:35px;">
+                            <div style="margin-left:10px">
+                                <div style="font-weight:bold; font-size:13px">${f.name}</div>
+                                <div style="font-size:11px; color:#888">Dostępny</div>
+                            </div>
+                        </div>
+                    `;
                 });
-            });
-        }
-
-        window.buyItem = async function(type, key, price) {
-            if(window.currentUserData.coins < price) return alert("Masz za mało Vulkan Dollars!");
-            if(confirm(`Kupić ${window.GAME_ITEMS[type][key].name} za $${price}?`)) {
-                window.currentUserData.coins -= price; window.currentUserData.inventory[type].push(key);
-                await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: window.currentUserData.coins, inventory: window.currentUserData.inventory });
-                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); updateProfileUI(auth.currentUser.email); renderItemsUI('shop');
-            }
-        };
-
-        window.equipItem = async function(type, key) {
-            const eqKey = type === 'tables' ? 'table' : type; window.currentUserData.equipped[eqKey] = key;
-            await updateDoc(doc(db, "users", auth.currentUser.uid), { equipped: window.currentUserData.equipped });
-            window.applyEquippedItems(); window.openInventory(); 
-        };
-
-        window.openDailyBox = async function() {
-            const now = Date.now(); const last = window.currentUserData.lastDaily;
-            if (now - last < 86400000) return alert(`Skrzynka odnawia się co 24h! Zostało ok. ${Math.ceil((86400000 - (now - last)) / 3600000)} godz.`);
-            const coins = Math.floor(Math.random() * 150) + 50; window.currentUserData.coins += coins; window.currentUserData.lastDaily = now;
-            await updateDoc(doc(db, "users", auth.currentUser.uid), { coins: window.currentUserData.coins, lastDaily: now });
-            updateProfileUI(auth.currentUser.email); confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 }, colors: ['#ff4500', '#ffd700', '#ffffff'] });
-            alert(`🎁 Otwarto Kasyno Box!\n\nZdobywasz: $${coins} Vulkan Dollars!`);
-        };
-
-        // --- SIDEBAR ZNAJOMYCH ---
-        window.toggleSidebar = function() {
-            document.getElementById('friends-sidebar').classList.toggle('open');
-            window.switchSidebarTab('list');
-        };
-
-        window.switchSidebarTab = function(tabName) {
-            document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).classList.add('active');
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`btn-tab-${tabName}`).classList.add('active');
-            if(tabName === 'list') renderFriendsList();
-        };
-
-        function renderFriendsList() {
-            const container = document.getElementById('friends-list-container'); container.innerHTML = "";
-            if(!window.currentUserData.friends || window.currentUserData.friends.length === 0) { container.innerHTML = "<p style='color:#888; text-align:center; margin-top:20px;'>Brak znajomych. Wyszukaj kogoś!</p>"; return; }
-            window.currentUserData.friends.forEach(f => {
-                container.innerHTML += `
-                <div class="sidebar-item">
-                    <div style="display:flex; align-items:center;">
-                        <img src="${f.avatar}" class="sidebar-avatar">
-                        <span>${f.name}</span>
-                    </div>
-                    <button class="btn" style="width:auto; padding:5px 10px; font-size:12px; margin:0;" onclick="alert('Użyj przycisku Graj Prywatnie i wyślij koledze kod pokoju.')">Graj</button>
-                </div>`;
-            });
-        }
-
-        window.searchPlayers = async () => {
-            const queryText = document.getElementById('search-input-sidebar').value.trim().toLowerCase();
-            const resultsBox = document.getElementById('search-results-sidebar');
-            if(!queryText) return;
-            resultsBox.innerHTML = "<div class='spinner' style='margin:20px auto'></div>";
-            const snapshot = await getDocs(collection(db, "users"));
-            let html = "";
-            snapshot.forEach(d => {
-                const u = d.data();
-                if(u.uid !== auth.currentUser.uid && u.displayName.toLowerCase().includes(queryText)) {
-                    const isFriend = window.currentUserData.friends.find(f => f.uid === u.uid);
-                    html += `
-                    <div class="sidebar-item">
-                        <div style="display:flex; align-items:center;">
-                            <img src="${u.avatar}" class="sidebar-avatar">
-                            <div><span style="font-weight:bold; display:block;">${window.getRankTitle(u.elo)} ${u.displayName}</span><span style="font-size:10px; color:gold;">${u.elo} ELO</span></div>
-                        </div>
-                        ${isFriend ? `<span style="font-size:12px; color:#888;">Znajomy</span>` : `<button class="btn" style="width:auto; padding:5px 10px; font-size:12px; margin:0;" onclick="window.sendFriendRequest('${u.uid}', '${u.displayName}')">Dodaj</button>`}
-                    </div>`;
-                }
-            });
-            resultsBox.innerHTML = html || "<p style='color:#888; text-align:center;'>Nie znaleziono gracza.</p>";
-        };
-
-        window.sendFriendRequest = async (toUid, toName) => {
-            await addDoc(collection(db, "mail"), { type: "friend_request", fromUid: auth.currentUser.uid, fromName: window.currentUserData.displayName, fromAvatar: window.currentUserData.avatar, toUid: toUid, timestamp: Date.now() });
-            alert(`Wysłano zaproszenie do: ${toName}`); document.getElementById('search-input-sidebar').value = ''; document.getElementById('search-results-sidebar').innerHTML = '';
-        };
-
-        function listenToMailbox() {
-            const q = query(collection(db, "mail"), where("toUid", "==", auth.currentUser.uid));
-            onSnapshot(q, (snapshot) => {
-                const mailBox = document.getElementById('mail-list-container'); let mailHtml = ""; let count = 0;
-                snapshot.forEach(d => {
-                    count++; const mail = d.data();
-                    mailHtml += `
-                    <div class="sidebar-item" style="flex-direction:column; align-items:flex-start;">
-                        <div style="display:flex; align-items:center; margin-bottom:10px;">
-                            <img src="${mail.fromAvatar}" class="sidebar-avatar"><span style="font-size:13px;"><b>${mail.fromName}</b> zaprasza!</span>
-                        </div>
-                        <div style="display:flex; gap:10px; width:100%;">
-                            <button class="btn" style="background:#28a745; margin:0; padding:5px; font-size:12px;" onclick="window.acceptFriend('${d.id}', '${mail.fromUid}', '${mail.fromName}', '${mail.fromAvatar}')">Akceptuj</button>
-                            <button class="btn" style="background:#dc3545; margin:0; padding:5px; font-size:12px;" onclick="window.deleteMail('${d.id}')">Odrzuć</button>
-                        </div>
-                    </div>`;
-                });
-                mailBox.innerHTML = mailHtml || "<p style='color:#888; text-align:center;'>Brak nowych powiadomień.</p>";
-                const notifDot = document.getElementById('sidebar-notif-dot');
-                if(count > 0) { notifDot.style.display = 'block'; notifDot.innerText = count; } else { notifDot.style.display = 'none'; }
-            });
-        }
-
-        window.deleteMail = async (mailId) => { await deleteDoc(doc(db, "mail", mailId)); };
-
-        window.acceptFriend = async (mailId, friendUid, friendName, friendAvatar) => {
-            const myRef = doc(db, "users", auth.currentUser.uid);
-            await updateDoc(myRef, { friends: arrayUnion({ uid: friendUid, name: friendName, avatar: friendAvatar }) });
-            window.currentUserData.friends.push({ uid: friendUid, name: friendName, avatar: friendAvatar });
-            const friendRef = doc(db, "users", friendUid);
-            await updateDoc(friendRef, { friends: arrayUnion({ uid: auth.currentUser.uid, name: window.currentUserData.displayName, avatar: window.currentUserData.avatar }) });
-            await window.deleteMail(mailId); alert(`Dodano ${friendName} do znajomych!`); window.switchSidebarTab('list');
-        };
-
-        // --- ZABEZPIECZONA LOGIKA MULTIPLAYER ---
-        window.currentGameId = null; window.gameStatus = 'menu';
-        window.opponentUid = null; window.gameMode = 'poker_free'; 
-
-        window.findOnlineMatch = async (isPrivate = false) => {
-            if (!auth.currentUser || !window.currentUserData) return alert("Zaloguj się!");
-            if (window.currentUserData.banned) return alert("Jesteś zbanowany!");
-            
-            window.gameMode = isPrivate ? 'private' : document.getElementById('game-mode-select').value;
-            
-            let privateCode = null;
-            if (isPrivate) {
-                const codeInput = prompt("Podaj kod pokoju znajomego (zostaw puste, by założyć własny):");
-                if(codeInput === null) return; 
-                if(codeInput.trim() === "") privateCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-                else privateCode = codeInput.trim().toUpperCase();
-            }
-            
-            showScreen('game-screen');
-            document.getElementById('waiting-overlay').style.display = 'flex';
-            document.getElementById('chat-messages').innerHTML = ''; 
-            document.getElementById('my-avatar').src = window.currentUserData.avatar; 
-            document.getElementById('my-name').innerHTML = `${window.getRankTitle(window.currentUserData.elo)} ${window.currentUserData.displayName}`;
-            document.getElementById('opponent-avatar').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=Puste"; 
-            document.getElementById('opponent-name').innerText = "Szukanie gracza do stołu...";
-            
-            if(isPrivate) document.getElementById('waiting-overlay').innerHTML = `<div class='spinner'></div>Czekaj na znajomego.<br><br>Twój Kod Pokoju:<br><strong style="font-size:30px; color:gold;">${privateCode}</strong>`;
-            else document.getElementById('waiting-overlay').innerHTML = `<div class='spinner'></div>Szukanie przeciwnika... (${document.getElementById('game-mode-select').options[document.getElementById('game-mode-select').selectedIndex].text})`;
-
-            window.isOnline = true; window.gameStatus = 'waiting'; 
-            
-            let q;
-            if(isPrivate) q = query(collection(db, "games"), where("status", "==", "waiting"), where("privateCode", "==", privateCode));
-            else q = query(collection(db, "games"), where("status", "==", "waiting"), where("mode", "==", window.gameMode));
-            
-            const snapshot = await getDocs(q);
-            let gameToJoin = null; snapshot.forEach(d => { if (d.data().creatorUid !== auth.currentUser.uid) gameToJoin = d; });
-
-            if (gameToJoin) {
-                const gData = gameToJoin.data(); window.currentGameId = gameToJoin.id; window.opponentUid = gData.creatorUid;
-                
-                const updates = { status: "playing", joinerUid: auth.currentUser.uid };
-                document.getElementById('opponent-avatar').src = gData.creatorAvatar; document.getElementById('opponent-name').innerHTML = gData.creatorPlayer;
-                updates.joinerPlayer = `${window.getRankTitle(window.currentUserData.elo)} ${window.currentUserData.displayName}`; 
-                updates.joinerAvatar = window.currentUserData.avatar;
-                
-                await updateDoc(doc(db, "games", window.currentGameId), updates);
-                startCardTable(); listenToGame();
             } else {
-                const newGame = { status: "waiting", gameState: "start", mode: window.gameMode, creatorUid: auth.currentUser.uid, messages: [] };
-                if(isPrivate) newGame.privateCode = privateCode;
-
-                newGame.creatorPlayer = `${window.getRankTitle(window.currentUserData.elo)} ${window.currentUserData.displayName}`;
-                newGame.creatorAvatar = window.currentUserData.avatar;
-                
-                const res = await addDoc(collection(db, "games"), newGame); window.currentGameId = res.id;
-                startCardTable(); listenToGame();
+                list.innerHTML = `<div style="padding:20px; color:#555; text-align:center">Nie masz jeszcze znajomych.</div>`;
             }
-        };
-
-        function listenToGame() {
-            onSnapshot(doc(db, "games", window.currentGameId), (docSnap) => {
-                if (!docSnap.exists()) return; const data = docSnap.data();
-                if (data.status === 'playing' && window.gameStatus === 'waiting') {
-                    window.gameStatus = 'playing'; document.getElementById('waiting-overlay').style.display = 'none';
-                    window.opponentUid = data.joinerUid === auth.currentUser.uid ? data.creatorUid : data.joinerUid;
-                    
-                    if(data.creatorUid === auth.currentUser.uid) { 
-                        document.getElementById('opponent-avatar').src = data.joinerAvatar; 
-                        document.getElementById('opponent-name').innerHTML = data.joinerPlayer; 
-                    } 
-                    document.getElementById('status').innerText = "Gra Rozpoczęta!";
-                }
-                
-                // MIEJSCE NA LOGIKĘ ODBIORU STANU GRY KARCIANEJ (Zastępuje fen() z szachów)
-                if (data.status === 'playing' && data.gameState !== "start") {
-                    // Update wizualny stołu
-                    if(window.moveSound) window.moveSound.play();
-                }
-
-                if (data.messages) {
-                    const cb = document.getElementById('chat-messages'); cb.innerHTML = data.messages.map(m => `<p><b>${m.nick}:</b> ${m.text}</p>`).join(''); cb.scrollTop = cb.scrollHeight;
-                }
-                if (data.status === 'finished' && window.gameStatus === 'playing') {
-                    window.gameStatus = 'finished'; window.gameEndSound.play();
-                    if(data.winnerUid === auth.currentUser.uid) {
-                        confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 } }); alert(`Wygrałeś! Przeciwnik: ${data.reason}.`);
-                    } else if(data.winnerUid === null) alert(`Remis / Podział puli! Powód: ${data.reason}.`);
-                    else alert(`Przegrałeś! Powód: ${data.reason}.`);
-                    showScreen('menu-screen');
-                }
-            });
-        }
-
-        window.endGame = async function(reason, winnerUid) {
-            if(window.gameStatus !== 'playing') return; window.gameStatus = 'finished';
-            await updateDoc(doc(db, "games", window.currentGameId), { status: "finished", winnerUid: winnerUid, reason: reason });
-            const myRef = doc(db, 'users', auth.currentUser.uid); 
-            if(winnerUid === auth.currentUser.uid) window.currentUserData.stats.wins++; else if(winnerUid === null) window.currentUserData.stats.draws++; else window.currentUserData.stats.losses++;
-            
-            if(!window.gameMode.includes('free') && window.gameMode !== 'private') {
-                const opRef = doc(db, 'users', window.opponentUid); const [myS, opS] = await Promise.all([getDoc(myRef), getDoc(opRef)]);
-                if(winnerUid === auth.currentUser.uid) { window.currentUserData.elo += 15; window.currentUserData.coins += 50; await updateDoc(opRef, { elo: opS.data().elo-15 }); }
-                else if(winnerUid !== null) { window.currentUserData.elo -= 15; await updateDoc(opRef, { elo: opS.data().elo+15 }); }
-            }
-            await updateDoc(myRef, { elo: window.currentUserData.elo, coins: window.currentUserData.coins, stats: window.currentUserData.stats });
-            updateProfileUI(auth.currentUser.email);
-        };
-
-        window.quitGame = async function() {
-            if (window.isOnline && window.gameStatus === 'playing') { if(confirm("Wyjście ze stołu oznacza natychmiastową porażkę/utratę puli. Na pewno?")) await window.endGame('opuszczenie stołu', window.opponentUid); else return; } 
-            else if (window.currentGameId && window.gameStatus === 'waiting') await updateDoc(doc(db, "games", window.currentGameId), { status: "cancelled" });
-            window.currentGameId = null; window.isOnline = false; window.gameStatus = 'menu'; showScreen('menu-screen');
-        };
-
-        window.sendChat = async function(e) { if(e.key === 'Enter' && e.target.value.trim() !== '') { const t = e.target.value.trim(); e.target.value = ''; await updateDoc(doc(db, "games", window.currentGameId), { messages: arrayUnion({ nick: window.currentUserData.displayName, text: t }) }); } };
-        document.addEventListener('mouseover', e => { if(e.target.classList.contains('btn') || e.target.classList.contains('shop-card') || e.target.classList.contains('tab-btn')) window.hoverSound.play(); });
-
-        window.startCardTable = function() {
-            // Tu można wywołać wizualne resetowanie stołu przed rozdaniem
-            document.getElementById('status').innerText = "Czekam na rozdanie...";
-        };
-
-        // --- RANKING ---
-        window.loadLeaderboard = async () => {
-            showScreen('leaderboard-screen');
-            const list = document.getElementById('leaderboard-list'); list.innerHTML = "<div class='spinner' style='margin:20px auto'></div>";
-            const snapshot = await getDocs(query(collection(db, "users"), orderBy("elo", "desc"), limit(50)));
-            let html = ""; let rank = 1;
-            snapshot.forEach(d => {
-                if(!d.data().banned) {
-                    html += `<div class="list-item">
-                        <div style="display:flex; align-items:center;"><strong style="margin-right:15px; color:var(--vulcan-glow);">#${rank}</strong><img src="${d.data().avatar}" style="width:35px; height:35px; border-radius:50%; margin-right:15px; object-fit:cover; border: 1px solid var(--vulcan-glow);"><span>${window.getRankTitle(d.data().elo)} ${d.data().displayName}</span></div>
-                        <strong style="color:gold; text-shadow: 0 0 5px rgba(255,215,0,0.5);">${d.data().elo} ELO</strong></div>`; 
-                    rank++;
-                }
-            });
-            list.innerHTML = html;
-        };
-
-        // --- INSTRUKCJE ---
-        window.showInstructions = function() {
-            showScreen('instructions-screen');
-            changeInstruction('poker_free');
-        };
-
-        window.changeInstruction = function(gameKey) {
-            const rules = {
-                'poker': "<b>Poker (Texas Hold'em) - Rankingowy</b><br><br>Klasyczny poker sportowy na wirtualne stawki rankingu ELO. Na początku każdy gracz otrzymuje 2 karty. Na stół wykładane jest 5 kart wspólnych w rundach (Flop, Turn, River). Wygrywa najlepszy 5-kartowy układ.<br><br>Dostępne akcje: Pas (Fold), Sprawdzenie (Call), Podbicie (Raise).",
-                'poker_free': "<b>Poker (Na Wymiany / Darmowy) - Waluta: $</b><br><br>Rozrywkowa wersja pokera, znana jako Dobierany (Five-card draw). Otrzymujesz 5 kart. Możesz wymienić dowolną ich liczbę w jednej rundzie, aby stworzyć jak najsilniejszy układ. Gra toczy się na Vulkan Dollars ($), bez utraty punktów ELO.",
-                'blackjack': "<b>Blackjack (Oczko)</b><br><br>Graj przeciwko krupierowi lub innemu graczowi. Celem jest zebranie kart o łącznej wartości jak najbliżej 21, ale nie przekraczając tej liczby. Figury mają wartość 10, As to 1 lub 11.",
-                'makao': "<b>Makao</b><br><br>Popularna polska gra karciana. Celem jest jak najszybsze pozbycie się wszystkich kart z ręki. Karty dopasowuje się kolorem lub figurą do karty leżącej na stosie. Funkcyjne karty: 2, 3, 4 (dobieranie/czekanie), J, Q, K, A zmieniają zasady na stole.",
-                'wojna': "<b>Wojna</b><br><br>Szybka gra losowa. Każdy gracz wykłada po jednej karcie ze swojej talii. Karta o wyższej wartości zabiera obie. W przypadku remisu następuje 'wojna' - karty zakryte i kolejne odkryte rozstrzygają starcie.",
-                'kierki': "<b>Kierki (Hearts)</b><br><br>Gra polega na braniu lew, jednak celem jest zdobycie jak najmniejszej liczby punktów. Każdy kier to 1 punkt karny, a Dama Pik to 13 punktów karnych. Wyjątkiem jest zebranie wszystkich karnych kart (tzw. ustrzelenie księżyca) – wtedy pozostali gracze dostają punkty karne."
-            };
-            document.getElementById('instruction-text').innerHTML = rules[gameKey];
-            document.querySelectorAll('.inst-btn').forEach(b => b.style.borderColor = "rgba(255,255,255,0.1)");
-            document.getElementById(`btn-inst-${gameKey}`).style.borderColor = "var(--vulcan-glow)";
-        };
-
-    </script>
-
-    <style>
-        /* === VULKAN STYL === */
-        :root { --vulcan-red: #9e0000; --vulcan-glow: #ff4500; --text-light: #fff; --glass-bg: rgba(10, 0, 0, 0.85); --table-color: #006400; --card-back-url: url('https://upload.wikimedia.org/wikipedia/commons/d/d4/Card_back_01.svg'); }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; color: var(--text-light); display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(45deg, #050000, #1a0000, #050000); background-size: 400% 400%; animation: bgShift 20s ease infinite; overflow: hidden; position: relative; }
-        @keyframes bgShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .lava-lamp { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; filter: blur(20px); }
-        .bubble { position: absolute; bottom: -200px; background: radial-gradient(circle at 30% 30%, rgba(255, 69, 0, 0.7), rgba(139, 0, 0, 0.8)); border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; animation: rise infinite alternate ease-in-out; mix-blend-mode: screen; box-shadow: 0 0 60px var(--vulcan-glow); }
-        .b1 { width: 200px; height: 200px; left: 15%; animation-duration: 14s; animation-delay: 0s; } .b2 { width: 300px; height: 250px; left: 45%; animation-duration: 22s; animation-delay: 2s; } .b3 { width: 150px; height: 150px; left: 75%; animation-duration: 12s; animation-delay: 5s; }
-        @keyframes rise { 0% { transform: translateY(0) scale(1) rotate(0deg); } 100% { transform: translateY(-110vh) scale(1.3) rotate(180deg); } }
-
-        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 10px; } ::-webkit-scrollbar-thumb { background: var(--vulcan-red); border-radius: 10px; } ::-webkit-scrollbar-thumb:hover { background: var(--vulcan-glow); }
-
-        .screen { display: none; width: 100%; max-width: 650px; text-align: center; z-index: 10; animation: fadeInSlideUp 0.4s ease forwards; } .active { display: block; }
-        @keyframes fadeInSlideUp { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
-        
-        .menu-container { background: var(--glass-bg); padding: 30px; border-radius: 20px; border: 1px solid rgba(255, 69, 0, 0.2); backdrop-filter: blur(15px); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(255, 69, 0, 0.05); margin: 0 auto; max-height: 95vh; overflow-y: auto; }
-        h1 { font-size: 40px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 4px; text-shadow: 0 5px 15px rgba(0,0,0,0.8);} h1 span { color: var(--vulcan-glow); text-shadow: 0 0 20px var(--vulcan-glow); }
-        
-        .wallet-display { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 8px 18px; border-radius: 25px; border: 1px solid #1c7c34; font-weight: bold; font-size: 16px; color: #4ade80; box-shadow: 0 0 15px rgba(28,124,52,0.4); animation: pulseGreen 2s infinite; z-index: 100;}
-        @keyframes pulseGreen { 0% { box-shadow: 0 0 10px rgba(74,222,128,0.4); } 50% { box-shadow: 0 0 20px rgba(74,222,128,0.8); } 100% { box-shadow: 0 0 10px rgba(74,222,128,0.4); } }
-
-        .btn { width: 100%; padding: 14px; margin-bottom: 12px; font-weight: bold; font-size: 15px; letter-spacing: 1px; color: white; border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); background: linear-gradient(135deg, var(--vulcan-red), #5a0000); text-transform: uppercase; box-shadow: 0 5px 15px rgba(0,0,0,0.6); }
-        .btn:hover { background: linear-gradient(135deg, var(--vulcan-glow), var(--vulcan-red)); box-shadow: 0 0 20px rgba(255, 69, 0, 0.7); transform: translateY(-3px); }
-        .btn:active { transform: translateY(1px); box-shadow: 0 2px 5px rgba(0,0,0,0.8); }
-        
-        .custom-input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid rgba(255, 69, 0, 0.3); background: rgba(0,0,0,0.6); color: white; text-align: center; font-size: 16px; box-sizing: border-box; transition: 0.3s;} .custom-input:focus { outline: none; border-color: var(--vulcan-glow); box-shadow: 0 0 15px rgba(255, 69, 0, 0.5); background: rgba(0,0,0,0.9); }
-        
-        .profile-card { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 15px; border: 1px solid rgba(255,69,0,0.2); margin-bottom: 20px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);}
-        .profile-img { width: 70px; height: 70px; object-fit: cover; border-radius: 50%; border: 2px solid var(--vulcan-glow); margin-right:15px; box-shadow: 0 0 15px var(--vulcan-glow);}
-        
-        .stats-row { display: flex; justify-content: space-around; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); } .stat-box { text-align: center; } .stat-box span { display: block; font-size: 20px; font-weight: bold; color: var(--vulcan-glow); } .stat-box small { font-size: 11px; color: #aaa; text-transform: uppercase; }
-        
-        .row-buttons { display: flex; gap: 12px; margin-bottom: 12px;} .row-buttons .btn { margin-bottom: 0; font-size: 13px; padding: 12px;}
-        
-        .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .shop-card { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; align-items: center; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.5);} .shop-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.8), inset 0 0 15px rgba(255,255,255,0.05); background: rgba(0,0,0,0.7);}
-        .shop-btn { padding: 8px; font-size: 12px; margin-top: auto; background: linear-gradient(135deg, #1c7c34, #145323); color: #fff; text-shadow: none;} .shop-btn:hover { background: linear-gradient(135deg, #4ade80, #1c7c34); color:#fff; box-shadow: 0 0 15px #4ade80;}
-        
-        /* Gra - KARTY */
-        .match-player { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.8); padding: 10px 15px; border-radius: 10px; margin: 8px auto; width: 550px; border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box;} .player-left { display: flex; align-items: center; } .player-left img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 12px; border: 2px solid #444;}
-        
-        #card-table { position: relative; width: 550px; height: 350px; margin: 0 auto; box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 50px rgba(0,0,0,0.8); border: 10px solid #2b1d0e; border-radius: 150px; background-color: var(--table-color); transition: background-color 0.5s; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center;}
-        
-        .card-slot { width: 60px; height: 85px; border: 2px dashed rgba(255,255,255,0.2); border-radius: 5px; margin: 5px; display: inline-block; }
-        .card-visual { width: 100%; height: 100%; background-image: var(--card-back-url); background-size: cover; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
-        .card-visual.face-up { background-color: white; background-image: none; display:flex; justify-content:center; align-items:center; color: black; font-weight: bold; font-size: 24px;}
-        
-        .poker-chip-stack { position: absolute; color: gold; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px black;}
-        
-        .game-controls { display: flex; justify-content: center; gap: 10px; margin-top: 10px; width: 550px; margin: 10px auto; }
-        .action-btn { background: #333; color: white; border: 1px solid #555; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s;}
-        .action-btn:hover { background: var(--vulcan-glow); border-color: white;}
-
-        #waiting-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10; display:flex; flex-direction:column; justify-content:center; align-items:center; color:var(--text-light); font-size:24px; font-weight:bold; text-shadow: 0 0 15px var(--vulcan-glow); backdrop-filter: blur(5px);}
-        
-        .chat-container { width: 550px; margin: 12px auto; background: rgba(0,0,0,0.7); border: 1px solid rgba(255,69,0,0.2); border-radius: 10px; overflow: hidden; } #chat-messages { height: 90px; overflow-y: auto; padding: 12px; text-align: left; font-size: 14px; } #chat-messages p { margin: 4px 0; background: rgba(255,255,255,0.03); padding: 5px 8px; border-radius: 5px;} #chat-messages b { color: var(--vulcan-glow); } #chat-input { width: 100%; padding: 12px; border: none; background: rgba(0,0,0,0.9); color: white; border-top: 1px solid rgba(255,69,0,0.3); box-sizing: border-box; }
-        
-        .list-container { background: rgba(0,0,0,0.5); padding: 12px; border-radius: 10px; border: 1px solid rgba(255,69,0,0.2); margin-bottom: 20px; overflow-y:auto; text-align:left; max-height:200px;} .list-item { display: flex; justify-content: space-between; align-items:center; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;} .list-item:hover { background: rgba(255,69,0,0.1); border-radius: 8px;}
-        .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,69,0,0.1); border-top-color: var(--vulcan-glow); border-radius: 50%; animation: spin 1s infinite cubic-bezier(0.55, 0.15, 0.45, 0.85); margin-bottom: 20px; } @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        /* SIDEBAR ZNAJOMYCH */
-        .sidebar-toggle-btn { position: fixed; right: 0; top: 50%; transform: translateY(-50%); background: var(--vulcan-red); color: white; padding: 15px 10px; border-radius: 10px 0 0 10px; cursor: pointer; border: 1px solid var(--vulcan-glow); border-right: none; z-index: 101; writing-mode: vertical-rl; text-orientation: mixed; font-weight: bold; font-size: 16px; box-shadow: -5px 0 15px rgba(255,69,0,0.5); transition: 0.3s; display:none;}
-        .sidebar-toggle-btn:hover { background: var(--vulcan-glow); padding-right: 15px;}
-        .notif-dot { position: absolute; top: 5px; right: 5px; background: red; color: white; font-size: 12px; width: 18px; height: 18px; border-radius: 50%; display: flex; justify-content: center; align-items: center; writing-mode: horizontal-tb; border: 1px solid white; display: none;}
-
-        .friends-sidebar { position: fixed; right: -360px; top: 0; width: 340px; height: 100vh; background: rgba(10,0,0,0.95); border-left: 2px solid var(--vulcan-red); transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); z-index: 105; padding: 20px; box-sizing: border-box; box-shadow: -10px 0 30px rgba(0,0,0,0.9); display: flex; flex-direction: column; text-align: left;}
-        .friends-sidebar.open { right: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,69,0,0.3); padding-bottom: 15px; margin-bottom: 15px; } .sidebar-header h2 { margin: 0; color: var(--vulcan-glow); font-size: 22px; text-transform: uppercase; letter-spacing: 2px;}
-        .close-btn { background: transparent; color: white; border: none; font-size: 24px; cursor: pointer; transition: 0.2s;} .close-btn:hover { color: var(--vulcan-glow); transform: scale(1.2); }
-        .sidebar-tabs { display: flex; margin-bottom: 15px; background: rgba(0,0,0,0.5); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);} .tab-btn { flex: 1; background: transparent; border: none; color: #aaa; padding: 10px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px;} .tab-btn.active { background: rgba(255,69,0,0.2); color: white; border-bottom: 2px solid var(--vulcan-glow); }
-        .sidebar-tab { display: none; flex-grow: 1; overflow-y: auto; padding-right: 5px;} .sidebar-tab.active { display: block; }
-        .sidebar-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.02);} .sidebar-avatar { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; margin-right: 10px; border: 1px solid var(--vulcan-glow);}
-    </style>
-</head>
-<body>
-    <div class="lava-lamp"><div class="bubble b1"></div><div class="bubble b2"></div><div class="bubble b3"></div></div>
-
-    <div id="wallet-ui" class="wallet-display" style="display:none;">$ <span id="player-coins">0</span></div>
-
-    <div class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="window.toggleSidebar()">
-        👥 ZNAJOMI <div class="notif-dot" id="sidebar-notif-dot">!</div>
-    </div>
-
-    <div id="friends-sidebar" class="friends-sidebar">
-        <div class="sidebar-header"><h2>Kasyno</h2><button class="close-btn" onclick="window.toggleSidebar()">✖</button></div>
-        <div class="sidebar-tabs">
-            <button class="tab-btn active" id="btn-tab-list" onclick="window.switchSidebarTab('list')">Gracze</button>
-            <button class="tab-btn" id="btn-tab-search" onclick="window.switchSidebarTab('search')">Szukaj</button>
-            <button class="tab-btn" id="btn-tab-mail" onclick="window.switchSidebarTab('mail')">Poczta</button>
-        </div>
-        <div id="tab-list" class="sidebar-tab active"><div id="friends-list-container"></div></div>
-        <div id="tab-search" class="sidebar-tab">
-            <input type="text" id="search-input-sidebar" placeholder="Wpisz nick..." class="custom-input" style="width:100%; margin-top:0;">
-            <button class="btn" onclick="window.searchPlayers()">Szukaj w bazie</button>
-            <div id="search-results-sidebar" style="margin-top:15px;"></div>
-        </div>
-        <div id="tab-mail" class="sidebar-tab"><div id="mail-list-container"></div></div>
-    </div>
-
-    <div id="menu-screen" class="screen active">
-        <div class="menu-container">
-            <h1>Vulkan <span>Cards</span></h1>
-            
-            <div id="login-section">
-                <button class="btn" style="background: linear-gradient(135deg, #DB4437, #a12b21); padding: 20px; font-size: 18px;" onclick="window.loginWithGoogle()">G Zaloguj przez Gmail</button>
-            </div>
-
-            <div id="profile-section" style="display: none; flex-direction: column;">
-                <div class="profile-card">
-                    <div style="display:flex; align-items:center;">
-                        <img id="profile-img" src="" class="profile-img">
-                        <div style="text-align:left;">
-                            <h3 id="player-nick" style="margin:0; font-size:18px; text-shadow: 0 0 5px rgba(255,255,255,0.3);">Gracz</h3>
-                            <p style="margin:2px 0 0 0; color:gold; font-weight:bold; font-size:16px;">🏆 ELO: <span id="player-elo">1000</span></p>
-                        </div>
-                    </div>
-                    <button onclick="window.editProfile()" style="background:transparent; border:none; cursor:pointer; font-size:28px; transition:0.3s;" onmouseover="this.style.transform='rotate(90deg) scale(1.1)'" onmouseout="this.style.transform='rotate(0deg) scale(1)'" title="Edytuj Profil">⚙️</button>
-                </div>
-
-                <div class="stats-row">
-                    <div class="stat-box"><span id="stat-total" style="color:white;">0</span><small>Partie</small></div>
-                    <div class="stat-box"><span id="stat-wins" style="color:#28a745;">0</span><small>Wygrane</small></div>
-                    <div class="stat-box"><span id="stat-losses" style="color:#dc3545;">0</span><small>Przegrane</small></div>
-                    <div class="stat-box"><span id="stat-draws" style="color:#aaa;">0</span><small>Remisy</small></div>
-                </div>
-                
-                <button id="yt-btn" class="btn" style="background: linear-gradient(135deg, #ff0000, #cc0000); box-shadow: 0 0 15px rgba(255,0,0,0.5);" onclick="window.claimYTReward()">📺 Subskrybuj xPatrysiakGames (+$500)</button>
-
-                <div class="row-buttons">
-                    <button class="btn" style="background: linear-gradient(135deg, #d4af37, #b8860b);" onclick="window.openDailyBox()">🎁 Odbierz Wypłatę</button>
-                    <button class="btn" style="background: linear-gradient(135deg, #0059b3, #003366);" onclick="window.openShop()">🛒 Sklep</button>
-                    <button class="btn" style="background: linear-gradient(135deg, #2a0845, #6441A5);" onclick="window.openInventory()">🎒 Wyposażenie</button>
-                </div>
-
-                <div style="display:flex; gap: 10px; align-items:center;">
-                    <select id="game-mode-select" class="custom-input" style="flex:2;">
-                        <option value="poker">🃏 Poker Texas Hold'em (Ranking ELO)</option>
-                        <option value="poker_free">💸 Poker na Wymiany (Graj o $)</option>
-                        <option value="blackjack">♠️ Blackjack (Oczko)</option>
-                        <option value="makao">🃏 Makao</option>
-                        <option value="wojna">⚔️ Wojna</option>
-                        <option value="kierki">♥️ Kierki</option>
-                    </select>
-                    <button class="btn" style="flex:1; margin:0; padding:12px; background:var(--vulcan-glow);" onclick="window.findOnlineMatch(false)">🔥 Graj Online</button>
-                </div>
-
-                <div class="row-buttons" style="margin-top:12px;">
-                    <button class="btn" style="background: linear-gradient(135deg, #004d00, #003300);" onclick="window.findOnlineMatch(true)">🤝 Pokój Prywatny</button>
-                    <button class="btn" style="background: linear-gradient(135deg, #444, #111);" onclick="window.showInstructions()">📖 Instrukcje Gier</button>
-                </div>
-                
-                <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; padding: 0 10px;">
-                    <button class="btn" style="width: auto; padding: 8px 15px; margin:0; background: linear-gradient(135deg, #333, #111);" onclick="window.loadLeaderboard()">🏆 Ranking</button>
-                    <label style="font-size:12px; color:#aaa; display:flex; align-items:center; gap:5px;">🔊 Głośność <input type="range" min="0" max="1" step="0.1" value="0.5" onchange="window.updateVolume(this.value)"></label>
-                    <button style="background:transparent; color:#888; border:none; cursor:pointer; font-weight:bold;" onclick="window.logout()">Wyloguj</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="instructions-screen" class="screen">
-        <div class="menu-container" style="max-width: 800px;">
-            <h2 style="color:var(--text-light); margin-top:0;">📖 Zasady Gier</h2>
-            <div class="row-buttons" style="flex-wrap:wrap; justify-content:center;">
-                <button id="btn-inst-poker" class="btn inst-btn" style="width:auto; padding:8px 15px; margin:5px; background:#222;" onclick="window.changeInstruction('poker')">Hold'em</button>
-                <button id="btn-inst-poker_free" class="btn inst-btn" style="width:auto; padding:8px 15px; margin:5px; background:#222;" onclick="window.changeInstruction('poker_free')">Poker Wymiany</button>
-                <button id="btn-inst-blackjack" class="btn inst-btn" style="width:auto; padding:8px 15px; margin:5px; background:#222;" onclick="window.changeInstruction('blackjack')">Blackjack</button>
-                <button id="btn-inst-makao" class="btn inst-btn" style="width:auto; padding:8px 15px; margin:5px; background:#222;" onclick="window.changeInstruction('makao')">Makao</button>
-                <button id="btn-inst-wojna" class="btn inst-btn" style="width:auto; padding:8px 15px; margin:5px; background:#222;" onclick="window.changeInstruction('wojna')">Wojna</button>
-                <button id="btn-inst-kierki" class="btn inst-btn" style="width:auto; padding:8px 15px; margin:5px; background:#222;" onclick="window.changeInstruction('kierki')">Kierki</button>
-            </div>
-            <div id="instruction-text" style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 10px; border: 1px solid #444; margin: 20px 0; text-align: left; line-height: 1.6; min-height: 150px;">
-                Wybierz grę powyżej.
-            </div>
-            <button class="btn" style="background:transparent; border: 1px solid #555;" onclick="showScreen('menu-screen')">Wróć do Kasyna</button>
-        </div>
-    </div>
-
-    <div id="shop-screen" class="screen">
-        <div class="menu-container" style="max-width: 800px;">
-            <h2 style="color:var(--text-light); margin-top:0;">🛒 Sklep Vulkan</h2>
-            <h3 style="color:var(--vulcan-glow); text-align:left; border-bottom: 1px solid #333; padding-bottom:5px;">Sukno do Stołu</h3>
-            <div class="shop-grid" id="shop-tables-list"></div>
-            <h3 style="color:var(--vulcan-glow); text-align:left; border-bottom: 1px solid #333; padding-bottom:5px;">Koszulki Kart</h3>
-            <div class="shop-grid" id="shop-cardBacks-list"></div>
-            <h3 style="color:var(--vulcan-glow); text-align:left; border-bottom: 1px solid #333; padding-bottom:5px;">Pakiety Dźwiękowe</h3>
-            <div class="shop-grid" id="shop-sounds-list"></div>
-            <button class="btn" style="background:transparent; border: 1px solid #555;" onclick="showScreen('menu-screen')">Wróć do Menu</button>
-        </div>
-    </div>
-
-    <div id="inventory-screen" class="screen">
-        <div class="menu-container" style="max-width: 800px;">
-            <h2 style="color:var(--text-light); margin-top:0;">🎒 Wyposażenie</h2>
-            <h3 style="color:var(--vulcan-glow); text-align:left; border-bottom: 1px solid #333; padding-bottom:5px;">Używane Sukno</h3>
-            <div class="shop-grid" id="inventory-tables-list"></div>
-            <h3 style="color:var(--vulcan-glow); text-align:left; border-bottom: 1px solid #333; padding-bottom:5px;">Używane Koszulki</h3>
-            <div class="shop-grid" id="inventory-cardBacks-list"></div>
-            <h3 style="color:var(--vulcan-glow); text-align:left; border-bottom: 1px solid #333; padding-bottom:5px;">Aktywne Dźwięki</h3>
-            <div class="shop-grid" id="inventory-sounds-list"></div>
-            <button class="btn" style="background:transparent; border: 1px solid #555;" onclick="showScreen('menu-screen')">Wróć</button>
-        </div>
-    </div>
-
-    <div id="setup-screen" class="screen">
-        <div class="menu-container">
-            <h2 style="color:var(--text-light); margin-top:0;">Karta Klubowa (Profil)</h2>
-            <div style="position:relative; width:140px; margin:0 auto 20px;">
-                <img id="preview-avatar" src="" style="width:140px; height:140px; object-fit:cover; border-radius:50%; border:4px solid var(--vulcan-glow); box-shadow:0 0 25px var(--vulcan-glow);">
-                <label style="position:absolute; bottom:0; right:0; background:var(--vulcan-red); border-radius:50%; width:40px; height:40px; display:flex; justify-content:center; align-items:center; cursor:pointer; box-shadow:0 0 15px #000; font-size:20px; transition:0.2s;">
-                    📷<input type="file" id="avatar-upload" accept="image/*" style="display:none;">
-                </label>
-            </div>
-            <input type="text" id="nick-input" placeholder="Podaj swój nick..." class="custom-input">
-            <button id="setup-btn" class="btn" style="margin-top:20px; padding:15px; font-size:18px;" onclick="window.saveProfile()">Zapisz Karta</button>
-        </div>
-    </div>
-
-    <div id="game-screen" class="screen">
-        <div class="match-player"><div class="player-left"><img id="opponent-avatar"><span id="opponent-name">...</span></div></div>
-        
-        <div id="card-table">
-            <div id="waiting-overlay">Czekaj...</div>
-            <div class="poker-chip-stack" style="top: 20px;">Pula: $0</div>
-            
-            <div style="position:absolute; top: 10px; display:flex;">
-                <div class="card-slot"><div class="card-visual"></div></div>
-                <div class="card-slot"><div class="card-visual"></div></div>
-                <div class="card-slot"><div class="card-visual"></div></div>
-            </div>
-
-            <div style="display:flex; justify-content:center; width:100%; z-index:2;">
-                <div class="card-slot"><div class="card-visual face-up" style="color:red;">A♥</div></div>
-                <div class="card-slot"><div class="card-visual face-up" style="color:black;">K♠</div></div>
-            </div>
-
-            <div style="position:absolute; bottom: 10px; display:flex;">
-                <div class="card-slot"><div class="card-visual face-up" style="color:black;">10♣</div></div>
-                <div class="card-slot"><div class="card-visual face-up" style="color:red;">J♦</div></div>
-                <div class="card-slot"><div class="card-visual face-up" style="color:black;">Q♠</div></div>
-            </div>
-        </div>
-
-        <div class="game-controls">
-            <button class="action-btn" onclick="alert('Pasujesz. (Zaimplementuj silnik wybranej gry w to miejsce)')">Pasuj</button>
-            <button class="action-btn" onclick="alert('Czekasz / Sprawdzasz. (Podepnij pod Firebase)')">Czekaj / Sprawdź</button>
-            <button class="action-btn" onclick="alert('Dorzucasz do puli! (Podepnij logika gry)')" style="background:#1c7c34;">Podbij Stawkę</button>
-        </div>
-
-        <div class="match-player"><div class="player-left"><img id="my-avatar"><span id="my-name">...</span></div></div>
-        <div class="chat-container"><div id="chat-messages"></div><input type="text" id="chat-input" placeholder="Napisz do przeciwnika... (Enter)" onkeypress="window.sendChat(event)"></div>
-        <p id="status" style="color:var(--text-light); font-weight:bold; font-size:16px; margin:10px 0; text-transform:uppercase; letter-spacing:1px; text-shadow: 0 0 10px var(--vulcan-glow);"></p>
-        <button class="btn" onclick="window.quitGame()" style="width:280px; margin:0 auto; background: linear-gradient(135deg, #660000, #220000);">Opuść Stół (Poddaj się)</button>
-    </div>
-
-    <div id="leaderboard-screen" class="screen">
-        <div class="menu-container">
-            <h2 style="color:var(--text-light); margin-top:0;">🏆 Top Gracze Kasyna</h2>
-            <div class="list-container" id="leaderboard-list" style="max-height: 50vh;"></div>
-            <button class="btn" onclick="showScreen('menu-screen')">Wróć do Menu</button>
-        </div>
-    </div>
-
-    <script>
-        function showScreen(id) { 
-            document.querySelectorAll('.screen').forEach(e => e.classList.remove('active')); 
-            document.getElementById(id).classList.add('active'); 
-            if(id === 'menu-screen' && auth.currentUser) document.getElementById('wallet-ui').style.display = 'block';
-            else document.getElementById('wallet-ui').style.display = 'none';
         }
     </script>
 </body>

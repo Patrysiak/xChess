@@ -6,431 +6,498 @@
 <title>Territorial Clone</title>
 <style>
     :root {
-        --c-water: rgb(24, 76, 116);
-        --c-land: rgb(65, 125, 45);
-        --c-land-dark: rgb(45, 95, 25);
-        --c-border: rgb(0, 0, 0);
-        --c-text: rgb(255, 255, 255);
-        --c-panel: rgb(20, 20, 20);
-        --c-btn-green: rgb(21, 88, 35);
-        --c-btn-blue: rgb(34, 102, 153);
-        --c-btn-red: rgb(153, 34, 34);
-        --c-btn-brown: rgb(90, 50, 20);
-        --c-btn-gray: rgb(70, 70, 70);
+        --color-bg-main: rgb(15, 15, 25);
+        --color-bg-lobby: rgb(20, 20, 35);
+        --color-text-main: rgb(255, 255, 255);
+        --color-text-dim: rgb(180, 180, 180);
+        --color-green: rgb(34, 139, 34);
+        --color-dark-green: rgb(20, 100, 20);
+        --color-red: rgb(200, 50, 50);
+        --color-blue: rgb(50, 100, 200);
+        --color-gold: rgb(218, 165, 32);
+        --color-border: rgb(60, 60, 80);
+        --color-chat-bg: rgb(30, 30, 45);
+        --color-water: rgb(24, 76, 116);
+        --color-land: rgb(65, 125, 45);
     }
-    
+
     * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
         user-select: none;
-        font-family: Arial, Helvetica, sans-serif;
+        font-family: Arial, sans-serif;
     }
-    
+
     body {
-        background-color: var(--c-water);
-        color: var(--c-text);
+        background-color: var(--color-bg-main);
+        color: var(--color-text-main);
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
         width: 100vw;
         height: 100vh;
-        display: flex;
-        flex-direction: column;
     }
-    
-    .bg-canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1;
-    }
-    
-    .screen-layer {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 10;
+
+    .view-layer {
         display: none;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0, 0, 0, 0.3);
-    }
-    
-    .screen-active {
-        display: flex;
-    }
-    
-    .main-logo {
-        font-size: 5rem;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        color: rgb(255, 255, 255);
-        text-shadow: 2px 2px 0 rgb(0,0,0), -2px -2px 0 rgb(0,0,0), 2px -2px 0 rgb(0,0,0), -2px 2px 0 rgb(0,0,0), 5px 5px 15px rgba(0,0,0,0.8);
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .logo-flag {
-        width: 40px;
-        height: 30px;
-        background: linear-gradient(to bottom, rgb(255,0,0) 33%, rgb(0,255,0) 33%, rgb(0,255,0) 66%, rgb(0,0,255) 66%);
-        border: 2px solid rgb(255,255,255);
-    }
-    
-    .menu-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 450px;
-    }
-    
-    .player-setup {
-        display: flex;
         width: 100%;
-        gap: 10px;
-        margin-bottom: 20px;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        flex-direction: column;
     }
-    
-    .player-name-input {
-        flex-grow: 1;
-        background: var(--c-panel);
-        border: 2px solid rgb(255, 255, 255);
-        color: rgb(255, 255, 255);
-        font-size: 1.5rem;
-        padding: 10px;
+
+    .view-active {
+        display: flex;
+    }
+
+    .btn-base {
+        border: 1px solid var(--color-text-main);
+        color: var(--color-text-main);
+        background: rgb(50, 50, 50);
+        padding: 10px 20px;
+        cursor: pointer;
         text-align: center;
-        outline: none;
-    }
-    
-    .player-color-box {
-        width: 60px;
-        background: rgb(100, 150, 255);
-        border: 2px solid rgb(255, 255, 255);
-        cursor: pointer;
-    }
-    
-    .menu-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        width: 100%;
-    }
-    
-    .menu-btn {
-        background: var(--c-panel);
-        border: 2px solid rgb(255, 255, 255);
-        color: rgb(255, 255, 255);
-        padding: 20px 10px;
-        font-size: 1.2rem;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
+        font-weight: bold;
         transition: 0.2s;
     }
-    
-    .menu-btn:hover {
+
+    .btn-base:hover {
         filter: brightness(1.2);
     }
-    
-    .btn-multi { background: var(--c-btn-green); }
-    .btn-custom { background: var(--c-btn-blue); }
-    .btn-account { background: var(--c-btn-brown); }
-    .btn-menu { background: var(--c-btn-gray); }
-    
-    .bottom-bar {
-        position: absolute;
-        bottom: 10px;
-        left: 10px;
+
+    .btn-success { background-color: var(--color-green); }
+    .btn-danger { background-color: var(--color-red); }
+
+    .lobby-header {
         display: flex;
-        gap: 10px;
-    }
-    
-    .bottom-box {
-        background: rgba(0, 0, 0, 0.8);
-        border: 1px solid rgb(255, 255, 255);
+        justify-content: space-between;
+        align-items: center;
         padding: 10px 20px;
+        background-color: rgb(10, 10, 15);
+        border-bottom: 2px solid var(--color-border);
+    }
+
+    .lobby-stats {
+        font-size: 0.8rem;
+        color: var(--color-text-dim);
+    }
+
+    .lobby-title {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+
+    .lobby-players-count {
+        font-size: 1.5rem;
+        font-weight: bold;
+        background: rgb(0, 0, 0);
+        padding: 5px 15px;
+        border: 1px solid var(--color-text-main);
+    }
+
+    .lobby-games-row {
+        display: flex;
+        border-bottom: 1px solid var(--color-border);
+        height: 80px;
+    }
+
+    .game-card {
+        flex: 1;
+        border-right: 1px solid var(--color-border);
+        padding: 5px;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        min-width: 150px;
+        justify-content: space-between;
+        background-color: rgb(25, 25, 35);
+        cursor: pointer;
     }
-    
-    .box-label {
+
+    .game-card:hover {
+        background-color: rgb(35, 35, 50);
+    }
+
+    .game-card-active {
+        background-color: var(--color-dark-green);
+    }
+
+    .game-card-top {
+        display: flex;
+        justify-content: space-between;
         font-size: 0.8rem;
-        color: rgb(200, 200, 200);
-        margin-bottom: 5px;
     }
-    
-    .box-value {
+
+    .game-card-center {
+        text-align: center;
         font-size: 1.2rem;
         font-weight: bold;
-        color: rgb(255, 255, 255);
     }
-    
+
+    .game-card-bottom {
+        font-size: 0.8rem;
+        color: var(--color-text-dim);
+    }
+
+    .lobby-sub-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 20px;
+        background-color: rgb(40, 40, 50);
+        border-bottom: 1px solid var(--color-border);
+        font-size: 0.9rem;
+    }
+
+    .lobby-main-area {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .lobby-chat-section {
+        flex: 1;
+        border-right: 1px solid var(--color-border);
+        display: flex;
+        flex-direction: column;
+        background-color: var(--color-bg-lobby);
+    }
+
+    .lobby-players-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--color-bg-lobby);
+    }
+
+    .section-header {
+        text-align: center;
+        padding: 10px;
+        font-size: 1.2rem;
+        border-bottom: 1px solid var(--color-border);
+        background-color: rgb(30, 30, 40);
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 10px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .chat-input-area {
+        display: flex;
+        padding: 10px;
+        background-color: var(--color-chat-bg);
+    }
+
+    .input-field {
+        flex: 1;
+        background-color: rgb(10, 10, 15);
+        border: 1px solid var(--color-border);
+        color: var(--color-text-main);
+        padding: 8px;
+        outline: none;
+    }
+
+    .players-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        padding: 10px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .player-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+    }
+
+    .color-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 1px solid rgb(0,0,0);
+    }
+
+    .lobby-footer {
+        display: flex;
+        height: 60px;
+        border-top: 2px solid var(--color-border);
+    }
+
+    .footer-btn {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        cursor: pointer;
+        background-color: rgb(20, 20, 30);
+        border-right: 1px solid var(--color-border);
+        transition: 0.2s;
+    }
+
+    .footer-btn:hover {
+        background-color: rgb(40, 40, 50);
+    }
+
     .game-ui-layer {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: 20;
         pointer-events: none;
-        display: none;
+        display: flex;
         flex-direction: column;
         justify-content: space-between;
+        z-index: 20;
     }
-    
+
     .game-top-bar {
         background: rgba(0, 0, 0, 0.6);
-        padding: 10px 20px;
+        padding: 10px;
         display: flex;
         justify-content: space-between;
         pointer-events: auto;
     }
-    
-    .game-bottom-bar {
-        background: rgba(0, 0, 0, 0.6);
-        padding: 20px;
-        display: flex;
-        justify-content: center;
-        gap: 20px;
+
+    .leaderboard-box {
+        position: absolute;
+        top: 50px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgb(100, 100, 100);
+        width: 250px;
+        padding: 10px;
         pointer-events: auto;
     }
-    
-    .slider-container {
+
+    .game-bottom-bar {
+        background: rgba(0, 0, 0, 0.7);
+        padding: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;
+        pointer-events: auto;
+    }
+
+    .troop-slider-wrap {
         display: flex;
         align-items: center;
         gap: 15px;
-        background: rgba(0, 0, 0, 0.8);
+        background: rgb(20, 20, 20);
         padding: 10px 20px;
         border: 2px solid rgb(255, 255, 255);
-        border-radius: 30px;
+        border-radius: 20px;
     }
-    
-    .slider-val {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: rgb(255, 255, 255);
-        width: 80px;
-        text-align: center;
-    }
-    
-    input[type="range"] {
-        -webkit-appearance: none;
-        width: 300px;
-        height: 15px;
-        background: rgb(50, 50, 50);
-        border-radius: 10px;
-        outline: none;
-    }
-    
-    input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        background: rgb(255, 255, 255);
-        cursor: pointer;
-    }
-    
-    .status-text {
-        font-size: 1.2rem;
-        color: rgb(255, 255, 255);
-        font-weight: bold;
-    }
-    
-    .modal-box {
-        background: var(--c-panel);
-        border: 2px solid rgb(255, 255, 255);
-        padding: 30px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-        width: 400px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-    }
-    
-    .generic-btn {
-        background: rgb(50, 50, 50);
-        color: rgb(255, 255, 255);
-        border: 1px solid rgb(255, 255, 255);
-        padding: 10px 20px;
-        cursor: pointer;
-        width: 100%;
-        font-size: 1.1rem;
-    }
-    
-    .generic-btn:hover {
-        background: rgb(80, 80, 80);
-    }
-    
-    .toast-wrap {
+
+    .game-canvas-container {
         position: absolute;
-        top: 20px;
-        right: 20px;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 5;
+        background-color: var(--color-water);
+        overflow: hidden;
+    }
+
+    .world-canvas {
+        cursor: crosshair;
+    }
+
+    .clan-tag {
+        color: rgb(150, 200, 255);
+        font-weight: bold;
+    }
+
+    .toast-container {
+        position: absolute;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 5px;
         z-index: 100;
-        pointer-events: none;
     }
-    
+
     .toast-msg {
-        background: rgba(0, 0, 0, 0.8);
-        color: rgb(255, 255, 255);
-        padding: 15px 25px;
-        border: 1px solid rgb(255, 255, 255);
-        font-weight: bold;
-        animation: fade 3s forwards;
+        background: rgba(0,0,0,0.8);
+        padding: 10px 20px;
+        border: 1px solid rgb(255,255,255);
+        animation: fadeOut 3s forwards;
     }
-    
-    @keyframes fade {
+
+    @keyframes fadeOut {
         0% { opacity: 1; }
         70% { opacity: 1; }
         100% { opacity: 0; }
     }
-    
-    .leaderboard {
+
+    .modal-overlay {
         position: absolute;
-        top: 60px;
-        right: 20px;
-        background: rgba(0, 0, 0, 0.6);
-        border: 1px solid rgb(100, 100, 100);
-        padding: 10px;
-        width: 250px;
-        pointer-events: auto;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        z-index: 50;
+        display: none;
+        justify-content: center;
+        align-items: center;
     }
-    
-    .lb-title {
-        color: rgb(255, 255, 255);
-        font-weight: bold;
-        text-align: center;
-        border-bottom: 1px solid rgb(100, 100, 100);
-        padding-bottom: 5px;
-        margin-bottom: 5px;
-    }
-    
-    .lb-row {
+
+    .setup-box {
+        background: var(--color-bg-main);
+        border: 2px solid var(--color-text-main);
+        padding: 30px;
         display: flex;
-        justify-content: space-between;
-        color: rgb(200, 200, 200);
-        padding: 3px 0;
-        font-size: 0.9rem;
+        flex-direction: column;
+        gap: 15px;
+        width: 400px;
     }
+
 </style>
 </head>
 <body>
 
-<canvas class="bg-canvas class-bg-canvas"></canvas>
-
-<div class="screen-layer screen-active class-screen-main">
-    <div class="main-logo">
-        <div class="logo-flag"></div>
-        TERRITORIAL.IO
-        <div class="logo-flag"></div>
-    </div>
-    
-    <div class="menu-container">
-        <div class="player-setup">
-            <input type="text" class="player-name-input class-player-name" value="Player 373" maxlength="15">
-            <div class="player-color-box class-player-color" style="background: rgb(100, 150, 255);"></div>
-        </div>
-        
-        <div class="menu-grid">
-            <button class="menu-btn btn-multi class-btn-multi">
-                <span style="font-size: 1.5rem;">⚔️</span>
-                Wieloosobowa
-            </button>
-            <button class="menu-btn btn-custom class-btn-custom">
-                <span style="font-size: 1.5rem;">🗡️</span>
-                Scenariusz<br>niestandardowy
-            </button>
-            <button class="menu-btn btn-account class-btn-account">
-                <span style="font-size: 1.5rem;">🔑</span>
-                Moje konto
-            </button>
-            <button class="menu-btn btn-menu class-btn-settings">
-                <span style="font-size: 1.5rem;">≡</span>
-                Menu gry
-            </button>
-        </div>
-    </div>
-    
-    <div class="bottom-bar">
-        <div class="bottom-box">
-            <div class="box-label">Najlepszy klan</div>
-            <div class="box-value">[OG]</div>
-        </div>
-        <div class="bottom-box">
-            <div class="box-label">Najlepszy Czlonek</div>
-            <div class="box-value">[OG] mel</div>
+<div class="view-layer view-active class-screen-login">
+    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
+        <h1 style="font-size: 5rem; margin-bottom: 20px; text-shadow: 2px 2px 0 rgb(0,0,0);">TERRITORIAL CLONE</h1>
+        <div class="setup-box">
+            <h3>Wybierz nazwe i klan</h3>
+            <input type="text" class="input-field class-input-nick" placeholder="Nazwa Gracza" value="Player 123">
+            <input type="text" class="input-field class-input-clan" placeholder="TAG Klanu (Opcjonalnie)" maxlength="4">
+            
+            <button class="btn-base btn-success class-btn-login-anon">Graj jako Gosc</button>
+            <button class="btn-base class-btn-login-google" style="background-color: rgb(200, 50, 50);">Zaloguj przez Google</button>
         </div>
     </div>
 </div>
 
-<div class="screen-layer class-screen-lobby">
-    <div class="modal-box">
-        <h2 style="color: rgb(255, 255, 255);">Konfiguracja Gry</h2>
-        <div style="width: 100%; display: flex; justify-content: space-between; color: rgb(255, 255, 255);">
-            <span>Ilosc Botow:</span>
-            <span class="class-bot-val">50</span>
+<div class="view-layer class-screen-lobby">
+    <div class="lobby-header">
+        <div class="lobby-stats">
+            Liczba graczy<br>
+            MP: 1227 SP: 158 Lobby: 187
         </div>
-        <input type="range" class="class-bot-slider" min="0" max="200" value="50">
-        
-        <div style="width: 100%; display: flex; justify-content: space-between; color: rgb(255, 255, 255);">
-            <span>Zageszczenie Mapy:</span>
-            <span class="class-map-val">Srednie</span>
+        <div class="lobby-title">Lobby</div>
+        <div class="lobby-players-count class-lobby-counter">0</div>
+    </div>
+
+    <div class="lobby-games-row">
+        <div class="game-card game-card-active class-game-card" data-room="room_australia">
+            <div class="game-card-top">
+                <span class="class-timer-aus">05:55</span>
+                <span class="class-players-aus">0</span>
+            </div>
+            <div class="game-card-center">Zespol</div>
+            <div class="game-card-bottom">Australia</div>
         </div>
-        <input type="range" class="class-map-slider" min="1" max="3" value="2">
         
-        <button class="generic-btn class-btn-start-game" style="background: rgb(34, 139, 34); margin-top: 10px;">Rozpocznij Gre</button>
-        <button class="generic-btn class-btn-back-main" style="background: rgb(153, 34, 34);">Wroc</button>
+        <div class="game-card class-game-card" data-room="room_world">
+            <div class="game-card-top">
+                <span class="class-timer-wrd">00:55</span>
+                <span class="class-players-wrd">0</span>
+            </div>
+            <div class="game-card-center" style="color: rgb(255,200,0);">Bitwa Krolewska</div>
+            <div class="game-card-bottom">Mare Nostrum</div>
+        </div>
+        
+        <div class="game-card class-game-card" data-room="room_1v1">
+            <div class="game-card-top">
+                <span class="class-timer-1v1">02:55</span>
+                <span class="class-players-1v1">0</span>
+            </div>
+            <div class="game-card-center">1 na 1</div>
+            <div class="game-card-bottom">Mountains 1</div>
+        </div>
+        
+        <div class="game-card class-game-card" data-room="room_zombies">
+            <div class="game-card-top">
+                <span class="class-timer-zmb">07:55</span>
+                <span class="class-players-zmb">0</span>
+            </div>
+            <div class="game-card-center">Balwan</div>
+            <div class="game-card-bottom">Halo</div>
+        </div>
+    </div>
+
+    <div class="lobby-sub-row">
+        <span>Wybrana: <strong class="class-selected-mode">Australia 4 Teams</strong></span>
+        <span>Nastepna gra: Caucasia 4 Teams</span>
+    </div>
+
+    <div class="lobby-main-area">
+        <div class="lobby-chat-section">
+            <div class="section-header">Pogawedzic</div>
+            <div class="chat-messages class-chat-box"></div>
+            <div class="chat-input-area">
+                <input type="text" class="input-field class-chat-input" placeholder="Napisz...">
+                <button class="btn-base class-btn-send">Wyslij</button>
+            </div>
+        </div>
+        
+        <div class="lobby-players-section">
+            <div class="section-header" style="color: rgb(50, 200, 50);">Gracze</div>
+            <div class="players-grid class-players-grid"></div>
+        </div>
+    </div>
+
+    <div class="lobby-footer">
+        <div class="footer-btn class-btn-leave" style="color: rgb(200, 100, 100);">Zamknij</div>
+        <div class="footer-btn class-btn-ready" style="color: rgb(100, 200, 100);">Gotowy</div>
     </div>
 </div>
 
-<div class="game-ui-layer class-game-ui">
-    <div class="game-top-bar">
-        <div class="status-text class-game-status">Zaczynamy...</div>
-        <button class="generic-btn class-btn-quit" style="width: auto; padding: 5px 15px;">Wyjdz</button>
+<div class="view-layer class-screen-game">
+    <div class="game-canvas-container">
+        <canvas class="world-canvas class-game-canvas"></canvas>
     </div>
     
-    <div class="leaderboard">
-        <div class="lb-title">Ranking (Terytorium)</div>
-        <div class="class-lb-content"></div>
-    </div>
-    
-    <div class="game-bottom-bar">
-        <div class="slider-container">
-            <span style="color: rgb(255,255,255);">Moc:</span>
-            <div class="slider-val class-atk-val">50%</div>
-            <input type="range" class="class-atk-slider" min="1" max="100" value="50">
+    <div class="game-ui-layer">
+        <div class="game-top-bar">
+            <div style="color: rgb(255,255,255); font-weight: bold; font-size: 1.2rem;" class="class-game-info">Terytorium Ziemi</div>
+            <button class="btn-base btn-danger class-btn-surrender">Poddaj sie</button>
         </div>
-        <div style="display: flex; flex-direction: column; justify-content: center; color: rgb(255,255,255); font-weight: bold;">
-            <div>Stan: <span class="class-balance-val">100</span></div>
-            <div>Przyrost: +<span class="class-income-val">1</span></div>
+        
+        <div class="leaderboard-box">
+            <div style="text-align:center; border-bottom:1px solid rgb(100,100,100); padding-bottom:5px; margin-bottom:5px; color:rgb(255,255,255);">Ranking</div>
+            <div class="class-lb-list"></div>
+        </div>
+        
+        <div class="game-bottom-bar">
+            <div class="troop-slider-wrap">
+                <span style="color:rgb(255,255,255);">MOC ATAKU:</span>
+                <span class="class-attack-percent" style="color:rgb(255,255,255); font-weight:bold; font-size:1.5rem; width:60px;">50%</span>
+                <input type="range" class="class-attack-slider" min="1" max="100" value="50" style="width: 200px;">
+            </div>
+            
+            <div style="display:flex; flex-direction:column; color:rgb(255,255,255);">
+                <div style="font-size:1.5rem; font-weight:bold;">Zasoby: <span class="class-my-balance">0</span></div>
+                <div style="color:rgb(100,200,100);">Przyrost: +<span class="class-my-income">0</span></div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="toast-wrap class-toast-wrap"></div>
+<div class="toast-container class-toast-container"></div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getDatabase, ref, set, onValue, get, update, onDisconnect, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+    import { getDatabase, ref, set, onValue, get, update, onDisconnect, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 
-    let fbCfg = {
+    const cfg = {
         apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
         authDomain: "xchess-79e2d.firebaseapp.com",
         projectId: "xchess-79e2d",
@@ -439,457 +506,527 @@
         appId: "1:382071993193:web:86dbe5211f2151cb5383f8"
     };
 
-    let fApp = initializeApp(fbCfg);
-    let fAuth = getAuth(fApp);
-    let fDb = getDatabase(fApp);
-    let fProv = new GoogleAuthProvider();
+    const fbApp = initializeApp(cfg);
+    const fbAuth = getAuth(fbApp);
+    const fbDb = getDatabase(fbApp);
+    const fbProv = new GoogleAuthProvider();
 
-    window.Net = {
-        db: fDb,
+    window.API = {
+        db: fbDb,
         uid: null,
-        name: "Player 373",
-        online: false,
+        nick: "Player",
+        clan: "",
+        room: "room_world",
+        color: "rgb(255,255,255)",
         
-        logG: function() {
-            signInWithPopup(fAuth, fProv).catch(function(e){ window.UI.toast(e.message, true); });
+        loginAnon: function(n, c) {
+            this.nick = n || "Anon";
+            this.clan = c;
+            signInAnonymously(fbAuth).catch(function(e){ alert(e.message); });
         },
-        logA: function() {
-            signInAnonymously(fAuth).catch(function(e){ window.UI.toast(e.message, true); });
+        
+        loginGoogle: function(n, c) {
+            this.nick = n || "Gracz";
+            this.clan = c;
+            signInWithPopup(fbAuth, fbProv).catch(function(e){ alert(e.message); });
         },
-        out: function() {
-            signOut(fAuth);
-        }
+        
+        logout: function() {
+            signOut(fbAuth);
+        },
+        
+        set: function(path, data) { set(ref(fbDb, path), data); },
+        upd: function(path, data) { update(ref(fbDb, path), data); },
+        get: function(path, cb) { get(ref(fbDb, path)).then(function(s){ cb(s); }); },
+        onV: function(path, cb) { onValue(ref(fbDb, path), function(s){ cb(s); }); },
+        onA: function(path, cb) { onChildAdded(ref(fbDb, path), function(s){ cb(s); }); },
+        rem: function(path) { remove(ref(fbDb, path)); },
+        disc: function(path) { return onDisconnect(ref(fbDb, path)); }
     };
 
-    onAuthStateChanged(fAuth, function(usr) {
-        if(usr) {
-            window.Net.uid = usr.uid;
-            window.Net.online = true;
-            if(usr.displayName) {
-                document.getElementsByClassName('class-player-name')[0].value = usr.displayName;
-                window.Net.name = usr.displayName;
-            }
-            window.UI.toast("Zalogowano pomyslnie!", false);
+    onAuthStateChanged(fbAuth, function(user) {
+        if(user) {
+            window.API.uid = user.uid;
+            let cList = ['rgb(59,130,246)','rgb(239,68,68)','rgb(16,185,129)','rgb(245,158,11)','rgb(139,92,246)','rgb(236,72,153)'];
+            let cIdx = 0;
+            for(let i=0; i<user.uid.length; i++) cIdx += user.uid.charCodeAt(i);
+            window.API.color = cList[cIdx % cList.length];
+            
+            window.Manager.joinLobby();
         } else {
-            window.Net.uid = null;
-            window.Net.online = false;
+            window.API.uid = null;
+            window.Manager.showScreen('class-screen-login');
         }
     });
 </script>
 
 <script>
-    window.UI = {
-        show: function(cls) {
-            let scrs = document.getElementsByClassName('screen-layer');
-            for(let i=0; i<scrs.length; i++) {
-                scrs[i].classList.remove('screen-active');
-            }
-            if(cls) {
-                document.getElementsByClassName(cls)[0].classList.add('screen-active');
-            }
+    let worldMapData = [
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000001111110000000000000000000111111110000000000000000000000111111100000000000000000000000000000",
+        "0000000111111111000000000000000111111111111111000000000000000111111111111000000000000000000000000000",
+        "0000011111111111111100000000111111111111111111111100000000111111111111111111100000000000000000000000",
+        "0001111111111111111111100001111111111111111111111111111111111111111111111111111100000000000000000000",
+        "0011111111111111111111110011111111111111111111111111111111111111111111111111111110000000000000000000",
+        "0111111111111111111111110001111111111111111111111111111111111111111111111111111110000000000000000000",
+        "0111111111111111111111000000111111111111111111111111111111111111111111111111111100000000000000000000",
+        "0011111111111111111110000000011111111111111111111111111111111111111111111111111000000000000000000000",
+        "0011111111111111111100000000001111111111111111111111111111111111111111111111100000000000000000000000",
+        "0001111111111111110000000000000111111111111111111111111111111111111111111111000000000000000000000000",
+        "0000111111111111000000000000000011111111111111111111111111111111111111111110000000000000000000000000",
+        "0000011111111110000000000000000001111111111111111111111111111111111111110000000000000000000000000000",
+        "0000001111111100000000000000000001111111111111111111111111111111111111000000000000000000000000000000",
+        "0000000111111000000000000000000000111111111111111111111111111111111110000000000000000000000000000000",
+        "0000000011110000000000000000000000111111111111111111111111111111110000000000000000000000000000000000",
+        "0000000001100000000000000000000000011111111111111111111111111111100000000000000000000000000000000000",
+        "0000000000000000000000000000000000001111111111111111111111111111000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000111111111111111111111111100000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000001111111111111111111111000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000111111111111111111000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000001111111111111000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000011111110000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000001111100000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000111000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000001111111000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000001111111111110000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000111111111111111000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000001111111111111111100000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000001111111111111111100000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000001111111111111111000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000111111111111110000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000011111111110000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000111110000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    ];
+
+    window.Manager = {
+        showScreen: function(s) {
+            let scrs = document.getElementsByClassName('screen');
+            for(let i=0; i<scrs.length; i++) scrs[i].classList.remove('screen-active');
+            if(s) document.getElementsByClassName(s)[0].classList.add('screen-active');
         },
-        toast: function(msg, isErr) {
-            let w = document.getElementsByClassName('class-toast-wrap')[0];
+        
+        toast: function(m, e) {
+            let c = document.getElementsByClassName('class-toast-container')[0];
             let d = document.createElement('div');
             d.className = 'toast-msg';
-            d.innerText = msg;
-            if(isErr) d.style.borderColor = 'rgb(255, 0, 0)';
-            else d.style.borderColor = 'rgb(0, 255, 0)';
-            w.appendChild(d);
+            d.innerText = m;
+            d.style.borderColor = e ? 'rgb(255,50,50)' : 'rgb(50,255,50)';
+            c.appendChild(d);
             setTimeout(function(){ if(d.parentNode) d.remove(); }, 3000);
+        },
+
+        joinLobby: function() {
+            this.showScreen('class-screen-lobby');
+            let n = window.API.nick;
+            let cl = window.API.clan;
+            let dNick = cl ? '['+cl+'] '+n : n;
+            
+            let obj = {};
+            obj[window.API.uid] = {
+                nick: dNick,
+                col: window.API.color
+            };
+            
+            window.API.upd('lobby/' + window.API.room + '/players', obj);
+            window.API.disc('lobby/' + window.API.room + '/players/' + window.API.uid).remove();
+            
+            this.listenLobby();
+        },
+
+        listenLobby: function() {
+            window.API.onV('lobby/' + window.API.room + '/players', function(s) {
+                let p = s.val() || {};
+                let grid = document.getElementsByClassName('class-players-grid')[0];
+                grid.innerHTML = '';
+                
+                let c = 0;
+                for(let k in p) {
+                    c++;
+                    let d = document.createElement('div');
+                    d.className = 'player-item';
+                    d.innerHTML = '<div class="color-dot" style="background:'+p[k].col+';"></div><span>'+p[k].nick+'</span>';
+                    grid.appendChild(d);
+                }
+                document.getElementsByClassName('class-lobby-counter')[0].innerText = c;
+            });
+
+            window.API.onA('lobby/' + window.API.room + '/chat', function(s) {
+                let m = s.val();
+                let b = document.getElementsByClassName('class-chat-box')[0];
+                let d = document.createElement('div');
+                d.style.marginBottom = "5px";
+                d.innerHTML = '<span style="color:rgb(200,200,200); font-size:0.8rem;">'+m.n+':</span> <span style="color:rgb(255,255,255); font-size:0.9rem;">'+m.msg+'</span>';
+                b.appendChild(d);
+                b.scrollTop = b.scrollHeight;
+            });
+            
+            window.API.onV('lobby/' + window.API.room + '/status', function(s) {
+                if(s.val() === 'playing') {
+                    window.Game.startClient();
+                }
+            });
+        },
+        
+        sendChat: function() {
+            let i = document.getElementsByClassName('class-chat-input')[0];
+            let v = i.value.trim();
+            if(v.length > 0) {
+                let n = window.API.clan ? '['+window.API.clan+'] '+window.API.nick : window.API.nick;
+                push(ref(window.API.db, 'lobby/' + window.API.room + '/chat'), {
+                    n: n,
+                    msg: v
+                });
+                i.value = '';
+            }
+        },
+        
+        hostGame: function() {
+            window.API.upd('lobby/' + window.API.room, { status: 'playing' });
+            window.Game.startHost();
         }
     };
 
-    let GamePallete = [
-        'rgb(255, 0, 0)', 'rgb(0, 255, 0)', 'rgb(0, 0, 255)', 
-        'rgb(255, 255, 0)', 'rgb(0, 255, 255)', 'rgb(255, 0, 255)',
-        'rgb(255, 128, 0)', 'rgb(128, 0, 255)', 'rgb(0, 255, 128)',
-        'rgb(128, 255, 0)', 'rgb(255, 0, 128)', 'rgb(0, 128, 255)'
-    ];
-
-    let Engine = {
-        cvs: document.getElementsByClassName('class-bg-canvas')[0],
+    window.Game = {
+        cvs: document.getElementsByClassName('class-game-canvas')[0],
         ctx: null,
-        w: 0,
-        h: 0,
         sz: 15,
-        cols: 0,
-        rows: 0,
+        cols: 100,
+        rows: 50,
         grid: [],
-        run: true,
-        inGame: false,
-        
-        myId: 1,
-        myColor: 'rgb(100, 150, 255)',
-        atkPerc: 50,
-        
+        run: false,
+        atk: 50,
+        myBal: 100,
+        myInc: 1,
         players: {},
         
-        init: function() {
+        initCvs: function() {
             this.ctx = this.cvs.getContext('2d');
-            this.resize();
-            window.addEventListener('resize', function() { Engine.resize(); });
-            this.genMap(2);
-            this.loop();
-            this.bindMenu();
-        },
-        
-        resize: function() {
-            this.w = window.innerWidth;
-            this.h = window.innerHeight;
-            this.cvs.width = this.w;
-            this.cvs.height = this.h;
-            this.cols = Math.floor(this.w / this.sz);
-            this.rows = Math.floor(this.h / this.sz);
-        },
-        
-        genMap: function(density) {
-            this.grid = [];
-            let prob = 0.4;
-            if(density === 1) prob = 0.3;
-            if(density === 3) prob = 0.5;
+            let w = window.innerWidth;
+            let h = window.innerHeight - 150;
+            this.cvs.width = w;
+            this.cvs.height = h;
+            this.cols = Math.floor(w / this.sz);
+            this.rows = Math.floor(h / this.sz);
             
+            if(this.cols > 100) this.cols = 100;
+            if(this.rows > 50) this.rows = 50;
+            
+            this.grid = [];
             for(let y=0; y<this.rows; y++) {
                 let r = [];
                 for(let x=0; x<this.cols; x++) {
-                    let isL = Math.random() < prob ? 1 : 0;
-                    if(x<2 || y<2 || x>this.cols-3 || y>this.rows-3) isL = 0;
-                    r.push(isL);
+                    let wM = worldMapData[y] ? worldMapData[y][x] : '0';
+                    let t = wM === '1' ? 1 : 0;
+                    r.push({ t: t, o: null, v: 0 });
                 }
                 this.grid.push(r);
             }
-            
-            for(let i=0; i<4; i++) {
-                let nG = [];
-                for(let y=0; y<this.rows; y++) {
-                    let nR = [];
-                    for(let x=0; x<this.cols; x++) {
-                        let nC = 0;
-                        for(let dy=-1; dy<=1; dy++) {
-                            for(let dx=-1; dx<=1; dx++) {
-                                let nx = x+dx, ny = y+dy;
-                                if(nx>=0 && nx<this.cols && ny>=0 && ny<this.rows) {
-                                    nC += this.grid[ny][nx] > 0 ? 1 : 0;
-                                }
-                            }
-                        }
-                        if(this.grid[y][x] > 0) {
-                            nR.push(nC >= 4 ? 1 : 0);
-                        } else {
-                            nR.push(nC >= 5 ? 1 : 0);
-                        }
-                    }
-                    nG.push(nR);
-                }
-                this.grid = nG;
-            }
-            
-            for(let y=0; y<this.rows; y++) {
-                for(let x=0; x<this.cols; x++) {
-                    if(this.grid[y][x] === 1) {
-                        this.grid[y][x] = { type: 1, own: 0, val: 0 };
-                    } else {
-                        this.grid[y][x] = { type: 0, own: 0, val: 0 };
-                    }
-                }
-            }
         },
-        
-        bindMenu: function() {
+
+        startHost: function() {
+            this.initCvs();
+            
+            window.API.get('lobby/' + window.API.room + '/players', function(s) {
+                let pls = s.val() || {};
+                let emps = [];
+                for(let y=0; y<window.Game.rows; y++) {
+                    for(let x=0; x<window.Game.cols; x++) {
+                        if(window.Game.grid[y][x].t === 1) emps.push({x:x, y:y});
+                    }
+                }
+                
+                let bCount = parseInt(document.getElementsByClassName('class-bot-slider')[0].value);
+                for(let i=0; i<bCount; i++) {
+                    let bid = "BOT_" + i;
+                    let cList = ['rgb(255,0,0)','rgb(0,255,0)','rgb(0,0,255)','rgb(255,255,0)'];
+                    pls[bid] = { nick: "Bot "+(i+1), col: cList[i%cList.length], isB: true };
+                }
+                
+                window.Game.players = pls;
+                
+                for(let k in pls) {
+                    if(emps.length > 0) {
+                        let ri = Math.floor(Math.random() * emps.length);
+                        let p = emps[ri];
+                        window.Game.grid[p.y][p.x].o = k;
+                        window.Game.grid[p.y][p.x].v = 100;
+                        emps.splice(ri, 1);
+                    }
+                }
+                
+                let fMap = {};
+                for(let y=0; y<window.Game.rows; y++) {
+                    for(let x=0; x<window.Game.cols; x++) {
+                        fMap[x+'_'+y] = window.Game.grid[y][x];
+                    }
+                }
+                
+                window.API.upd('game/' + window.API.room, { map: fMap, pl: pls });
+                window.Game.runClient();
+            });
+        },
+
+        startClient: function() {
+            this.initCvs();
+            window.API.get('game/' + window.API.room, function(s) {
+                let d = s.val();
+                if(d) {
+                    window.Game.players = d.pl;
+                    for(let y=0; y<window.Game.rows; y++) {
+                        for(let x=0; x<window.Game.cols; x++) {
+                            let c = d.map[x+'_'+y];
+                            window.Game.grid[y][x] = c;
+                        }
+                    }
+                    window.Game.runClient();
+                }
+            });
+        },
+
+        runClient: function() {
+            window.Manager.showScreen('class-game-ui');
+            document.getElementsByClassName('class-game-status')[0].innerText = "W Grze";
+            
+            this.bindEvents();
+            
+            window.API.onV('game/' + window.API.room + '/map', function(s) {
+                let d = s.val();
+                if(d) {
+                    for(let y=0; y<window.Game.rows; y++) {
+                        for(let x=0; x<window.Game.cols; x++) {
+                            window.Game.grid[y][x] = d[x+'_'+y];
+                        }
+                    }
+                }
+            });
+            
+            this.run = true;
+            this.loop();
+            setInterval(function(){ window.Game.tick(); }, 1000);
+            setInterval(function(){ window.Game.botTick(); }, 500);
+        },
+
+        bindEvents: function() {
             let self = this;
-            document.getElementsByClassName('class-btn-multi')[0].addEventListener('click', function() {
-                if(!window.Net.online) {
-                    window.UI.toast("Zaloguj sie najpierw (Konto)", true);
-                    return;
-                }
-                window.UI.show('class-screen-lobby');
-            });
-            
-            document.getElementsByClassName('class-btn-custom')[0].addEventListener('click', function() {
-                window.UI.show('class-screen-lobby');
-            });
-            
-            document.getElementsByClassName('class-btn-account')[0].addEventListener('click', function() {
-                window.Net.logG();
-            });
-            
-            document.getElementsByClassName('class-player-color')[0].addEventListener('click', function() {
-                let c = GamePallete[Math.floor(Math.random()*GamePallete.length)];
-                this.style.background = c;
-                self.myColor = c;
-            });
-            
-            document.getElementsByClassName('class-player-name')[0].addEventListener('input', function() {
-                window.Net.name = this.value;
-            });
-            
-            let sBot = document.getElementsByClassName('class-bot-slider')[0];
-            let vBot = document.getElementsByClassName('class-bot-val')[0];
-            sBot.addEventListener('input', function() { vBot.innerText = this.value; });
-            
-            let sMap = document.getElementsByClassName('class-map-slider')[0];
-            let vMap = document.getElementsByClassName('class-map-val')[0];
-            sMap.addEventListener('input', function() {
-                let val = parseInt(this.value);
-                if(val===1) vMap.innerText = "Mala";
-                if(val===2) vMap.innerText = "Srednia";
-                if(val===3) vMap.innerText = "Duza";
-            });
-            
-            document.getElementsByClassName('class-btn-back-main')[0].addEventListener('click', function() {
-                window.UI.show('class-screen-main');
-            });
-            
-            document.getElementsByClassName('class-btn-start-game')[0].addEventListener('click', function() {
-                self.startGame(parseInt(sBot.value), parseInt(sMap.value));
-            });
-            
-            document.getElementsByClassName('class-atk-slider')[0].addEventListener('input', function() {
-                self.atkPerc = parseInt(this.value);
-                document.getElementsByClassName('class-atk-val')[0].innerText = self.atkPerc + "%";
-            });
-            
-            document.getElementsByClassName('class-btn-quit')[0].addEventListener('click', function() {
-                self.inGame = false;
-                document.getElementsByClassName('class-game-ui')[0].style.display = 'none';
-                window.UI.show('class-screen-main');
-                self.genMap(2);
-            });
-            
             this.cvs.addEventListener('mousedown', function(e) {
-                if(!self.inGame) return;
-                let x = Math.floor(e.clientX / self.sz);
-                let y = Math.floor(e.clientY / self.sz);
-                self.doClick(x, y);
+                let r = self.cvs.getBoundingClientRect();
+                let x = Math.floor((e.clientX - r.left) / self.sz);
+                let y = Math.floor((e.clientY - r.top) / self.sz);
+                self.click(x, y);
+            });
+            
+            let s = document.getElementsByClassName('class-attack-slider')[0];
+            s.addEventListener('input', function() {
+                self.atk = parseInt(this.value);
+                document.getElementsByClassName('class-attack-percent')[0].innerText = self.atk + "%";
+            });
+            
+            document.getElementsByClassName('class-btn-surrender')[0].addEventListener('click', function() {
+                self.run = false;
+                window.Manager.showScreen('class-screen-main');
             });
         },
-        
-        startGame: function(bots, den) {
-            window.UI.show(null);
-            document.getElementsByClassName('class-game-ui')[0].style.display = 'flex';
-            this.genMap(den);
-            
-            this.players = {};
-            this.players[this.myId] = { id: this.myId, name: window.Net.name, col: this.myColor, bal: 100, inc: 1, cells: 0, dead: false, isBot: false };
-            
-            for(let i=0; i<bots; i++) {
-                let bid = i+10;
-                let bcol = GamePallete[i % GamePallete.length];
-                this.players[bid] = { id: bid, name: "Bot " + (i+1), col: bcol, bal: 100, inc: 1, cells: 0, dead: false, isBot: true };
-            }
-            
-            let lands = [];
-            for(let y=0; y<this.rows; y++) {
-                for(let x=0; x<this.cols; x++) {
-                    if(this.grid[y][x].type === 1) lands.push({x:x, y:y});
-                }
-            }
-            
-            for(let k in this.players) {
-                if(lands.length > 0) {
-                    let ri = Math.floor(Math.random()*lands.length);
-                    let pos = lands[ri];
-                    this.grid[pos.y][pos.x].own = parseInt(k);
-                    this.grid[pos.y][pos.x].val = 100;
-                    this.players[k].cells = 1;
-                    lands.splice(ri, 1);
-                }
-            }
-            
-            this.inGame = true;
-            this.ecoTimer = setInterval(function(){ Engine.tick(); }, 1000);
-            this.botTimer = setInterval(function(){ Engine.botStep(); }, 500);
-        },
-        
-        tick: function() {
-            if(!this.inGame) {
-                clearInterval(this.ecoTimer);
-                clearInterval(this.botTimer);
-                return;
-            }
-            
-            let lb = [];
-            for(let k in this.players) {
-                let p = this.players[k];
-                if(p.dead) continue;
-                
-                let cCount = 0;
-                for(let y=0; y<this.rows; y++) {
-                    for(let x=0; x<this.cols; x++) {
-                        if(this.grid[y][x].own === p.id) {
-                            cCount++;
-                        }
-                    }
-                }
-                p.cells = cCount;
-                if(cCount === 0) {
-                    p.dead = true;
-                    if(p.id === this.myId) {
-                        window.UI.toast("Zostales zniszczony!", true);
-                    }
-                    continue;
-                }
-                
-                let inc = Math.max(1, Math.floor(p.cells / 5));
-                p.inc = inc;
-                p.bal += inc;
-                
-                lb.push(p);
-            }
-            
-            lb.sort(function(a,b){ return b.cells - a.cells; });
-            let lbHtml = '';
-            for(let i=0; i<Math.min(10, lb.length); i++) {
-                let op = lb[i];
-                let bold = op.id === this.myId ? 'font-weight:900;color:rgb(255,255,255);' : '';
-                lbHtml += '<div class="lb-row" style="'+bold+'"><span>'+(i+1)+'. '+op.name+'</span><span>'+op.cells+'</span></div>';
-            }
-            document.getElementsByClassName('class-lb-content')[0].innerHTML = lbHtml;
-            
-            if(!this.players[this.myId].dead) {
-                document.getElementsByClassName('class-balance-val')[0].innerText = Math.floor(this.players[this.myId].bal);
-                document.getElementsByClassName('class-income-val')[0].innerText = this.players[this.myId].inc;
-            }
-        },
-        
-        botStep: function() {
-            if(!this.inGame) return;
-            for(let k in this.players) {
-                let p = this.players[k];
-                if(!p.isBot || p.dead) continue;
-                
-                if(p.bal > 50) {
-                    let edge = [];
-                    for(let y=0; y<this.rows; y++) {
-                        for(let x=0; x<this.cols; x++) {
-                            if(this.grid[y][x].own === p.id) {
-                                for(let dy=-1; dy<=1; dy++) {
-                                    for(let dx=-1; dx<=1; dx++) {
-                                        if(dx===0 && dy===0) continue;
-                                        let nx = x+dx, ny = y+dy;
-                                        if(nx>=0 && nx<this.cols && ny>=0 && ny<this.rows) {
-                                            if(this.grid[ny][nx].type === 1 && this.grid[ny][nx].own !== p.id) {
-                                                edge.push({x:nx, y:ny});
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    if(edge.length > 0) {
-                        let t = edge[Math.floor(Math.random()*edge.length)];
-                        let c = this.grid[t.y][t.x];
-                        let cost = 10;
-                        if(c.own !== 0) {
-                            let ep = this.players[c.own];
-                            cost = 20; 
-                            if(ep) cost += Math.floor(ep.bal * 0.1); 
-                        }
-                        
-                        let atk = p.bal * 0.5;
-                        if(atk > cost) {
-                            p.bal -= atk;
-                            if(c.own !== 0) {
-                                let ep = this.players[c.own];
-                                if(ep && ep.bal > 0) {
-                                    ep.bal -= atk * 0.5;
-                                    if(ep.bal < 0) ep.bal = 0;
-                                }
-                            }
-                            c.own = p.id;
-                        }
-                    }
-                }
-            }
-        },
-        
-        doClick: function(x, y) {
+
+        click: function(x, y) {
             if(x<0 || x>=this.cols || y<0 || y>=this.rows) return;
             let c = this.grid[y][x];
-            if(c.type === 0) return;
-            
-            let mp = this.players[this.myId];
-            if(mp.dead) return;
+            if(c.t === 0) return;
             
             let isAdj = false;
             for(let dy=-1; dy<=1; dy++) {
                 for(let dx=-1; dx<=1; dx++) {
                     let nx = x+dx, ny = y+dy;
                     if(nx>=0 && nx<this.cols && ny>=0 && ny<this.rows) {
-                        if(this.grid[ny][nx].own === this.myId) isAdj = true;
+                        if(this.grid[ny][nx].o === window.API.uid) isAdj = true;
                     }
                 }
             }
             
-            if(!isAdj && c.own !== this.myId) return;
+            if(!isAdj && c.o !== window.API.uid) return;
             
-            if(c.own !== this.myId) {
-                let cost = 10;
-                if(c.own !== 0) {
-                    let ep = this.players[c.own];
-                    if(ep) cost += Math.floor(ep.bal * 0.1);
-                }
+            let cost = 10;
+            if(c.o && c.o !== window.API.uid) cost = 25;
+            
+            let aForce = this.myBal * (this.atk / 100);
+            if(aForce >= cost) {
+                this.myBal -= aForce;
+                c.o = window.API.uid;
                 
-                let atk = mp.bal * (this.atkPerc / 100);
-                if(atk >= cost) {
-                    mp.bal -= atk;
-                    if(c.own !== 0) {
-                        let ep = this.players[c.own];
-                        if(ep) {
-                            ep.bal -= atk * 0.5;
-                            if(ep.bal < 0) ep.bal = 0;
+                let u = {};
+                u['game/' + window.API.room + '/map/' + x + '_' + y] = c;
+                window.API.upd('/', u);
+            }
+        },
+
+        tick: function() {
+            if(!this.run) return;
+            
+            let cells = 0;
+            for(let y=0; y<this.rows; y++) {
+                for(let x=0; x<this.cols; x++) {
+                    if(this.grid[y][x].o === window.API.uid) cells++;
+                }
+            }
+            
+            if(cells === 0 && this.myBal > 0) {
+                this.myBal = 0;
+                window.UI.toast("Zostales wyeliminowany!", true);
+            }
+            
+            this.myInc = Math.max(1, Math.floor(cells / 5));
+            if(cells > 0) this.myBal += this.myInc;
+            
+            document.getElementsByClassName('class-my-balance')[0].innerText = Math.floor(this.myBal);
+            document.getElementsByClassName('class-my-income')[0].innerText = this.myInc;
+            
+            this.updLb();
+        },
+
+        botTick: function() {
+            if(!this.run || !window.API.uid) return;
+            let uo = {};
+            let upd = false;
+            
+            for(let k in this.players) {
+                let p = this.players[k];
+                if(!p.isB) continue;
+                
+                let e = [];
+                for(let y=0; y<this.rows; y++) {
+                    for(let x=0; x<this.cols; x++) {
+                        if(this.grid[y][x].o === k) {
+                            for(let dy=-1; dy<=1; dy++) {
+                                for(let dx=-1; dx<=1; dx++) {
+                                    let nx = x+dx, ny = y+dy;
+                                    if(nx>=0 && nx<this.cols && ny>=0 && ny<this.rows) {
+                                        if(this.grid[ny][nx].t === 1 && this.grid[ny][nx].o !== k) {
+                                            e.push({x:nx, y:ny});
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
-                    c.own = this.myId;
-                } else {
-                    window.UI.toast("Za malo sil na atak!", true);
+                }
+                
+                if(e.length > 0 && Math.random() < 0.2) {
+                    let t = e[Math.floor(Math.random() * e.length)];
+                    this.grid[t.y][t.x].o = k;
+                    uo['game/' + window.API.room + '/map/' + t.x + '_' + t.y] = this.grid[t.y][t.x];
+                    upd = true;
                 }
             }
             
-            document.getElementsByClassName('class-balance-val')[0].innerText = Math.floor(mp.bal);
+            if(upd) window.API.upd('/', uo);
         },
-        
+
+        updLb: function() {
+            let arr = [];
+            for(let k in this.players) {
+                let c = 0;
+                for(let y=0; y<this.rows; y++) {
+                    for(let x=0; x<this.cols; x++) {
+                        if(this.grid[y][x].o === k) c++;
+                    }
+                }
+                arr.push({n: this.players[k].nick, c: c});
+            }
+            arr.sort(function(a,b){ return b.c - a.c; });
+            
+            let h = '';
+            for(let i=0; i<Math.min(10, arr.length); i++) {
+                h += '<div class="lb-row"><span>'+(i+1)+'. '+arr[i].n+'</span><span>'+arr[i].c+'</span></div>';
+            }
+            document.getElementsByClassName('class-lb-content')[0].innerHTML = h;
+        },
+
         draw: function() {
             this.ctx.fillStyle = 'rgb(24, 76, 116)';
-            this.ctx.fillRect(0, 0, this.w, this.h);
+            this.ctx.fillRect(0, 0, this.cvs.width, this.cvs.height);
             
             for(let y=0; y<this.rows; y++) {
                 for(let x=0; x<this.cols; x++) {
                     let c = this.grid[y][x];
-                    let px = x * this.sz;
-                    let py = y * this.sz;
-                    
-                    if(c.type === 1) {
-                        if(c.own === 0) {
-                            this.ctx.fillStyle = 'rgb(65, 125, 45)';
+                    if(c.t === 1) {
+                        if(c.o) {
+                            let p = this.players[c.o];
+                            this.ctx.fillStyle = p ? p.col : 'rgb(255,255,255)';
                         } else {
-                            let p = this.players[c.own];
-                            if(p) {
-                                this.ctx.fillStyle = p.col;
-                            } else {
-                                this.ctx.fillStyle = 'rgb(255,255,255)';
-                            }
+                            this.ctx.fillStyle = 'rgb(65, 125, 45)';
                         }
-                        this.ctx.fillRect(px, py, this.sz, this.sz);
+                        this.ctx.fillRect(x*this.sz, y*this.sz, this.sz, this.sz);
                     }
                 }
             }
         },
-        
+
         loop: function() {
             if(this.run) {
                 this.draw();
-                let sR = this;
-                requestAnimationFrame(function(){ sR.loop(); });
+                let sr = this;
+                requestAnimationFrame(function(){ sr.loop(); });
             }
         }
     };
 
-    window.onload = function() {
-        Engine.init();
-    };
+    document.getElementsByClassName('class-btn-login-anon')[0].addEventListener('click', function() {
+        let n = document.getElementsByClassName('class-input-nick')[0].value;
+        let c = document.getElementsByClassName('class-input-clan')[0].value;
+        window.API.loginAnon(n, c);
+    });
+
+    document.getElementsByClassName('class-btn-login-google')[0].addEventListener('click', function() {
+        let n = document.getElementsByClassName('class-input-nick')[0].value;
+        let c = document.getElementsByClassName('class-input-clan')[0].value;
+        window.API.loginGoogle(n, c);
+    });
+
+    document.getElementsByClassName('class-btn-send')[0].addEventListener('click', function() {
+        let i = document.getElementsByClassName('class-chat-input')[0];
+        if(i.value.trim().length > 0) {
+            let n = window.API.clan ? '['+window.API.clan+'] '+window.API.nick : window.API.nick;
+            push(ref(window.API.db, 'lobby/' + window.API.room + '/chat'), { n: n, msg: i.value });
+            i.value = '';
+        }
+    });
+
+    document.getElementsByClassName('class-game-card')[0].addEventListener('click', function() {
+        window.API.room = this.getAttribute('data-room');
+        document.getElementsByClassName('class-selected-mode')[0].innerText = "Australia";
+    });
+
+    let crds = document.getElementsByClassName('class-game-card');
+    for(let i=0; i<crds.length; i++) {
+        crds[i].addEventListener('click', function() {
+            for(let j=0; j<crds.length; j++) crds[j].classList.remove('game-card-active');
+            this.classList.add('game-card-active');
+            window.API.room = this.getAttribute('data-room');
+        });
+    }
+
+    document.getElementsByClassName('class-btn-ready')[0].addEventListener('click', function() {
+        window.Manager.hostGame();
+    });
+
+    document.getElementsByClassName('class-btn-leave')[0].addEventListener('click', function() {
+        window.API.logout();
+    });
 
 </script>
 </body>

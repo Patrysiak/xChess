@@ -3,175 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HybridPro: Discord x Messenger x Insta</title>
+    <title>Discord Clone - Firebase Edition</title>
     <style>
-        /* ================= CSS: ZMIENNE I BAZA ================= */
+        /* ================= ZMIENNE KOLORYSTYCZNE (DISCORD THEME) ================= */
         :root {
-            --bg-darkest: #1e1f22;
-            --bg-sidebar: #2b2d31;
-            --bg-chat: #313338;
+            --bg-tertiary: #1e1f22;   /* Pasek serwerów */
+            --bg-secondary: #2b2d31;  /* Pasek kanałów/DM */
+            --bg-primary: #313338;    /* Główny czat */
+            --bg-message-hover: #2e3035;
+            --bg-modifier-hover: rgba(78, 80, 88, 0.3);
+            --bg-modifier-active: rgba(78, 80, 88, 0.48);
             --bg-input: #383a40;
-            --bg-hover: rgba(255, 255, 255, 0.08);
-            --text-main: #dbdee1;
+            --text-normal: #dbdee1;
             --text-muted: #949ba4;
-            --brand-blue: #5865F2; /* Discord Blurple */
-            --messenger-blue: #0084ff;
-            --danger-red: #f23f42;
-            --success-green: #23a559;
-            --insta-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            --header-primary: #f2f3f5;
+            --header-secondary: #b5bac1;
+            --brand-color: #5865F2;
+            --brand-hover: #4752c4;
+            --danger-color: #da373c;
+            --success-color: #23a559;
+            --scrollbar-thumb: #1a1b1e;
+            --scrollbar-track: #2b2d31;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-darkest);
-            color: var(--text-main);
+            background-color: var(--bg-primary);
+            color: var(--text-normal);
             display: flex;
             height: 100vh;
             overflow: hidden;
+            font-size: 14px;
         }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #1a1b1e; border-radius: 10px; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+        ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
 
         svg { width: 24px; height: 24px; fill: currentColor; }
+        button, input { font-family: inherit; }
 
-        /* ================= EKRAN LOGOWANIA (STYL DISCORDA) ================= */
+        /* ================= EKRAN LOGOWANIA ================= */
         #login-screen {
             position: fixed; inset: 0;
-            background: var(--bg-darkest);
-            background-image: radial-gradient(circle at center, #2b2d31 0%, #1e1f22 100%);
-            z-index: 9999;
-            display: flex; justify-content: center; align-items: center;
+            background: var(--bg-tertiary);
+            background-image: url('https://cdn.discordapp.com/attachments/1077750831628173434/1100088924163014766/discord_bg.png');
+            background-size: cover; background-position: center;
+            z-index: 10000; display: flex; justify-content: center; align-items: center;
         }
 
         .login-box {
-            background: var(--bg-chat);
-            padding: 40px;
-            border-radius: 8px;
-            width: 480px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.05);
+            background: var(--bg-primary); padding: 32px; border-radius: 5px;
+            width: 480px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
-        .login-box h2 { font-size: 24px; color: white; margin-bottom: 8px; }
-        .login-box p { color: var(--text-muted); font-size: 15px; margin-bottom: 30px; }
-        
+        .login-box h2 { color: var(--header-primary); font-size: 24px; margin-bottom: 8px; font-weight: 600; }
+        .login-box p { color: var(--header-secondary); font-size: 15px; margin-bottom: 30px; }
+
         .btn-brand {
-            background: var(--brand-blue); color: white; border: none;
-            width: 100%; padding: 15px; border-radius: 4px; font-size: 16px;
-            font-weight: bold; cursor: pointer; transition: 0.2s;
-            display: flex; justify-content: center; align-items: center; gap: 10px;
+            background: var(--brand-color); color: white; border: none; width: 100%;
+            padding: 12px; border-radius: 3px; font-size: 16px; font-weight: 500;
+            cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px;
         }
-        .btn-brand:hover { background: #4752c4; }
+        .btn-brand:hover { background: var(--brand-hover); }
 
-        /* Główny kontener aplikacji (ukryty do zalogowania) */
         #app-container { display: none; width: 100%; height: 100%; }
 
-        /* ================= 1. DISCORD NAV ================= */
-        .app-nav {
-            width: 75px; background-color: var(--bg-darkest);
-            display: flex; flex-direction: column; align-items: center;
-            padding-top: 15px; gap: 12px; z-index: 10;
+        /* ================= 1. PASEK SERWERÓW (LEWA) ================= */
+        .servers-nav {
+            width: 72px; background-color: var(--bg-tertiary); display: flex;
+            flex-direction: column; align-items: center; padding-top: 12px; gap: 8px; z-index: 10;
         }
 
-        .nav-icon {
-            width: 50px; height: 50px; border-radius: 50%;
-            background-color: var(--bg-sidebar); color: var(--text-main);
-            display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: 0.3s; position: relative;
+        .server-icon-wrapper { position: relative; display: flex; justify-content: center; width: 100%; cursor: pointer; }
+        
+        .server-pill {
+            position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+            width: 4px; height: 8px; background: white; border-radius: 0 4px 4px 0;
+            transition: 0.2s; opacity: 0;
         }
-        .nav-icon svg { width: 28px; height: 28px; }
-        .nav-icon:hover { border-radius: 16px; background-color: var(--brand-blue); color: white; }
-        .nav-icon.active { background: var(--insta-gradient); border-radius: 16px; color: white; }
+        .server-icon-wrapper:hover .server-pill { height: 20px; opacity: 1; }
+        .server-icon-wrapper.active .server-pill { height: 40px; opacity: 1; }
 
-        .badge {
-            position: absolute; bottom: -2px; right: -2px;
-            background-color: var(--danger-red); color: white;
-            font-size: 11px; font-weight: bold; padding: 2px 6px;
-            border-radius: 10px; border: 3px solid var(--bg-darkest);
+        .server-icon {
+            width: 48px; height: 48px; border-radius: 50%; background-color: var(--bg-primary);
+            color: var(--text-normal); display: flex; justify-content: center; align-items: center;
+            transition: 0.2s; overflow: hidden; font-weight: 500; font-size: 16px;
+        }
+        .server-icon img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .server-icon-wrapper:hover .server-icon, .server-icon-wrapper.active .server-icon {
+            border-radius: 16px; background-color: var(--brand-color); color: white;
         }
 
-        /* ================= 2. SIDEBAR ================= */
+        .server-separator { width: 32px; height: 2px; background: var(--bg-modifier-active); margin: 4px 0; border-radius: 1px; }
+
+        .server-add { background-color: var(--bg-primary); color: #23a559; }
+        .server-icon-wrapper:hover .server-add { background-color: #23a559; color: white; }
+
+        /* ================= 2. PASEK KANAŁÓW / DM (ŚRODEK) ================= */
         .sidebar {
-            width: 340px; background-color: var(--bg-sidebar);
-            display: flex; flex-direction: column; border-right: 1px solid #1f2023;
+            width: 240px; background-color: var(--bg-secondary); display: flex;
+            flex-direction: column; border-right: 1px solid var(--bg-modifier-active);
         }
 
         .sidebar-header {
-            padding: 25px 20px 15px; font-size: 22px; font-weight: 800; color: white;
-            display: flex; justify-content: space-between; align-items: center;
+            height: 48px; padding: 0 16px; display: flex; align-items: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-weight: 600; color: var(--header-primary);
+            cursor: pointer; transition: 0.2s; border-bottom: 1px solid var(--bg-tertiary);
         }
+        .sidebar-header:hover { background: var(--bg-modifier-hover); }
 
-        .stories-container { display: flex; padding: 0 15px 15px; gap: 15px; overflow-x: auto; border-bottom: 1px solid #1f2023; }
-        .story { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; }
-        .story:hover { transform: translateY(-2px); }
-        .story-img-wrapper { width: 58px; height: 58px; border-radius: 50%; padding: 3px; background: var(--insta-gradient); }
-        .story.viewed .story-img-wrapper { background: #4f545c; }
-        .story img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--bg-sidebar); }
-        .story span { font-size: 11px; width: 60px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 8px; }
 
-        .search-bar { padding: 15px; }
-        .search-bar input { width: 100%; background: var(--bg-darkest); border: none; color: white; padding: 10px 15px; border-radius: 6px; outline: none; }
+        /* Kategoria / Przyciski DM */
+        .category-name { font-size: 12px; font-weight: 600; color: var(--header-secondary); text-transform: uppercase; margin: 16px 8px 4px; display: flex; justify-content: space-between; }
+        .category-name svg { width: 14px; height: 14px; cursor: pointer; }
+        .category-name svg:hover { color: var(--text-normal); }
 
-        .chat-list { flex: 1; overflow-y: auto; }
-        .chat-item { padding: 12px 15px; margin: 0 10px; border-radius: 8px; display: flex; align-items: center; cursor: pointer; transition: 0.1s; }
-        .chat-item:hover { background-color: var(--bg-hover); }
-        .chat-item.active { background-color: rgba(255, 255, 255, 0.1); }
-        .chat-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; margin-right: 15px; }
-        .chat-info { flex: 1; overflow: hidden; }
-        .chat-info h4 { font-size: 15px; color: white; font-weight: 600; margin-bottom: 4px;}
-        .chat-info p { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        /* ================= 3. CHAT AREA ================= */
-        .chat-area { flex: 1; background-color: var(--bg-chat); display: flex; flex-direction: column; position: relative; }
-        .chat-header { height: 70px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1f2023; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .chat-header-info { display: flex; align-items: center; gap: 15px; }
-        .chat-header-info img { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; }
-        .chat-header-info h3 { font-size: 16px; color: white; margin-bottom: 2px;}
-        .chat-header-info span { font-size: 13px; color: var(--text-muted); }
+        .list-item {
+            padding: 6px 8px; border-radius: 4px; display: flex; align-items: center;
+            cursor: pointer; color: var(--text-muted); margin-bottom: 2px;
+        }
+        .list-item:hover { background: var(--bg-modifier-hover); color: var(--text-normal); }
+        .list-item.active { background: var(--bg-modifier-active); color: var(--text-normal); }
         
-        .header-actions { display: flex; gap: 20px; }
-        .header-actions span { color: var(--text-muted); cursor: pointer; transition: 0.2s; display: flex; align-items: center; }
-        .header-actions span:hover { color: white; }
+        .list-item svg { width: 20px; height: 20px; margin-right: 12px; color: #80848e; }
+        .list-avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: 12px; object-fit: cover; position: relative; }
+        .status-indicator { position: absolute; bottom: -2px; right: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--success-color); border: 2px solid var(--bg-secondary); }
 
-        .messages { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
-        .message-row { display: flex; width: 100%; flex-direction: column; }
-        .message-row.received { align-items: flex-start; }
-        .message-row.sent { align-items: flex-end; }
-        .message-bubble { max-width: 65%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.4; position: relative; word-wrap: break-word; }
-        .received .message-bubble { background-color: var(--bg-input); border-bottom-left-radius: 4px; }
-        .sent .message-bubble { background-color: var(--messenger-blue); color: white; border-bottom-right-radius: 4px; }
-        .message-time { font-size: 11px; color: var(--text-muted); margin-top: 4px; padding: 0 5px; }
+        /* Pasek użytkownika (na dole) */
+        .user-panel {
+            height: 52px; background: #232428; display: flex; align-items: center;
+            padding: 0 8px; justify-content: space-between;
+        }
+        .user-profile { display: flex; align-items: center; padding: 4px; border-radius: 4px; cursor: pointer; flex: 1; overflow: hidden; }
+        .user-profile:hover { background: var(--bg-modifier-hover); }
+        .user-profile img { width: 32px; height: 32px; border-radius: 50%; margin-right: 8px; }
+        .user-info { display: flex; flex-direction: column; overflow: hidden; }
+        .user-info strong { font-size: 14px; color: var(--header-primary); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .user-info span { font-size: 12px; color: var(--header-secondary); }
 
-        .like-btn { position: absolute; bottom: -12px; right: 10px; background: var(--bg-chat); border-radius: 50%; padding: 4px 6px; cursor: pointer; opacity: 0; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .sent .like-btn { left: 10px; right: auto; }
-        .message-bubble:hover .like-btn { opacity: 1; transform: translateY(-2px); }
-        .like-btn.liked { opacity: 1; color: var(--danger-red); }
+        .user-controls { display: flex; }
+        .control-btn { width: 32px; height: 32px; border-radius: 4px; display: flex; justify-content: center; align-items: center; color: var(--header-secondary); cursor: pointer; }
+        .control-btn:hover { background: var(--bg-modifier-hover); color: var(--text-normal); }
+        .control-btn svg { width: 20px; height: 20px; }
 
-        .input-area { padding: 0 20px 25px; }
-        .input-wrapper { background-color: var(--bg-input); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 15px; }
-        .input-wrapper input { flex: 1; background: none; border: none; color: white; outline: none; font-size: 15px; }
-        .action-icon { color: var(--text-muted); cursor: pointer; transition: 0.2s; display: flex; align-items: center;}
-        .action-icon:hover { color: white; }
-
-        /* ================= MODALS (WIDEO, TELEFON, USTAWIENIA) ================= */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--bg-sidebar); padding: 30px; border-radius: 12px; text-align: center; color: white; min-width: 300px; border: 1px solid #1f2023; position: relative;}
+        /* ================= 3. OBSZAR CZATU (PRAWA) ================= */
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-primary); }
         
-        .call-avatar { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 20px; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(88, 101, 242, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(88, 101, 242, 0); } 100% { box-shadow: 0 0 0 0 rgba(88, 101, 242, 0); } }
+        .chat-header {
+            height: 48px; padding: 0 16px; display: flex; align-items: center;
+            border-bottom: 1px solid var(--bg-tertiary); box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .chat-header svg { color: #80848e; margin-right: 8px; }
+        .chat-header h3 { font-size: 16px; color: var(--header-primary); font-weight: 600; }
+        .chat-header-actions { margin-left: auto; display: flex; gap: 16px; color: var(--header-secondary); }
+        .chat-header-actions svg { cursor: pointer; transition: 0.2s; }
+        .chat-header-actions svg:hover { color: var(--text-normal); }
+
+        .messages-container { flex: 1; overflow-y: auto; padding: 16px 0; display: flex; flex-direction: column; }
+
+        .message { padding: 4px 16px 4px 72px; position: relative; margin-top: 17px; }
+        .message:hover { background: var(--bg-message-hover); }
+        .msg-avatar { position: absolute; left: 16px; top: 4px; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; }
+        .msg-header { display: flex; align-items: baseline; margin-bottom: 2px; }
+        .msg-author { color: var(--header-primary); font-weight: 500; font-size: 16px; cursor: pointer; margin-right: 8px; }
+        .msg-author:hover { text-decoration: underline; }
+        .msg-time { color: var(--text-muted); font-size: 12px; }
+        .msg-content { color: var(--text-normal); font-size: 15px; line-height: 1.375rem; word-wrap: break-word; }
+
+        /* Następująca wiadomość tego samego autora */
+        .message.chained { margin-top: 0; padding-top: 2px; padding-bottom: 2px; }
+        .message.chained .msg-avatar, .message.chained .msg-header { display: none; }
+        .message.chained .msg-time-hover { position: absolute; left: 16px; top: 2px; font-size: 10px; color: var(--text-muted); opacity: 0; width: 40px; text-align: center; }
+        .message.chained:hover .msg-time-hover { opacity: 1; }
+
+        .input-area { padding: 0 16px 24px; }
+        .input-wrapper {
+            background: var(--bg-input); border-radius: 8px; display: flex; align-items: flex-start;
+            padding: 10px 16px;
+        }
+        .input-btn { color: var(--header-secondary); cursor: pointer; display: flex; justify-content: center; align-items: center; padding-right: 16px; }
+        .input-btn:hover { color: var(--text-normal); }
+        .chat-input {
+            flex: 1; background: transparent; border: none; color: var(--text-normal);
+            font-size: 15px; outline: none; max-height: 144px; overflow-y: auto; resize: none; line-height: 1.375rem;
+        }
+        .chat-input::placeholder { color: #5c5e66; }
+
+        /* ================= MODALE ================= */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000;
+            display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.2s;
+        }
+        .modal-content {
+            background: var(--bg-primary); border-radius: 5px; width: 440px; overflow: hidden;
+            box-shadow: 0 0 0 1px rgba(32,34,37,0.6), 0 2px 10px 0 rgba(0,0,0,0.2);
+            transform: scale(0.9); transition: transform 0.2s;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+
+        .modal-header { padding: 24px; text-align: center; }
+        .modal-header h2 { color: var(--header-primary); font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+        .modal-header p { color: var(--header-secondary); font-size: 15px; }
         
-        .btn-endcall { background: var(--danger-red); color: white; border: none; padding: 12px 25px; border-radius: 20px; cursor: pointer; font-weight: bold; margin-top: 20px; display: flex; align-items: center; gap: 10px; margin: 20px auto 0;}
-        .btn-logout { background: var(--bg-input); color: var(--danger-red); border: 1px solid var(--danger-red); padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight:bold; margin-top: 20px; width: 100%;}
-        .btn-logout:hover { background: var(--danger-red); color: white; }
+        .modal-body { padding: 0 24px 24px; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-label { display: block; color: var(--header-secondary); font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+        .form-input { width: 100%; background: var(--bg-tertiary); color: var(--text-normal); border: none; border-radius: 3px; padding: 10px; font-size: 16px; outline: none; }
         
-        .close-modal { position: absolute; top: 15px; right: 15px; cursor: pointer; color: var(--text-muted); }
-        .close-modal:hover { color: white; }
+        .modal-footer { background: var(--bg-secondary); padding: 16px 24px; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-cancel { background: transparent; color: white; border: none; padding: 10px 24px; cursor: pointer; font-size: 14px; }
+        .btn-cancel:hover { text-decoration: underline; }
+        .btn-submit { background: var(--brand-color); color: white; border: none; padding: 10px 24px; border-radius: 3px; cursor: pointer; font-size: 14px; font-weight: 500; }
+        .btn-submit:hover { background: var(--brand-hover); }
+        .btn-danger { background: var(--danger-color); color: white; border: none; padding: 10px 24px; border-radius: 3px; cursor: pointer; font-size: 14px; font-weight: 500; width: 100%; margin-top: 10px;}
 
     </style>
 </head>
@@ -179,13 +229,12 @@
 
     <div id="login-screen">
         <div class="login-box">
-            <svg viewBox="0 0 127.14 96.36" style="width: 60px; height: 60px; color: var(--brand-blue); margin-bottom: 20px;">
+            <svg viewBox="0 0 127.14 96.36" style="width: 50px; height: 50px; color: var(--brand-color); margin-bottom: 20px;">
                 <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.68,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.36,46,96.26,53,91.08,65.69,84.69,65.69Z"/>
             </svg>
             <h2>Witaj ponownie!</h2>
-            <p>Jesteśmy tak bardzo podekscytowani, że znowu Cię widzimy!</p>
-            <button class="btn-brand" id="btn-login" onclick="loginWithGoogle()">
-                <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            <p>Połącz się przez Firebase, aby wejść na serwer.</p>
+            <button class="btn-brand" id="btn-login" onclick="window.loginWithGoogle()">
                 Zaloguj przez Google
             </button>
         </div>
@@ -193,93 +242,139 @@
 
     <div id="app-container">
         
-        <div class="app-nav">
-            <div class="nav-icon active" title="Główna">
-                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        <div class="servers-nav" id="servers-nav">
+            <div class="server-icon-wrapper active" id="btn-home" onclick="window.switchToHome()">
+                <div class="server-pill"></div>
+                <div class="server-icon" style="background-color: var(--brand-color);">
+                    <svg viewBox="0 0 127.14 96.36" style="width: 28px; height: 28px; color: white;"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.68,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.36,46,96.26,53,91.08,65.69,84.69,65.69Z"/></svg>
+                </div>
             </div>
-            <div class="nav-icon" title="Czat">
-                <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
-                <div class="badge" id="total-unread">3</div>
-            </div>
-            <div class="nav-icon" title="Powiadomienia" onclick="alert('Brak nowych powiadomień')">
-                <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
-            </div>
-            <div class="nav-icon" title="Ustawienia" style="margin-top: auto; margin-bottom: 20px;" onclick="openSettings()">
-                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            
+            <div class="server-separator"></div>
+            
+            <div id="server-list"></div>
+
+            <div class="server-icon-wrapper" onclick="window.openModal('create-server-modal')">
+                <div class="server-pill"></div>
+                <div class="server-icon server-add">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                </div>
             </div>
         </div>
 
         <div class="sidebar">
-            <div class="sidebar-header">
-                Wiadomości
-                <span style="cursor:pointer; color:var(--text-muted);" title="Nowa wiadomość" onclick="alert('Wybierz kontakt z listy.')">
-                    <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-                </span>
+            <div class="sidebar-header" id="sidebar-header-title">Znajomi</div>
+            
+            <div class="sidebar-content" id="sidebar-content-list">
+                </div>
+
+            <div class="user-panel">
+                <div class="user-profile" onclick="window.openModal('settings-modal')">
+                    <img id="my-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Puste">
+                    <div class="user-info">
+                        <strong id="my-name">Ładowanie...</strong>
+                        <span id="my-status">Online</span>
+                    </div>
+                </div>
+                <div class="user-controls">
+                    <div class="control-btn" title="Wycisz mikrofon" onclick="window.toggleMic(this)"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></div>
+                    <div class="control-btn" title="Ustawienia Użytkownika" onclick="window.openModal('settings-modal')"><svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg></div>
+                </div>
             </div>
-            <div class="stories-container" id="stories-box"></div>
-            <div class="search-bar"><input type="text" placeholder="Szukaj..." onkeyup="filterChats(this.value)"></div>
-            <div class="chat-list" id="chats-box"></div>
         </div>
 
         <div class="chat-area">
-            <div class="chat-header" id="chat-header"></div>
-            <div class="messages" id="messages-box"></div>
-            
+            <div class="chat-header">
+                <svg id="chat-type-icon" viewBox="0 0 24 24" style="width:24px; height:24px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                <h3 id="chat-title">Ładowanie...</h3>
+                <div class="chat-header-actions">
+                    <svg title="Rozpocznij połączenie głosowe" viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    <svg title="Rozpocznij rozmowę wideo" viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                </div>
+            </div>
+
+            <div class="messages-container" id="messages-container">
+                </div>
+
             <div class="input-area">
                 <div class="input-wrapper">
-                    <label class="action-icon" title="Dodaj plik">
-                        <input type="file" style="display:none;" onchange="alert('Plik załączony: ' + this.files[0].name)">
-                        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                    </label>
-                    <span class="action-icon" title="Wyślij zdjęcie" onclick="alert('Otwieram aparat...')">
-                        <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-                    </span>
-                    <input type="text" placeholder="Napisz wiadomość..." id="msg-input" onkeypress="handleKeyPress(event)" autocomplete="off">
-                    <span class="action-icon" id="mic-btn" title="Nagraj głos" onmousedown="startMic()" onmouseup="stopMic()">
-                        <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
-                    </span>
+                    <div class="input-btn" title="Dodaj plik" onclick="alert('Wysyłanie plików wkrótce!')">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                    </div>
+                    <input type="text" class="chat-input" id="message-input" placeholder="Napisz wiadomość..." onkeypress="window.sendMessage(event)" autocomplete="off">
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="call-modal" class="modal-overlay">
+    <div class="modal-overlay" id="create-server-modal">
         <div class="modal-content">
-            <h2 id="call-title" style="margin-bottom:10px;">Dzwonię...</h2>
-            <p id="call-name" style="color:var(--text-muted); margin-bottom:20px;">Anna Nowak</p>
-            <img id="call-img" src="" class="call-avatar">
-            <div style="display:flex; justify-content:center; gap:20px; margin-top:10px;">
-                <button class="btn-endcall" onclick="closeModals()">
-                    <svg viewBox="0 0 24 24" style="width:20px; height:20px;"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
-                    Rozłącz
-                </button>
+            <div class="modal-header">
+                <h2>Stwórz swój serwer</h2>
+                <p>Twój serwer to miejsce, gdzie spotykasz się ze znajomymi. Stwórz go i zacznijcie rozmawiać.</p>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Nazwa serwera</label>
+                    <input type="text" id="new-server-name" class="form-input" placeholder="np. Serwer Gier Janka">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="window.closeModal('create-server-modal')">Wstecz</button>
+                <button class="btn-submit" onclick="window.submitCreateServer()">Stwórz</button>
             </div>
         </div>
     </div>
 
-    <div id="settings-modal" class="modal-overlay">
-        <div class="modal-content" style="width: 350px;">
-            <span class="close-modal" onclick="closeModals()"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></span>
-            <img id="my-profile-img" src="" style="width:80px; height:80px; border-radius:50%; margin-bottom:15px; border:2px solid var(--brand-blue);">
-            <h2 id="my-profile-name">Ładowanie...</h2>
-            <p style="color:var(--text-muted); font-size:13px; margin-bottom:20px;" id="my-profile-email">email@test.com</p>
-            
-            <div style="background:var(--bg-darkest); padding:15px; border-radius:8px; text-align:left; margin-bottom:20px;">
-                <p><strong>Status:</strong> Online 🟢</p>
-                <p><strong>Motyw:</strong> Ciemny 🌙</p>
+    <div class="modal-overlay" id="add-friend-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Dodaj znajomego</h2>
+                <p>Możesz dodać znajomego, używając jego nazwy użytkownika.</p>
             </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Dodaj przez nazwę</label>
+                    <input type="text" id="new-friend-name" class="form-input" placeholder="Nazwa użytkownika#0000">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="window.closeModal('add-friend-modal')">Anuluj</button>
+                <button class="btn-submit" onclick="window.submitAddFriend()">Wyślij zaproszenie</button>
+            </div>
+        </div>
+    </div>
 
-            <button class="btn-logout" onclick="logout()">Wyloguj się z Firebase</button>
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Moje konto</h2>
+                <img id="settings-avatar-preview" src="" style="width:80px;height:80px;border-radius:50%;margin-top:10px;">
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Wyświetlana nazwa</label>
+                    <input type="text" id="edit-profile-name" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Link do nowego awatara (URL)</label>
+                    <input type="text" id="edit-profile-avatar" class="form-input" placeholder="https://...">
+                </div>
+                <button class="btn-danger" onclick="window.logout()">Wyloguj się</button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="window.closeModal('settings-modal')">Anuluj</button>
+                <button class="btn-submit" onclick="window.saveProfile()">Zapisz zmiany</button>
+            </div>
         </div>
     </div>
 
     <script type="module">
-        // 1. IMPORT FIREBASE
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // 2. KONFIGURACJA Z PROMPTA
+        // KONFIGURACJA FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDVip74fl5K2fnLjlCOBLJfBnq7lxglyoU",
             authDomain: "xchess-79e2d.firebaseapp.com",
@@ -294,224 +389,295 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        // Podpięcie funkcji pod window by HTML to widział
+        // ------------------ STAN APLIKACJI (Baza Danych) ------------------
+        let currentUser = null;
+        let currentContext = "home"; // "home" lub id serwera (np. "s1")
+        let activeChannelId = "dm1"; // Id aktywnego czatu (DM lub Kanału)
+
+        // Przykładowe dane (Mock DB)
+        let servers = [
+            { id: "s1", name: "Vulkan Casino Głosowy", icon: "V", channels: [
+                { id: "c1", name: "ogólny", type: "text" },
+                { id: "c2", name: "głosowy", type: "voice" }
+            ]}
+        ];
+
+        let friends = [
+            { id: "dm1", name: "Jan Kowalski", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jan", status: "online" },
+            { id: "dm2", name: "Marta Nowak", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marta", status: "offline" }
+        ];
+
+        let messagesDB = {
+            "dm1": [{ authorId: "dm1", authorName: "Jan Kowalski", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jan", text: "Siemka, grasz w coś dzisiaj?", time: "Dzisiaj o 15:30" }],
+            "c1": [{ authorId: "system", authorName: "System", avatar: "https://api.dicebear.com/7.x/bot/svg?seed=1", text: "Witaj na serwerze!", time: "Wczoraj o 12:00" }]
+        };
+
+        // ------------------ FIREBASE AUTH ------------------
         window.loginWithGoogle = () => {
             const btn = document.getElementById('btn-login');
-            btn.innerHTML = "Ładowanie...";
+            btn.innerHTML = "Łączenie...";
             signInWithPopup(auth, provider).catch(e => {
-                alert("Błąd logowania: " + e.message);
-                btn.innerHTML = "Zaloguj przez Google";
+                alert("Błąd: " + e.message); btn.innerHTML = "Zaloguj przez Google";
             });
         };
 
-        window.logout = () => { signOut(auth); window.closeModals(); };
+        window.logout = () => { signOut(auth); window.closeModal('settings-modal'); };
 
-        // 3. STAN APLIKACJI
-        window.MY_USER_DATA = null;
-        window.activeChatId = "c_1";
-
-        // Baza testowa (poza Firebase, żeby interfejs od razu był bogaty)
-        const users = {
-            "u_1": { name: "Anna Nowak", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Anna", status: "online", lastSeen: "Teraz" },
-            "u_2": { name: "Kamil Kowalski", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kamil", status: "offline", lastSeen: "15 min temu" },
-            "u_3": { name: "Grupa Projektowa", avatar: "https://api.dicebear.com/7.x/initials/svg?seed=GP&backgroundColor=0084ff", status: "online", isGroup: true }
-        };
-
-        const chats = [
-            { id: "c_1", userId: "u_1", lastMsg: "Podeślesz mi to zdjęcie?", time: "10:45", unread: 2 },
-            { id: "c_3", userId: "u_3", lastMsg: "Kamil: Zrobię to jutro.", time: "09:30", unread: 1 },
-            { id: "c_2", userId: "u_2", lastMsg: "Haha, dokładnie!", time: "Wczoraj", unread: 0 }
-        ];
-
-        window.messagesDb = {
-            "c_1": [
-                { id: "m_1", senderId: "u_1", text: "Hej! Widziałeś najnowsze Insta Stories? 😂", time: "10:40", liked: false },
-                { id: "m_2", senderId: "me", text: "Tak, mega zabawne! Zrobiłem zrzut ekranu.", time: "10:42", liked: true },
-                { id: "m_3", senderId: "u_1", text: "Podeślesz mi to zdjęcie? Zapomniałam zapisać.", time: "10:45", liked: false }
-            ]
-        };
-
-        // 4. NASŁUCHIWANIE LOGOWANIA
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Udane logowanie -> Pokaż App, Ukryj Login
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-container').style.display = 'block';
                 
-                // Pobierz/Zapisz do Firestore
                 const docRef = doc(db, 'users', user.uid);
                 const docSnap = await getDoc(docRef);
                 
                 let avatarUrl = user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`;
                 if (!docSnap.exists()) {
-                    window.MY_USER_DATA = { uid: user.uid, name: user.displayName, email: user.email, avatar: avatarUrl };
-                    await setDoc(docRef, window.MY_USER_DATA);
+                    currentUser = { uid: user.uid, name: user.displayName, avatar: avatarUrl };
+                    await setDoc(docRef, currentUser);
                 } else {
-                    window.MY_USER_DATA = docSnap.data();
-                    if(!window.MY_USER_DATA.avatar) window.MY_USER_DATA.avatar = avatarUrl;
+                    currentUser = docSnap.data();
                 }
 
-                // Aktualizuj UI w ustawieniach
-                document.getElementById('my-profile-img').src = window.MY_USER_DATA.avatar;
-                document.getElementById('my-profile-name').innerText = window.MY_USER_DATA.name;
-                document.getElementById('my-profile-email').innerText = window.MY_USER_DATA.email;
-
-                initUI();
+                initApp();
             } else {
-                // Wylogowano -> Pokaż Login
                 document.getElementById('login-screen').style.display = 'flex';
                 document.getElementById('app-container').style.display = 'none';
-                document.getElementById('btn-login').innerHTML = `<svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Zaloguj przez Google`;
             }
         });
 
-        // ================= FUNKCJE UI (WYWOŁYWANE Z HTML) =================
-        function initUI() {
-            window.renderStories();
-            window.renderChats();
-            window.loadChat(window.activeChatId);
+        // ------------------ LOGIKA UI ------------------
+        function initApp() {
+            updateUserPanel();
+            renderServers();
+            window.switchToHome(); // Załaduj DM na start
         }
 
-        window.renderStories = () => {
-            const box = document.getElementById("stories-box");
-            box.innerHTML = `
-                <div class="story" onclick="alert('Brak uprawnień do kamery!')">
-                    <div class="story-img-wrapper"><img src="${window.MY_USER_DATA.avatar}"></div>
-                    <span>Ty</span>
-                </div>
-                <div class="story" onclick="alert('Relacja od Anna Nowak')">
-                    <div class="story-img-wrapper"><img src="${users['u_1'].avatar}"></div>
-                    <span>Anna</span>
-                </div>
-            `;
-        };
+        function updateUserPanel() {
+            document.getElementById('my-avatar').src = currentUser.avatar;
+            document.getElementById('my-name').innerText = currentUser.name;
+        }
 
-        window.renderChats = (filter = "") => {
-            const box = document.getElementById("chats-box");
-            box.innerHTML = "";
-            let totalUnread = 0;
-
-            chats.forEach(chat => {
-                const user = users[chat.userId];
-                if (filter && !user.name.toLowerCase().includes(filter.toLowerCase())) return;
-
-                totalUnread += chat.unread;
-                const active = chat.id === window.activeChatId ? "active" : "";
-                
-                box.innerHTML += `
-                    <div class="chat-item ${active}" onclick="loadChat('${chat.id}')">
-                        <img src="${user.avatar}" class="chat-avatar">
-                        <div class="chat-info">
-                            <h4>${user.name}</h4>
-                            <p style="${chat.unread>0?'color:white;font-weight:bold;':''}">${chat.lastMsg}</p>
-                        </div>
-                        <div style="display:flex; flex-direction:column; align-items:flex-end;">
-                            <span style="font-size:11px;color:var(--text-muted);">${chat.time}</span>
-                            ${chat.unread > 0 ? `<div style="background:var(--danger-red); color:white; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:bold; margin-top:5px;">${chat.unread}</div>` : ""}
-                        </div>
+        // RENDEROWANIE SERWERÓW
+        function renderServers() {
+            const list = document.getElementById('server-list');
+            list.innerHTML = "";
+            servers.forEach(server => {
+                const isActive = currentContext === server.id ? "active" : "";
+                list.innerHTML += `
+                    <div class="server-icon-wrapper ${isActive}" onclick="window.switchToServer('${server.id}')">
+                        <div class="server-pill"></div>
+                        <div class="server-icon">${server.icon}</div>
                     </div>
                 `;
             });
-            document.getElementById('total-unread').innerText = totalUnread;
+        }
+
+        // PRZEŁĄCZANIE: STRONA GŁÓWNA (ZNJAOMI)
+        window.switchToHome = () => {
+            currentContext = "home";
+            document.getElementById('btn-home').classList.add('active');
+            renderServers(); // Odśwież pillsy
+            
+            document.getElementById('sidebar-header-title').innerText = "Znajomi";
+            const content = document.getElementById('sidebar-content-list');
+            
+            let html = `<div class="category-name">Bezpośrednie wiadomości <svg onclick="window.openModal('add-friend-modal')" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></div>`;
+            
+            friends.forEach(f => {
+                const isActive = activeChannelId === f.id ? "active" : "";
+                html += `
+                    <div class="list-item ${isActive}" onclick="window.loadChat('${f.id}', 'dm')">
+                        <div style="position:relative;">
+                            <img src="${f.avatar}" class="list-avatar">
+                            ${f.status === 'online' ? '<div class="status-indicator"></div>' : ''}
+                        </div>
+                        <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${f.name}</div>
+                    </div>
+                `;
+            });
+            content.innerHTML = html;
+            
+            if(friends.length > 0) window.loadChat(friends[0].id, 'dm');
         };
 
-        window.filterChats = (v) => window.renderChats(v);
+        // PRZEŁĄCZANIE: SERWER
+        window.switchToServer = (serverId) => {
+            currentContext = serverId;
+            document.getElementById('btn-home').classList.remove('active');
+            renderServers();
 
-        window.loadChat = (chatId) => {
-            window.activeChatId = chatId;
-            const chatObj = chats.find(c => c.id === chatId);
-            const user = users[chatObj.userId];
-            chatObj.unread = 0; // Przeczytano
-            window.renderChats();
-
-            // Header z Ikonami Akcji
-            document.getElementById("chat-header").innerHTML = `
-                <div class="chat-header-info">
-                    <img src="${user.avatar}">
-                    <div><h3>${user.name}</h3><span>${user.status==='online'?'Dostępny(a)':'Offline'}</span></div>
-                </div>
-                <div class="header-actions">
-                    <span title="Zadzwoń" onclick="startCall('audio', '${user.name}', '${user.avatar}')">
-                        <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
-                    </span>
-                    <span title="Wideo" onclick="startCall('video', '${user.name}', '${user.avatar}')">
-                        <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
-                    </span>
-                    <span title="Profil kontaktu" onclick="alert('Informacje o użytkowniku: ${user.name}')">
-                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-                    </span>
-                </div>
-            `;
-            window.renderMessages();
+            const server = servers.find(s => s.id === serverId);
+            document.getElementById('sidebar-header-title').innerText = server.name;
+            
+            const content = document.getElementById('sidebar-content-list');
+            let html = `<div class="category-name">Kanały tekstowe</div>`;
+            
+            server.channels.forEach(c => {
+                const isActive = activeChannelId === c.id ? "active" : "";
+                const icon = c.type === "voice" 
+                    ? `<svg viewBox="0 0 24 24"><path d="M11.5 2C11.5 2 11.5 6 11.5 6 11.5 6 15 6 15 6 15 6 15 2 11.5 2zM3 10V14H6L11 19V5L6 10H3z"/></svg>`
+                    : `<svg viewBox="0 0 24 24"><path d="M21 8.5h-4.5V4h-2v4.5H9.5V4h-2v4.5H3v2h4.5V15H3v2h4.5v4.5h2V17h5v4.5h2V17H21v-2h-4.5v-4.5H21v-2zm-6.5 6.5h-5v-4.5h5v4.5z"/></svg>`;
+                
+                html += `
+                    <div class="list-item ${isActive}" onclick="${c.type === 'voice' ? `alert('Rozmowy głosowe niedostępne w wersji Web')` : `window.loadChat('${c.id}', 'channel')`}">
+                        ${icon}
+                        <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${c.name}</div>
+                    </div>
+                `;
+            });
+            content.innerHTML = html;
+            
+            const firstText = server.channels.find(c => c.type === 'text');
+            if(firstText) window.loadChat(firstText.id, 'channel');
         };
 
-        window.renderMessages = () => {
-            const box = document.getElementById("messages-box");
-            box.innerHTML = "";
-            const msgs = window.messagesDb[window.activeChatId] || [];
+        // ŁADOWANIE CZATU
+        window.loadChat = (id, type) => {
+            activeChannelId = id;
+            if(currentContext === "home") window.switchToHome(); else window.switchToServer(currentContext);
+
+            const chatTitle = document.getElementById('chat-title');
+            const chatIcon = document.getElementById('chat-type-icon');
+            
+            if(type === 'dm') {
+                const f = friends.find(x => x.id === id);
+                chatTitle.innerText = f.name;
+                chatIcon.innerHTML = `<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>`;
+            } else {
+                const s = servers.find(x => x.id === currentContext);
+                const c = s.channels.find(x => x.id === id);
+                chatTitle.innerText = c.name;
+                chatIcon.innerHTML = `<path d="M21 8.5h-4.5V4h-2v4.5H9.5V4h-2v4.5H3v2h4.5V15H3v2h4.5v4.5h2V17h5v4.5h2V17H21v-2h-4.5v-4.5H21v-2zm-6.5 6.5h-5v-4.5h5v4.5z"/>`;
+            }
+
+            renderMessages();
+        };
+
+        // RENDEROWANIE WIADOMOŚCI
+        function renderMessages() {
+            const container = document.getElementById('messages-container');
+            container.innerHTML = "";
+            const msgs = messagesDB[activeChannelId] || [];
+            
+            let lastAuthorId = null;
 
             msgs.forEach(msg => {
-                const isMe = msg.senderId === "me";
-                const rowClass = isMe ? "sent" : "received";
+                const isChained = lastAuthorId === msg.authorId;
                 
-                // SVG Serduszka
-                const heartSvg = msg.liked 
-                    ? `<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>` 
-                    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
-
-                const likedHTML = `<div class="like-btn ${msg.liked ? 'liked' : ''}" onclick="toggleLike('${msg.id}')">${heartSvg}</div>`;
-
-                box.innerHTML += `
-                    <div class="message-row ${rowClass}">
-                        <div class="message-bubble">
-                            ${msg.text}
-                            ${likedHTML}
+                if(isChained) {
+                    container.innerHTML += `
+                        <div class="message chained">
+                            <span class="msg-time-hover">${msg.time.split(' ')[2]}</span>
+                            <div class="msg-content">${msg.text}</div>
                         </div>
-                        <span class="message-time">${msg.time}</span>
-                    </div>
-                `;
+                    `;
+                } else {
+                    container.innerHTML += `
+                        <div class="message">
+                            <img src="${msg.avatar}" class="msg-avatar">
+                            <div class="msg-header">
+                                <span class="msg-author">${msg.authorName}</span>
+                                <span class="msg-time">${msg.time}</span>
+                            </div>
+                            <div class="msg-content">${msg.text}</div>
+                        </div>
+                    `;
+                }
+                lastAuthorId = msg.authorId;
             });
-            box.scrollTop = box.scrollHeight;
-        };
+            container.scrollTop = container.scrollHeight;
+        }
 
-        window.handleKeyPress = (e) => {
-            if (e.key === "Enter") {
-                const input = document.getElementById("msg-input");
-                if (input.value.trim() !== "") {
-                    const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    if(!window.messagesDb[window.activeChatId]) window.messagesDb[window.activeChatId] = [];
+        // WYSYŁANIE WIADOMOŚCI
+        window.sendMessage = (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                const input = document.getElementById("message-input");
+                const text = input.value.trim();
+                
+                if (text !== "") {
+                    const timeStr = "Dzisiaj o " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    if(!messagesDB[activeChannelId]) messagesDB[activeChannelId] = [];
                     
-                    window.messagesDb[window.activeChatId].push({
-                        id: "m_" + Date.now(), senderId: "me", text: input.value.trim(), time: timeStr, liked: false
+                    messagesDB[activeChannelId].push({
+                        authorId: currentUser.uid,
+                        authorName: currentUser.name,
+                        avatar: currentUser.avatar,
+                        text: text,
+                        time: timeStr
                     });
                     
-                    chats.find(c => c.id === window.activeChatId).lastMsg = "Ty: " + input.value.trim();
                     input.value = "";
-                    window.renderMessages();
-                    window.renderChats();
+                    renderMessages();
                 }
             }
         };
 
-        window.toggleLike = (msgId) => {
-            const msg = window.messagesDb[window.activeChatId].find(m => m.id === msgId);
-            if(msg) { msg.liked = !msg.liked; window.renderMessages(); }
+        // ------------------ MODALE & LOGIKA ------------------
+        window.openModal = (id) => {
+            document.getElementById(id).classList.add('active');
+            if(id === 'settings-modal') {
+                document.getElementById('edit-profile-name').value = currentUser.name;
+                document.getElementById('edit-profile-avatar').value = currentUser.avatar;
+                document.getElementById('settings-avatar-preview').src = currentUser.avatar;
+            }
+        };
+        
+        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
+
+        // Ustawienia: Zapisz profil
+        window.saveProfile = async () => {
+            const newName = document.getElementById('edit-profile-name').value;
+            const newAv = document.getElementById('edit-profile-avatar').value;
+            currentUser.name = newName; currentUser.avatar = newAv;
+            
+            // Zapisz do Firebase
+            await setDoc(doc(db, 'users', currentUser.uid), currentUser);
+            
+            updateUserPanel();
+            window.closeModal('settings-modal');
         };
 
-        // --- OBSŁUGA MODALI ---
-        window.startCall = (type, name, avatar) => {
-            document.getElementById('call-modal').style.display = 'flex';
-            document.getElementById('call-title').innerText = type === 'video' ? 'Wideo rozmowa...' : 'Dzwonię...';
-            document.getElementById('call-name').innerText = name;
-            document.getElementById('call-img').src = avatar;
+        // Dodaj Serwer
+        window.submitCreateServer = () => {
+            const name = document.getElementById('new-server-name').value;
+            if(!name) return;
+            const newId = "s" + Date.now();
+            servers.push({
+                id: newId, name: name, icon: name.charAt(0).toUpperCase(),
+                channels: [{ id: "c_" + Date.now(), name: "ogólny", type: "text" }]
+            });
+            document.getElementById('new-server-name').value = "";
+            window.closeModal('create-server-modal');
+            window.switchToServer(newId);
         };
 
-        window.openSettings = () => { document.getElementById('settings-modal').style.display = 'flex'; };
-        window.closeModals = () => { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); };
+        // Dodaj Znajomego
+        window.submitAddFriend = () => {
+            const name = document.getElementById('new-friend-name').value;
+            if(!name) return;
+            const newId = "dm_" + Date.now();
+            friends.push({
+                id: newId, name: name, avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`, status: "online"
+            });
+            document.getElementById('new-friend-name').value = "";
+            window.closeModal('add-friend-modal');
+            window.switchToHome();
+        };
 
-        // Fake mic
-        window.startMic = () => { document.getElementById('msg-input').placeholder = "Nagrywanie... (puść by wysłać)"; document.getElementById('mic-btn').style.color = "var(--danger-red)"; };
-        window.stopMic = () => { document.getElementById('msg-input').placeholder = "Napisz wiadomość..."; document.getElementById('mic-btn').style.color = "var(--text-muted)"; alert("Nagranie głosowe (symulacja) zapisane!"); };
+        // Przycisk Mute
+        let isMuted = false;
+        window.toggleMic = (btn) => {
+            isMuted = !isMuted;
+            if(isMuted) {
+                btn.style.color = "var(--danger-color)";
+                btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M10.8 4.9c0-.66.54-1.2 1.2-1.2s1.2.54 1.2 1.2l-.01 3.91L15 10.6V5c0-1.66-1.34-3-3-3S9 3.34 9 5v3.6l1.8 1.8V4.9zM19 11h-2c0 .91-.26 1.75-.69 2.48l1.46 1.46C18.54 13.82 19 12.46 19 11zM4.27 3L3 4.27l6 6V11c0 1.66 1.34 3 3 3 .23 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c.57-.08 1.12-.24 1.64-.46l5.09 5.09L21 21.27 4.27 3z"/></svg>`;
+            } else {
+                btn.style.color = "var(--header-secondary)";
+                btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`;
+            }
+        };
 
     </script>
 </body>
